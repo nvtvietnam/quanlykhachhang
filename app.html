@@ -1,0 +1,3607 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QLKH — Quản lý khách hàng chứng khoán (Mockup)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root{
+  --bg:#F5F7FA;
+  --panel:#FFFFFF;
+  --border:#E4E8EE;
+  --sidebar:#0F1B2D;
+  --sidebar-hover:#1A2C45;
+  --sidebar-text:#AAB6C8;
+  --accent:#2358E8;
+  --accent-dark:#1A44BD;
+  --accent-soft:#EAF0FE;
+  --text:#111827;
+  --text-muted:#6B7280;
+  --green:#0E9F6E;
+  --green-soft:#E6F8F1;
+  --amber:#D97706;
+  --amber-soft:#FEF3E2;
+  --red:#DC2626;
+  --red-soft:#FCEAEA;
+  --radius:8px;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);font-size:14px;}
+.num{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;font-weight:500;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;}
+
+/* ---- layout ---- */
+.app{display:flex;min-height:100vh;}
+.sidebar{width:230px;background:var(--sidebar);flex-shrink:0;display:flex;flex-direction:column;padding:18px 12px;position:sticky;top:0;height:100vh;}
+.brand{display:flex;align-items:center;gap:10px;padding:6px 10px 22px;color:#fff;}
+.brand-mark{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,var(--accent),#5B8DEF);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;}
+.brand-name{font-weight:600;font-size:14.5px;line-height:1.25;}
+.brand-sub{font-size:11px;color:var(--sidebar-text);}
+.nav-group-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#5C6B84;padding:14px 12px 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;color:var(--sidebar-text);font-size:13.5px;font-weight:500;margin-bottom:2px;cursor:pointer;}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:.85;}
+.nav-item:hover{background:var(--sidebar-hover);color:#fff;}
+.nav-item.active{background:var(--accent);color:#fff;}
+.nav-item.active svg{opacity:1;}
+.sidebar-footer{margin-top:auto;padding:12px;border-top:1px solid #1E2E47;}
+.user-chip{display:flex;align-items:center;gap:9px;padding:8px;border-radius:7px;}
+.avatar{width:28px;height:28px;border-radius:50%;background:#33507A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;}
+.user-chip .uname{color:#E5EAF2;font-size:13px;font-weight:600;}
+.user-chip .urole{color:var(--sidebar-text);font-size:11px;}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column;}
+.topbar{height:60px;border-bottom:1px solid var(--border);background:var(--panel);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:20;}
+.page-title{font-size:17px;font-weight:700;}
+.page-subtitle{font-size:12.5px;color:var(--text-muted);margin-top:1px;}
+.content{padding:24px;flex:1;}
+
+.view{display:none;}
+.view.active{display:block;}
+
+/* ---- buttons ---- */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:7px;font-size:13.5px;font-weight:600;border:1px solid transparent;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent-dark);}
+.btn-secondary{background:#fff;border:1px solid var(--border);color:var(--text);}
+.btn-secondary:hover{background:#F3F5F8;}
+.btn-ghost{background:transparent;color:var(--text-muted);padding:6px 10px;}
+.btn-ghost:hover{background:#F0F2F5;color:var(--text);}
+.btn-sm{padding:5px 10px;font-size:12.5px;}
+.btn svg{width:14px;height:14px;}
+
+/* ---- cards / stat ---- */
+.stat-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:18px;}
+.stat-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:12px 13px;min-width:0;}
+.stat-label{font-size:11px;color:var(--text-muted);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.stat-value{font-size:17px;font-weight:700;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.stat-delta{font-size:10.5px;margin-top:3px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.stat-delta.up{color:var(--green);}
+.stat-delta.down{color:var(--red);}
+
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);}
+.panel-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.panel-title{font-size:14px;font-weight:700;}
+.panel-body{padding:16px 18px;}
+
+.alert-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #F0F2F5;}
+.alert-row:last-child{border-bottom:none;}
+.alert-dot{width:7px;height:7px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.alert-dot.amber{background:var(--amber);}
+.alert-dot.red{background:var(--red);}
+.alert-text{font-size:13px;}
+.alert-text b{font-weight:600;}
+.alert-sub{font-size:12px;color:var(--text-muted);margin-top:2px;}
+
+.two-col{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;}
+
+/* ---- toolbar / filters ---- */
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.search-box{position:relative;flex:1;min-width:220px;max-width:340px;}
+.search-box input{width:100%;padding:8px 12px 8px 32px;border:1px solid var(--border);border-radius:7px;font-size:13px;background:#fff;}
+.search-box svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text-muted);}
+select.filter-select{padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;background:#fff;color:var(--text);}
+.spacer{flex:1;}
+
+/* ---- table ---- */
+table{width:100%;border-collapse:collapse;}
+thead th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--text-muted);font-weight:600;padding:10px 14px;border-bottom:1px solid var(--border);background:#FAFBFC;white-space:nowrap;}
+thead th.num-col{text-align:right;}
+tbody td{padding:11px 14px;border-bottom:1px solid #F0F2F5;font-size:13.3px;vertical-align:middle;}
+tbody td.num-col{text-align:right;}
+tbody tr:hover{background:#FAFBFF;}
+tbody tr{cursor:pointer;}
+.cust-name{font-weight:600;}
+.cust-code{color:var(--text-muted);font-size:12px;}
+
+.badge{display:inline-flex;align-items:center;padding:2.5px 9px;border-radius:20px;font-size:11.5px;font-weight:600;}
+.badge-blue{background:var(--accent-soft);color:var(--accent-dark);}
+.badge-green{background:var(--green-soft);color:var(--green);}
+.badge-amber{background:var(--amber-soft);color:var(--amber);}
+.badge-gray{background:#F0F2F5;color:var(--text-muted);}
+.badge-red{background:var(--red-soft);color:var(--red);}
+
+.row-actions{display:flex;gap:4px;opacity:0;transition:opacity .1s;}
+tbody tr:hover .row-actions{opacity:1;}
+.icon-btn{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:#fff;color:var(--text-muted);position:relative;}
+.notif-badge{position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9.5px;font-weight:700;min-width:15px;height:15px;border-radius:20px;display:flex;align-items:center;justify-content:center;padding:0 3px;}
+.icon-btn:hover{background:#F3F5F8;color:var(--text);}
+.icon-btn svg{width:13px;height:13px;}
+
+.warn-icon{color:var(--amber);}
+
+/* ---- modal ---- */
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;z-index:100;}
+.overlay.active{display:flex;}
+.modal{background:#fff;border-radius:10px;width:560px;max-width:92vw;max-height:88vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.2);}
+.modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-size:15px;font-weight:700;}
+.modal-body{padding:18px 20px;}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+.close-x{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);border:none;background:transparent;}
+.close-x:hover{background:#F3F5F8;}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-field{display:flex;flex-direction:column;gap:5px;}
+.form-field.full{grid-column:1/-1;}
+.form-field label{font-size:12.5px;font-weight:600;color:var(--text-muted);}
+.form-field input,.form-field select,.form-field textarea{padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13.5px;font-family:inherit;background:#fff;}
+.form-field textarea{resize:vertical;min-height:56px;}
+.field-hint{font-size:11.5px;color:var(--text-muted);}
+.field-hint.full{grid-column:1/-1;}
+
+/* ---- detail slideover ---- */
+.slideover-scrim{position:fixed;inset:0;background:rgba(15,23,42,.35);display:none;z-index:90;}
+.slideover-scrim.active{display:block;}
+.slideover{position:fixed;top:0;right:0;height:100vh;width:480px;max-width:94vw;background:#fff;box-shadow:-10px 0 30px rgba(0,0,0,.12);transform:translateX(100%);transition:transform .18s ease;z-index:95;overflow-y:auto;}
+.slideover.active{transform:translateX(0);}
+.so-header{padding:20px 22px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;background:#fff;}
+.so-name{font-size:17px;font-weight:700;}
+.so-meta{font-size:12.5px;color:var(--text-muted);margin-top:3px;}
+.so-body{padding:18px 22px;}
+.so-section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--text-muted);margin:20px 0 10px;}
+.so-section-title:first-child{margin-top:0;}
+.kv-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;}
+.kv{display:flex;flex-direction:column;gap:2px;}
+.kv .k{font-size:11.5px;color:var(--text-muted);}
+.kv .v{font-size:13.5px;font-weight:600;}
+.mini-table{width:100%;border-collapse:collapse;margin-top:2px;}
+.mini-table th{font-size:11px;text-transform:uppercase;color:var(--text-muted);text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);}
+.mini-table th.num-col,.mini-table td.num-col{text-align:right;}
+.mini-table td{font-size:12.5px;padding:7px 8px;border-bottom:1px solid #F3F4F6;}
+
+.timeline{position:relative;padding-left:18px;}
+.timeline::before{content:'';position:absolute;left:4px;top:4px;bottom:4px;width:1.5px;background:var(--border);}
+.tl-item{position:relative;padding-bottom:16px;}
+.tl-item::before{content:'';position:absolute;left:-18px;top:3px;width:9px;height:9px;border-radius:50%;background:var(--accent);border:2px solid #fff;box-shadow:0 0 0 1px var(--border);}
+.tl-date{font-size:11px;color:var(--text-muted);font-weight:600;}
+.tl-text{font-size:13px;margin-top:2px;}
+
+/* ---- import wizard ---- */
+.steps{display:flex;align-items:center;gap:0;margin-bottom:22px;}
+.step{display:flex;align-items:center;gap:8px;color:var(--text-muted);}
+.step-num{width:24px;height:24px;border-radius:50%;background:#EEF1F5;color:var(--text-muted);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
+.step.active .step-num{background:var(--accent);color:#fff;}
+.step.done .step-num{background:var(--green);color:#fff;}
+.step-label{font-size:13px;font-weight:600;}
+.step.active .step-label{color:var(--text);}
+.step-line{width:44px;height:1.5px;background:var(--border);margin:0 10px;}
+
+.upload-box{border:1.5px dashed var(--border);border-radius:10px;padding:32px;text-align:center;background:#FAFBFC;cursor:pointer;transition:border-color .12s,background .12s;}
+.upload-box:hover{border-color:#C7D2E0;}
+.upload-box.dragover{border-color:var(--accent);background:var(--accent-soft);}
+.upload-box svg{width:30px;height:30px;color:var(--text-muted);margin-bottom:10px;}
+.upload-filename{margin-top:12px;display:inline-flex;align-items:center;gap:8px;background:var(--accent-soft);color:var(--accent-dark);padding:6px 12px;border-radius:7px;font-size:12.5px;font-weight:600;}
+
+.mapping-row{display:grid;grid-template-columns:1fr 24px 1fr;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #F3F4F6;}
+.mapping-col-name{font-size:13px;font-weight:600;background:#F5F7FA;padding:7px 10px;border-radius:6px;}
+
+.summary-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px;}
+.summary-card{border:1px solid var(--border);border-radius:8px;padding:13px;text-align:center;}
+.summary-card .n{font-size:19px;font-weight:700;}
+.summary-card .l{font-size:11.5px;color:var(--text-muted);margin-top:3px;}
+
+.diff-old{color:var(--text-muted);text-decoration:line-through;}
+.diff-new{color:var(--green);font-weight:600;}
+
+/* ---- rooms ---- */
+.room-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.room-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:border-color .3s;}
+.room-card-top{display:flex;justify-content:space-between;align-items:flex-start;}
+.room-name{font-size:14.5px;font-weight:700;}
+.room-range{font-size:12px;color:var(--text-muted);margin-top:2px;}
+.room-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+.room-stat .l{font-size:11px;color:var(--text-muted);}
+.room-stat .v{font-size:14.5px;font-weight:700;margin-top:2px;}
+
+.notice{display:flex;gap:10px;background:var(--accent-soft);border:1px solid #C9D9FB;border-radius:8px;padding:11px 14px;font-size:12.5px;color:var(--accent-dark);margin-bottom:16px;}
+
+.stat-icon-badge{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;margin-bottom:7px;}
+.stat-icon-badge.blue{background:#E8EEFE;}
+.stat-icon-badge.green{background:var(--green-soft);}
+.stat-icon-badge.amber{background:var(--amber-soft);}
+.stat-icon-badge.red{background:var(--red-soft);}
+.stat-icon-badge.purple{background:#F1E9FE;}
+
+.period-toggle{display:flex;gap:4px;background:#F1F3F6;padding:3px;border-radius:8px;}
+.period-toggle button{border:none;background:transparent;padding:6px 11px;border-radius:6px;font-size:12px;font-weight:600;color:var(--text-muted);cursor:pointer;}
+.period-toggle button.active{background:var(--accent);color:#fff;}
+.period-toggle button:hover:not(.active){background:#E5E8ED;}
+
+.transfer-layout{display:grid;grid-template-columns:1.3fr 1fr;gap:24px;}
+.transfer-summary{display:flex;gap:28px;margin-bottom:16px;}
+.transfer-summary-item{display:flex;gap:10px;align-items:flex-start;}
+.tsi-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;}
+.tsi-icon.green{background:var(--green-soft);color:var(--green);}
+.tsi-icon.red{background:var(--red-soft);color:var(--red);}
+.tsi-label{font-size:10.5px;font-weight:700;letter-spacing:.03em;color:var(--text-muted);}
+.tsi-value{font-size:16px;font-weight:700;margin-top:2px;}
+.tsi-sub{font-size:11.5px;color:var(--text-muted);margin-top:1px;}
+
+.nav-rong-box{margin-bottom:12px;}
+.nav-rong-value{font-size:22px;font-weight:700;color:var(--green);font-family:'IBM Plex Mono',monospace;}
+.transfer-date-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.transfer-table{width:100%;border-collapse:collapse;}
+.transfer-table th{font-size:10.5px;text-transform:uppercase;color:var(--text-muted);text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);font-weight:600;}
+.transfer-table th.num-col{text-align:right;}
+.transfer-table td{font-size:12px;padding:7px 8px;border-bottom:1px solid #F3F4F6;font-family:'IBM Plex Mono',monospace;}
+.transfer-table td:first-child{font-family:'Inter',sans-serif;}
+.transfer-table td.num-col{text-align:right;}
+.transfer-table tr.total-row td{font-weight:700;font-family:'Inter',sans-serif;border-top:1.5px solid var(--border);border-bottom:none;}
+.transfer-table tr.total-row td.num-col{font-family:'IBM Plex Mono',monospace;font-weight:700;}
+.tcell-pos{color:var(--green);}
+.tcell-neg{color:var(--red);}
+
+.avatar-sm{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;}
+.recent-row-name{display:flex;align-items:center;gap:10px;}
+
+.alert-icon-badge{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.alert-icon-badge.red{background:var(--red-soft);}
+.alert-icon-badge.amber{background:var(--amber-soft);}
+.alert-icon-badge.purple{background:#F1E9FE;}
+.alert-icon-badge.blue{background:var(--accent-soft);}
+.alert-row2{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #F0F2F5;}
+.alert-row2:last-child{border-bottom:none;}
+.alert-row2-title{font-size:13px;font-weight:600;}
+.alert-row2-sub{font-size:11.5px;color:var(--text-muted);margin-top:1px;}
+.alert-row2-action{margin-left:auto;font-size:12px;font-weight:600;color:var(--accent);white-space:nowrap;flex-shrink:0;cursor:pointer;}
+
+.room-comp-row{display:grid;grid-template-columns:110px 1fr 100px;align-items:center;gap:12px;padding:10px 0;}
+.room-comp-label{font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px;}
+.room-comp-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.room-comp-bar-wrap{background:#F0F2F5;border-radius:6px;height:10px;overflow:hidden;}
+.room-comp-bar{height:100%;border-radius:6px;transition:width .3s;}
+.room-comp-count{font-size:12px;color:var(--text-muted);text-align:right;font-family:'IBM Plex Mono',monospace;}
+.room-comp-nav{font-size:11px;color:var(--text-muted);margin-top:1px;}
+
+.donut-layout{display:flex;align-items:center;gap:22px;}
+.donut-wrap{position:relative;flex-shrink:0;width:150px;height:150px;}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.donut-center .n{font-size:22px;font-weight:700;}
+.donut-center .l{font-size:10.5px;color:var(--text-muted);}
+.donut-legend{flex:1;display:flex;flex-direction:column;gap:9px;}
+.donut-legend-row{display:flex;align-items:center;gap:9px;}
+.donut-legend-row .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.donut-legend-row .name{font-size:13px;font-weight:600;flex:1;}
+.donut-legend-row .val{font-size:12.5px;font-weight:600;font-family:'IBM Plex Mono',monospace;}
+.donut-legend-row .pct{font-size:11.5px;color:var(--text-muted);width:36px;text-align:right;}
+
+.tag-chip{font-size:11px;background:#F0F2F5;color:var(--text-muted);padding:3px 8px;border-radius:5px;}
+
+.pronoun-manager{display:none;position:absolute;top:calc(100% + 6px);left:0;width:260px;background:#fff;border:1px solid var(--border);border-radius:9px;box-shadow:0 12px 28px rgba(15,23,42,.14);padding:12px;z-index:50;}
+.pronoun-manager.open{display:block;}
+.pronoun-manager-title{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--text-muted);margin-bottom:8px;}
+.pronoun-chip-list{display:flex;flex-direction:column;gap:4px;max-height:160px;overflow-y:auto;}
+.pronoun-chip{display:flex;align-items:center;justify-content:space-between;background:#F5F7FA;border-radius:6px;padding:6px 8px 6px 10px;font-size:13px;font-weight:500;}
+.chip-remove{width:19px;height:19px;border-radius:5px;border:none;background:transparent;color:var(--text-muted);font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;}
+.chip-remove:hover{background:var(--red-soft);color:var(--red);}
+.pronoun-add-row{display:flex;gap:6px;margin-top:10px;}
+.pronoun-add-row input{flex:1;padding:7px 9px;border:1px solid var(--border);border-radius:6px;font-size:12.5px;}
+
+.col-check-row{display:flex;align-items:center;gap:8px;padding:6px 4px;font-size:13px;border-radius:6px;cursor:pointer;}
+.col-check-row:hover{background:#F5F7FA;}
+.col-check-row input{accent-color:var(--accent);}
+.col-check-row.locked{opacity:.55;cursor:default;}
+.col-check-row.locked:hover{background:transparent;}
+
+.loan-group-header{cursor:pointer;background:#FAFBFD;}
+.loan-group-header:hover{background:#F3F5F9;}
+.loan-group-header td{border-bottom:1px solid var(--border);font-weight:600;}
+.chevron{display:inline-block;transition:transform .12s;color:var(--text-muted);margin-right:4px;font-size:11px;}
+.chevron.open{transform:rotate(90deg);}
+.loan-detail-row td{background:#fff;}
+
+.loan-card{border:1px solid var(--border);border-radius:10px;margin-bottom:12px;overflow:hidden;background:#fff;}
+.loan-card-header{display:grid;grid-template-columns:20px 1fr 90px 76px 150px 130px 120px auto;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;background:#FAFBFD;}
+.loan-card-header:hover{background:#F3F5F9;}
+.loan-stk-pill{display:inline-flex;align-items:center;gap:6px;background:#EEF1F5;padding:4px 10px;border-radius:20px;font-weight:700;font-size:12.5px;}
+.loan-col-label{font-size:10.5px;text-transform:uppercase;color:var(--text-muted);font-weight:600;letter-spacing:.02em;}
+.loan-col-value{font-size:13px;font-weight:600;margin-top:1px;}
+.loan-detail-table{width:100%;border-collapse:collapse;}
+.loan-detail-table thead th{font-size:11px;text-transform:uppercase;color:var(--text-muted);padding:8px 16px;border-bottom:1px solid var(--border);text-align:left;background:#FCFCFD;font-weight:600;}
+.loan-detail-table td{padding:9px 16px;font-size:13px;border-bottom:1px solid #F3F4F6;vertical-align:middle;}
+.loan-card-footer{display:flex;justify-content:space-between;padding:9px 16px;font-size:12.5px;color:var(--text-muted);background:#FAFBFD;border-top:1px solid var(--border);}
+.status-select{padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12.5px;background:#fff;font-weight:600;}
+.overall-badge-overdue{background:var(--red-soft);color:var(--red);}
+.overall-badge-soon{background:var(--amber-soft);color:var(--amber);}
+.overall-badge-ok{background:var(--green-soft);color:var(--green);}
+
+.loan-page-layout{display:grid;grid-template-columns:260px 1fr;gap:18px;align-items:start;}
+.loan-sidebar{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:sticky;top:76px;}
+.loan-sidebar-title{font-size:15px;font-weight:700;margin-bottom:4px;}
+.loan-sidebar-sub{font-size:11.5px;color:var(--text-muted);margin-bottom:14px;line-height:1.4;}
+.loan-filter-group-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--text-muted);margin:14px 0 8px;}
+.loan-pill{display:flex;align-items:center;justify-content:space-between;width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:7px;background:#fff;font-size:12.5px;font-weight:600;margin-bottom:6px;cursor:pointer;color:var(--text);}
+.loan-pill:hover{background:#F5F7FA;}
+.loan-pill.active{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-dark);}
+.loan-pill .cnt{font-family:'IBM Plex Mono',monospace;font-weight:700;}
+.loan-sidebar-total{font-size:12.5px;color:var(--text-muted);margin-top:14px;padding-top:12px;border-top:1px solid var(--border);}
+.loan-main{min-width:0;}
+.bulk-checkbox{margin-right:8px;}
+.loan-note-input{width:100%;padding:6px 8px;border:1px solid transparent;border-radius:6px;font-size:12.5px;background:transparent;color:var(--text);font-family:inherit;}
+.loan-note-input:hover{border-color:var(--border);background:#fff;}
+.loan-note-input:focus{border-color:var(--accent);background:#fff;outline:none;}
+
+.filter-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #F3F4F6;flex-wrap:wrap;}
+.filter-row:last-child{border-bottom:none;}
+.filter-value-input{padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;width:160px;}
+.filter-op-label{font-size:13px;color:var(--text-muted);padding:0 2px;}
+.filter-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;font-size:10.5px;font-weight:700;min-width:16px;height:16px;border-radius:20px;padding:0 4px;margin-left:4px;}
+
+::-webkit-scrollbar{width:9px;height:9px;}
+::-webkit-scrollbar-thumb{background:#D3D9E2;border-radius:5px;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#F5F7FA;">
+  <div style="background:#fff;border:1px solid #E4E8EE;border-radius:14px;padding:40px 36px;width:360px;text-align:center;box-shadow:0 10px 30px rgba(15,23,42,.06);">
+    <div style="width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,#2358E8,#5B8DEF);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:19px;margin:0 auto 16px;">QL</div>
+    <div style="font-size:18px;font-weight:700;margin-bottom:4px;">Quản lý khách hàng</div>
+    <div style="font-size:12.5px;color:#6B7280;margin-bottom:22px;">Đăng nhập bằng tài khoản đã được cấp quyền</div>
+    <form id="loginForm" onsubmit="event.preventDefault(); loginWithEmail();" style="text-align:left;display:flex;flex-direction:column;gap:12px;">
+      <div>
+        <label style="font-size:12.5px;font-weight:600;color:#6B7280;display:block;margin-bottom:5px;">Email</label>
+        <input type="email" id="loginEmail" required placeholder="ten@gmail.com" style="width:100%;padding:9px 11px;border:1px solid #E4E8EE;border-radius:7px;font-size:13.5px;">
+      </div>
+      <div>
+        <label style="font-size:12.5px;font-weight:600;color:#6B7280;display:block;margin-bottom:5px;">Mật khẩu</label>
+        <input type="password" id="loginPassword" required placeholder="••••••••" style="width:100%;padding:9px 11px;border:1px solid #E4E8EE;border-radius:7px;font-size:13.5px;">
+      </div>
+      <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
+    </form>
+    <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
+    <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
+  </div>
+</div>
+
+<!-- LOADING SCREEN (giữa lúc kiểm tra phiên đăng nhập / tải dữ liệu) -->
+<div id="loadingScreen" style="display:none;min-height:100vh;align-items:center;justify-content:center;background:#F5F7FA;color:#6B7280;font-size:13.5px;">
+  Đang tải dữ liệu…
+</div>
+
+<div class="app" id="appRoot" style="display:none;">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">QL</div>
+      <div>
+        <div class="brand-name">Quản lý khách hàng</div>
+        <div class="brand-sub">Chứng khoán · Mockup</div>
+      </div>
+    </div>
+    <div class="nav-group-label">Tổng quan</div>
+    <div class="nav-item active" data-view="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-group-label">Nghiệp vụ</div>
+    <div class="nav-item" data-view="customers">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Danh sách khách hàng
+    </div>
+    <div class="nav-item" data-view="rooms">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
+      Quản lý Room
+    </div>
+    <div class="nav-item" data-view="loans">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Quản lý khoản vay
+    </div>
+    <div class="nav-item" data-view="rights">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      Quản lý quyền mua
+    </div>
+    <div class="nav-item" data-view="import">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Import Excel
+    </div>
+    <div class="nav-group-label" id="ownerGroupLabel">Owner</div>
+    <div class="nav-item" data-view="accounts" id="navAccounts">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M17 11a3 3 0 1 0 0-6"/><path d="M22 21v-1.5a3 3 0 0 0-2-2.83"/></svg>
+      Quản lý tài khoản
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="avatar" id="currentUserAvatar">S</div>
+        <div style="flex:1;min-width:0;">
+          <div class="uname" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Sunel</div>
+          <div class="urole" id="currentUserRoleLabel">Owner</div>
+        </div>
+        <button class="icon-btn" title="Đăng xuất" onclick="logout()" style="background:transparent;border-color:#2A3B57;color:#AAB6C8;flex-shrink:0;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="page-title" id="pageTitle">Dashboard</div>
+        <div class="page-subtitle" id="pageSubtitle">Tổng quan hoạt động quản lý khách hàng</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div style="position:relative;">
+          <button class="icon-btn" id="notifBellBtn" title="Cảnh báo cần xử lý" onclick="toggleNotifPanel()" style="width:34px;height:34px;">
+            🔔<span class="notif-badge" id="notifBadge" style="display:none;"></span>
+          </button>
+          <div class="pronoun-manager" id="notifPanel" style="width:340px;right:0;left:auto;">
+            <div class="pronoun-manager-title">Cảnh báo cần xử lý</div>
+            <div id="notifList" style="max-height:360px;overflow-y:auto;"></div>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="openImport()">Import dữ liệu</button>
+        <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Thêm khách hàng</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ============ DASHBOARD ============ -->
+      <div class="view active" id="view-dashboard">
+        <div class="stat-grid">
+          <div class="stat-card"><div class="stat-icon-badge blue">👥</div><div class="stat-label">KH đang quản lý</div><div class="stat-value" id="statTotalActive">–</div><div class="stat-delta up">▲ 3 so với 3 tháng gần đây</div></div>
+          <div class="stat-card"><div class="stat-icon-badge green">👛</div><div class="stat-label">Tổng NAV</div><div class="stat-value num" id="statTotalNav">–</div><div class="stat-delta up">▲ 8,4% so với tháng trước</div></div>
+          <div class="stat-card"><div class="stat-icon-badge amber">💲</div><div class="stat-label">Tổng phí tháng 08/2026</div><div class="stat-value num" id="statTotalFee">–</div><div class="stat-delta up">▲ 5,1% so với tháng trước</div></div>
+          <div class="stat-card" id="statLoansDueCard"><div class="stat-icon-badge red">📅</div><div class="stat-label">Khoản vay đến hạn hôm nay</div><div class="stat-value" id="statLoansDueToday">–</div><div class="stat-delta" id="statLoansDueDelta"></div></div>
+          <div class="stat-card" id="statRightsDueCard"><div class="stat-icon-badge red">📈</div><div class="stat-label">Quyền mua hết hạn hôm nay</div><div class="stat-value" id="statRightsDueToday">–</div><div class="stat-delta" id="statRightsDueDelta"></div></div>
+          <div class="stat-card"><div class="stat-icon-badge purple">🔁</div><div class="stat-label">Khách quay lại (tháng này)</div><div class="stat-value" id="statReturning">–</div><div class="stat-delta" id="statReturningDelta"></div></div>
+        </div>
+
+        <div class="panel" style="margin-bottom:18px;">
+          <div class="panel-header">
+            <div class="panel-title">KHÁCH HÀNG CHUYỂN VỀ &amp; CHUYỂN ĐI</div>
+            <div class="period-toggle" id="periodToggle">
+              <button data-period="7d">7 ngày</button>
+              <button data-period="30d" class="active">30 ngày</button>
+              <button data-period="month">Tháng này</button>
+              <button data-period="3m">3 tháng</button>
+              <button data-period="6m">6 tháng</button>
+              <button data-period="1y">1 năm</button>
+              <button data-period="custom">Tùy chọn</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="transfer-layout">
+              <div class="transfer-chart-col">
+                <div class="transfer-summary">
+                  <div class="transfer-summary-item">
+                    <div class="tsi-icon green">▲</div>
+                    <div>
+                      <div class="tsi-label">CHUYỂN VỀ</div>
+                      <div class="tsi-value" id="transferInCount">8 KH</div>
+                      <div class="tsi-sub" id="transferInNav">3.200.000.000 NAV về</div>
+                    </div>
+                  </div>
+                  <div class="transfer-summary-item">
+                    <div class="tsi-icon red">▼</div>
+                    <div>
+                      <div class="tsi-label">CHUYỂN ĐI</div>
+                      <div class="tsi-value" id="transferOutCount">3 KH</div>
+                      <div class="tsi-sub" id="transferOutNav">850.000.000 NAV đi</div>
+                    </div>
+                  </div>
+                </div>
+                <div id="transferChartWrap"></div>
+              </div>
+              <div class="transfer-table-col">
+                <div class="nav-rong-box">
+                  <div class="loan-col-label">NAV RÒNG</div>
+                  <div class="nav-rong-value" id="navRongValue">+2.350.000.000</div>
+                </div>
+                <div class="transfer-date-row">
+                  <span class="tag-chip" id="transferDateRange">📅 —</span>
+                  <select class="filter-select" style="margin-left:auto;">
+                    <option>Theo ngày</option>
+                    <option>Theo tuần</option>
+                    <option>Theo tháng</option>
+                  </select>
+                </div>
+                <table class="transfer-table">
+                  <thead><tr><th>Ngày</th><th class="num-col">Về (KH)</th><th class="num-col">NAV về</th><th class="num-col">Đi (KH)</th><th class="num-col">NAV đi</th><th class="num-col">NAV ròng</th></tr></thead>
+                  <tbody id="transferTableBody"></tbody>
+                </table>
+                <a class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="switchView('customers')">Xem chi tiết →</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">KHÁCH HÀNG GẦN ĐÂY</div>
+              <a class="btn btn-ghost btn-sm" onclick="switchView('customers')">Xem tất cả →</a>
+            </div>
+            <div class="panel-body" style="padding:0;">
+              <table>
+                <thead><tr><th>Khách hàng</th><th>Mã KH</th><th class="num-col">NAV</th><th class="num-col">Phí tháng</th><th>Room</th><th>Cập nhật</th><th></th></tr></thead>
+                <tbody id="dashRecentBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">CƠ CẤU CÁC ROOM</div>
+              <a class="btn btn-ghost btn-sm" onclick="switchView('rooms')">Xem tất cả →</a>
+            </div>
+            <div class="panel-body" id="roomCompositionBody"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ CUSTOMERS ============ -->
+      <div class="view" id="view-customers">
+        <div class="toolbar">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Tìm theo mã KH, STK, tên hoặc Telegram…" oninput="renderCustomers()" id="searchInput">
+          </div>
+          <select class="filter-select" id="filterRoom" onchange="renderCustomers()">
+            <option value="">Tất cả Room</option>
+          </select>
+          <select class="filter-select" id="filterStatus" onchange="renderCustomers()">
+            <option value="">Tất cả trạng thái</option>
+            <option value="Đang quản lý">Đang quản lý</option>
+            <option value="Chờ xác nhận">Chờ xác nhận</option>
+            <option value="Đã chuyển đi">Đã chuyển đi</option>
+          </select>
+          <div class="spacer"></div>
+
+          <div style="position:relative;">
+            <button class="btn btn-secondary btn-sm" id="btnAdvFilter" onclick="toggleAdvFilterPanel()">🔎 Bộ lọc nâng cao</button>
+          </div>
+          <div style="position:relative;">
+            <button class="btn btn-secondary btn-sm" onclick="toggleColumnManager()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+              Cột hiển thị
+            </button>
+            <div class="pronoun-manager" id="columnManager" style="width:230px;right:0;left:auto;">
+              <div class="pronoun-manager-title">Chọn cột muốn hiển thị</div>
+              <div id="columnManagerList" style="display:flex;flex-direction:column;gap:2px;max-height:280px;overflow-y:auto;"></div>
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="exportToExcel()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Xuất Excel
+          </button>
+
+          <span class="tag-chip" id="resultCount">8 khách hàng</span>
+        </div>
+
+        <!-- ADVANCED FILTER PANEL -->
+        <div class="panel" id="advFilterPanel" style="display:none;margin-bottom:14px;">
+          <div class="panel-header">
+            <div class="panel-title">Bộ lọc nâng cao <span style="font-weight:500;color:var(--text-muted);font-size:12px;">(kết hợp AND — thỏa mãn tất cả điều kiện)</span></div>
+            <button class="btn btn-ghost btn-sm" onclick="toggleAdvFilterPanel()">Đóng</button>
+          </div>
+          <div class="panel-body">
+            <div id="filterRowsContainer"></div>
+            <button class="btn btn-secondary btn-sm" style="margin-top:10px;" onclick="addFilterRow()">+ Thêm điều kiện</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <table>
+            <thead id="customersHead"></thead>
+            <tbody id="customersBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ============ ROOMS ============ -->
+      <div class="view" id="view-rooms">
+        <div class="notice">
+          ℹ️ Ngưỡng NAV của từng Room có thể chỉnh sửa. Việc chuyển Room khách hàng cần xác nhận thủ công — hệ thống chỉ cảnh báo, không tự động chuyển.
+        </div>
+        <div class="toolbar">
+          <div class="spacer"></div>
+          <button class="btn btn-secondary btn-sm" onclick="renderRooms(true)">🔄 Cập nhật lại thông số</button>
+          <button class="btn btn-primary btn-sm" onclick="openRoomModal()">+ Thêm Room</button>
+        </div>
+        <div class="room-grid" id="roomGrid"></div>
+      </div>
+
+      <!-- ============ LOAN MANAGEMENT (KHOẢN VAY MARGIN) ============ -->
+      <div class="view" id="view-loans">
+        <div class="loan-page-layout">
+          <div class="loan-sidebar">
+            <div class="search-box" style="max-width:none;margin-bottom:10px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" placeholder="Tìm theo tên khách hàng…" id="loanSearchInput" oninput="renderLoans()" style="width:100%;">
+            </div>
+            <label class="col-check-row" style="margin-bottom:12px;">
+              <input type="checkbox" id="loanShowAll" checked onchange="renderLoans()">
+              Xem tất cả (kể cả đã xử lý)
+            </label>
+
+            <div class="loan-filter-group-title">Lọc theo trạng thái</div>
+            <div id="loanStatusPills"></div>
+
+            <div class="loan-filter-group-title">Lọc theo ngày</div>
+            <div id="loanDatePills"></div>
+
+            <div class="loan-sidebar-total" id="loanSidebarTotal"></div>
+
+            <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:14px;" id="btnBulkSelect" onclick="toggleBulkSelectMode()">🗑 Chọn để xoá</button>
+            <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;" onclick="refreshLoans()">🔄 Làm mới danh sách</button>
+          </div>
+
+          <div class="loan-main">
+            <div class="toolbar">
+              <span class="tag-chip" id="loanResultCount"></span>
+              <div class="spacer"></div>
+              <select class="filter-select" id="loanStatusDropdown" onchange="setLoanStatusFromDropdown(this.value)">
+                <option value="">Tất cả trạng thái</option>
+                <option value="Chưa xử lý">Chưa xử lý</option>
+                <option value="Đã check">Đã check</option>
+                <option value="Đã liên hệ">Đã liên hệ</option>
+                <option value="KH xử lý xong">KH xử lý xong</option>
+                <option value="Công ty đã xử lý">Công ty đã xử lý</option>
+              </select>
+            </div>
+            <div id="loansContainer"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ RIGHTS MANAGEMENT (QUYỀN MUA) ============ -->
+      <div class="view" id="view-rights">
+        <div class="notice">
+          ℹ️ Theo dõi quyền mua cổ phiếu phát hành thêm của khách hàng: tỷ lệ, giá quyền mua, ngày chốt quyền và hạn đăng ký/nộp tiền.
+        </div>
+        <div class="toolbar">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Tìm theo tên, STK hoặc mã CP…" oninput="renderRights()" id="rightSearchInput">
+          </div>
+          <select class="filter-select" id="rightFilterStatus" onchange="renderRights()">
+            <option value="">Tất cả trạng thái</option>
+            <option>Chưa đăng ký</option>
+            <option>Đã đăng ký</option>
+            <option>Đã nộp tiền</option>
+            <option>Hết hạn</option>
+            <option>Đã hủy</option>
+          </select>
+          <div class="spacer"></div>
+          <span class="tag-chip" id="rightResultCount"></span>
+          <button class="btn btn-primary btn-sm" onclick="openRightModal()">+ Thêm quyền mua</button>
+        </div>
+        <div class="panel">
+          <table>
+            <thead><tr><th>STT</th><th>Tên khách hàng</th><th>STK</th><th>Mã CP</th><th>Tỷ lệ</th><th class="num-col">Giá quyền mua</th><th class="num-col">SL được mua</th><th>Ngày chốt quyền</th><th>Hạn đăng ký</th><th>Trạng thái</th><th></th></tr></thead>
+            <tbody id="rightsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ============ IMPORT WIZARD ============ -->
+      <div class="view" id="view-import">
+        <div class="steps" id="importSteps"></div>
+
+        <!-- step 1 -->
+        <div class="import-step" id="importStep1">
+          <div class="toolbar" style="margin-bottom:16px;">
+            <div class="step-toggle" style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn btn-secondary btn-sm" id="btnTypeCustomerList" onclick="setImportType('customerlist')">👥 Import Danh sách KH</button>
+              <button class="btn btn-primary btn-sm" id="btnTypeNav" onclick="setImportType('nav')">📊 Import file NAV</button>
+              <button class="btn btn-secondary btn-sm" id="btnTypeBc12" onclick="setImportType('bc12')">💰 Import file BC12 (Phí)</button>
+              <button class="btn btn-secondary btn-sm" id="btnTypeLoan" onclick="setImportType('loan')">📅 Import Khoản vay đến hạn</button>
+              <button class="btn btn-secondary btn-sm" id="btnTypeRight" onclick="setImportType('right')">📈 Import Quyền mua</button>
+            </div>
+          </div>
+
+          <div class="panel"><div class="panel-body">
+            <div class="upload-box" id="uploadBox" onclick="triggerFilePicker()">
+              <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none;" onchange="handleFileSelected(this.files)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <div style="font-size:13.5px;font-weight:600;" id="uploadHint">Kéo thả file NAV đã tổng hợp vào đây, hoặc bấm để chọn file</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:4px;" id="uploadSubHint">File đầu ra từ bước "Tổng hợp NAV" — sheet "Tong hop NAV"</div>
+              <div class="upload-filename" id="uploadFilename" style="display:none;"></div>
+            </div>
+
+            <div class="so-section-title" style="margin-top:24px;">Cột dữ liệu sẽ được đọc (cố định, không cần gán tay)</div>
+            <table class="mini-table" id="fixedMappingTable">
+              <thead><tr><th>Cột trong file</th><th>Ánh xạ vào hệ thống</th></tr></thead>
+              <tbody id="fixedMappingBody"></tbody>
+            </table>
+            <div class="field-hint" style="margin-top:10px;">Vì đây là file đã được chuẩn hoá sẵn (đầu ra của skill tổng hợp), hệ thống đọc đúng cấu trúc cột cố định — không cần bước gán cột thủ công.</div>
+            <div class="field-hint" id="importTypeNote" style="margin-top:8px;color:var(--amber);display:none;"></div>
+          </div></div>
+          <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+            <button class="btn btn-primary" onclick="proceedFromUpload()">Tiếp tục — Kiểm tra dữ liệu →</button>
+          </div>
+        </div>
+
+        <!-- step 2 -->
+        <div class="import-step" id="importStep2" style="display:none;">
+          <div class="summary-grid">
+            <div class="summary-card"><div class="n" id="sumValid">0</div><div class="l">Dòng hợp lệ</div></div>
+            <div class="summary-card"><div class="n" style="color:var(--accent);" id="sumNew">0</div><div class="l">Mới</div></div>
+            <div class="summary-card"><div class="n" style="color:var(--green);" id="sumChanged">0</div><div class="l">Có thay đổi</div></div>
+            <div class="summary-card"><div class="n" style="color:var(--amber);" id="sumUnchanged">0</div><div class="l">Không đổi</div></div>
+            <div class="summary-card"><div class="n" style="color:var(--red);" id="sumError">0</div><div class="l">Dòng lỗi</div></div>
+          </div>
+          <div class="panel" id="errorPanel" style="display:none;"><div class="panel-header"><div class="panel-title">Chi tiết lỗi cần xử lý</div></div>
+            <div class="panel-body" style="padding:0;">
+              <table><thead><tr><th>Dòng</th><th>Nội dung</th><th>Lỗi</th></tr></thead>
+              <tbody id="importErrorBody"></tbody></table>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:16px;">
+            <button class="btn btn-secondary" onclick="goImportStep(1)">← Quay lại</button>
+            <button class="btn btn-primary" onclick="goToImportStep3()" id="btnToStep3">Tiếp tục — Xem trước thay đổi →</button>
+          </div>
+        </div>
+
+        <!-- step 3 -->
+        <div class="import-step" id="importStep3" style="display:none;">
+          <div class="panel"><div class="panel-header"><div class="panel-title" id="previewTitle">Xem trước thay đổi</div></div>
+            <div class="panel-body" style="padding:0;">
+              <table id="previewTable">
+                <thead id="previewTableHead"></thead>
+                <tbody id="previewTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:16px;">
+            <button class="btn btn-secondary" onclick="goImportStep(2)">← Quay lại</button>
+            <button class="btn btn-primary" onclick="confirmImportToDatabase()" id="btnConfirmImport">Xác nhận cập nhật ✓</button>
+          </div>
+        </div>
+
+        <!-- step 4 -->
+        <div class="import-step" id="importStep4" style="display:none;">
+          <div class="panel"><div class="panel-body" style="text-align:center;padding:50px 20px;" id="importResultBody">
+            <div style="font-size:38px;">✅</div>
+            <div style="font-size:16px;font-weight:700;margin-top:10px;" id="importResultTitle">Đã cập nhật thành công</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:6px;" id="importResultSub"></div>
+            <button class="btn btn-primary" style="margin-top:18px;" onclick="switchView('customers')">Xem danh sách khách hàng</button>
+          </div></div>
+        </div>
+      </div>
+
+      <!-- ============ ACCOUNTS (OWNER ONLY) ============ -->
+      <div class="view" id="view-accounts">
+        <div class="notice" id="accountsAccessNotice">
+          🔒 Mục này chỉ Owner truy cập được. Trong bản build thật, Editor sẽ không thấy mục "Quản lý tài khoản" trong sidebar và bị chặn ở tầng Row Level Security nếu cố truy cập trực tiếp.
+        </div>
+
+        <div class="toolbar">
+          <div class="panel-title" style="font-size:14px;">Tài khoản đăng nhập hệ thống</div>
+          <div class="spacer"></div>
+          <button class="btn btn-primary btn-sm" onclick="openAccountModal()">+ Thêm tài khoản</button>
+        </div>
+        <div class="panel" style="margin-bottom:20px;">
+          <table>
+            <thead><tr><th>Email</th><th>Tên hiển thị</th><th>Vai trò</th><th>Ngày tạo</th><th></th></tr></thead>
+            <tbody id="accountsBody"></tbody>
+          </table>
+        </div>
+
+        <div class="panel-title" style="font-size:14px;margin-bottom:10px;">Dữ liệu &amp; bảo mật</div>
+        <div class="panel">
+          <div class="panel-body" style="display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;">
+              <div>
+                <div class="loan-col-value">Tải toàn bộ dữ liệu về máy</div>
+                <div class="field-hint">Xuất 1 file Excel gồm đầy đủ: Khách hàng, Khoản vay, Quyền mua, Room, lịch sử NAV/phí — dùng để tự lưu trữ/sao lưu định kỳ.</div>
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="exportFullBackup()">⬇️ Tải file Excel sao lưu</button>
+            </div>
+            <div style="border-top:1px solid var(--border);"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;">
+              <div>
+                <div class="loan-col-value" style="color:var(--red);">Xóa toàn bộ dữ liệu trên hệ thống</div>
+                <div class="field-hint">Xóa vĩnh viễn toàn bộ Khách hàng, Khoản vay, Quyền mua đang lưu — dùng khi cần đảm bảo dữ liệu không bị lộ ra ngoài. <b>Không thể hoàn tác.</b> Nên tải file sao lưu trước khi xóa.</div>
+              </div>
+              <button class="btn btn-secondary btn-sm" style="color:var(--red);border-color:#F3C6C6;" onclick="openWipeConfirm()">🗑 Xóa toàn bộ dữ liệu</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- WIPE CONFIRM MODAL -->
+<div class="overlay" id="wipeModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" style="color:var(--red);">⚠️ Xóa toàn bộ dữ liệu</div>
+      <button class="close-x" onclick="closeWipeConfirm()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13.5px;">Hành động này sẽ <b>xóa vĩnh viễn</b> toàn bộ dữ liệu Khách hàng, Khoản vay, Quyền mua đang lưu trên hệ thống. Không thể hoàn tác.</p>
+      <p style="font-size:13.5px;">Gõ chính xác <b>XOA TOAN BO</b> vào ô bên dưới để xác nhận:</p>
+      <input type="text" id="wipeConfirmInput" placeholder="XOA TOAN BO" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:7px;font-size:13.5px;margin-top:6px;">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeWipeConfirm()">Hủy</button>
+      <button class="btn btn-primary" style="background:var(--red);" onclick="confirmWipeData()">Xóa vĩnh viễn</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT ACCOUNT MODAL -->
+<div class="overlay" id="accountModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="accountModalTitle">Thêm tài khoản</div>
+      <button class="close-x" onclick="closeAccountModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-field full"><label>Email *</label><input type="text" id="acc_email" placeholder="ten@gmail.com"></div>
+        <div class="form-field full"><label>Tên hiển thị *</label><input type="text" id="acc_name" placeholder="VD: Nhân viên 1"></div>
+        <div class="form-field full">
+          <label>Vai trò *</label>
+          <select id="acc_role">
+            <option value="editor">Editor — thêm/sửa/import, không xóa được</option>
+            <option value="owner">Owner — toàn quyền, xem được nhật ký của mọi người</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-hint" style="margin-top:10px;">Thêm ở đây chỉ cấp <b>quyền</b> (Owner/Editor) cho email này trong hệ thống. Để người này đăng nhập được, bạn cần tạo tài khoản email + mật khẩu tương ứng trong Supabase Dashboard → Authentication → Users → Add user (nhớ đúng email này, và bật "Auto Confirm User").</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeAccountModal()">Hủy</button>
+      <button class="btn btn-primary" onclick="saveAccount()">Lưu tài khoản</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD LOAN MODAL -->
+<div class="overlay" id="loanModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Thêm khoản vay margin</div>
+      <button class="close-x" onclick="closeLoanModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-field full">
+          <label>Khách hàng *</label>
+          <select id="loan_stk"></select>
+          <div class="field-hint">1 khách hàng có thể có nhiều khoản vay cùng lúc, với ngày đến hạn khác nhau.</div>
+        </div>
+        <div class="form-field">
+          <label>Tiểu khoản vay *</label>
+          <select id="loan_tk">
+            <option value="6">Margin (TK6)</option>
+            <option value="3">Margin đặc biệt (TK3)</option>
+          </select>
+          <div class="field-hint">Số tài khoản đầy đủ = STK KH (6 ký tự) + số này.</div>
+        </div>
+        <div class="form-field"><label>Số tiền vay (VNĐ) *</label><input type="text" id="loan_amount" placeholder="200.000.000"></div>
+        <div class="form-field"><label>Ngày đến hạn *</label><input type="text" id="loan_due" placeholder="dd/mm/yyyy"></div>
+        <div class="form-field">
+          <label>Trạng thái *</label>
+          <select id="loan_status">
+            <option>Chưa xử lý</option><option>Đã check</option><option>Đã liên hệ</option>
+            <option>KH xử lý xong</option><option>Công ty đã xử lý</option>
+          </select>
+        </div>
+        <div class="form-field full"><label>Ghi chú</label><textarea id="loan_note" placeholder="VD: Cần gọi gấp"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeLoanModal()">Hủy</button>
+      <button class="btn btn-primary" onclick="saveLoan()">Lưu khoản vay</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD RIGHT MODAL -->
+<div class="overlay" id="rightModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Thêm quyền mua cổ phiếu</div>
+      <button class="close-x" onclick="closeRightModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-field full">
+          <label>Khách hàng *</label>
+          <select id="right_stk"></select>
+          <div class="field-hint">1 khách hàng có thể có nhiều quyền mua cùng lúc (nhiều mã cổ phiếu khác nhau).</div>
+        </div>
+        <div class="form-field"><label>Mã cổ phiếu *</label><input type="text" id="right_symbol" placeholder="VD: HPG" style="text-transform:uppercase;"></div>
+        <div class="form-field"><label>Giá quyền mua (VNĐ/CP) *</label><input type="text" id="right_price" placeholder="12.000"></div>
+        <div class="form-field">
+          <label>Tỷ lệ quyền mua *</label>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <input type="number" id="right_ratio_num" value="1" min="1" style="width:70px;" oninput="computeRightQty()">
+            <span style="color:var(--text-muted);">quyền mua : </span>
+            <input type="number" id="right_ratio_denom" value="5" min="1" style="width:70px;" oninput="computeRightQty()">
+            <span style="color:var(--text-muted);">CP nắm giữ</span>
+          </div>
+        </div>
+        <div class="form-field"><label>Số CP đang nắm giữ (tại ngày chốt) *</label><input type="number" id="right_holdings" placeholder="VD: 5000" oninput="computeRightQty()"></div>
+        <div class="form-field">
+          <label>Số lượng được mua <span style="font-weight:500;color:var(--text-muted);">(tự động tính)</span></label>
+          <input type="text" id="right_qty_preview" readonly style="background:#F5F7FA;color:var(--text-muted);font-weight:700;">
+        </div>
+        <div class="form-field"><label>Ngày chốt quyền *</label><input type="text" id="right_record_date" placeholder="dd/mm/yyyy"></div>
+        <div class="form-field"><label>Hạn đăng ký / nộp tiền *</label><input type="text" id="right_deadline" placeholder="dd/mm/yyyy"></div>
+        <div class="form-field full">
+          <label>Trạng thái *</label>
+          <select id="right_status">
+            <option>Chưa đăng ký</option><option>Đã đăng ký</option><option>Đã nộp tiền</option>
+            <option>Hết hạn</option><option>Đã hủy</option>
+          </select>
+        </div>
+        <div class="field-hint full">Công thức: Số lượng được mua = floor(Số CP nắm giữ ÷ mẫu số tỷ lệ) × tử số tỷ lệ.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeRightModal()">Hủy</button>
+      <button class="btn btn-primary" onclick="saveRight()">Lưu quyền mua</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT ROOM MODAL -->
+<div class="overlay" id="roomModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="roomModalTitle">Thêm Room mới</div>
+      <button class="close-x" onclick="closeRoomModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-field full"><label>Tên Room *</label><input type="text" id="room_name" placeholder="VD: Room 6"></div>
+        <div class="form-field"><label>Ngưỡng NAV từ (VNĐ) *</label><input type="text" id="room_min" placeholder="0"></div>
+        <div class="form-field">
+          <label>Ngưỡng NAV đến (VNĐ)</label>
+          <input type="text" id="room_max" placeholder="Để trống = không giới hạn">
+        </div>
+        <div class="form-field full"><label>Mô tả</label><input type="text" id="room_desc" placeholder="VD: NAV từ 200–500 triệu"></div>
+      </div>
+      <div class="field-hint" style="margin-top:10px;" id="roomModalWarning"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="roomDeleteBtn" style="margin-right:auto;color:var(--red);" onclick="deleteRoom()">🗑 Xóa Room</button>
+      <button class="btn btn-secondary" onclick="closeRoomModal()">Hủy</button>
+      <button class="btn btn-primary" onclick="saveRoom()">Lưu Room</button>
+    </div>
+  </div>
+</div>
+
+<!-- MESSAGE COMPOSE MODAL (dùng chung cho Room/Khoản vay/Quyền mua) -->
+<div class="overlay" id="msgModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="msgModalTitle">Soạn tin nhắn</div>
+      <button class="close-x" onclick="closeMessageModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Xưng hô</label>
+          <select id="msg_pronoun" onchange="renderMessagePreview()"></select>
+        </div>
+        <div class="form-field">
+          <label>Khách hàng</label>
+          <input type="text" id="msg_customer_label" readonly style="background:#F5F7FA;color:var(--text-muted);">
+        </div>
+        <div class="form-field full">
+          <label>Mẫu tin nhắn <span style="font-weight:500;color:var(--text-muted);">(có thể chỉnh sửa, dùng {token} để chèn dữ liệu)</span></label>
+          <textarea id="msg_template" style="min-height:90px;" oninput="renderMessagePreview()"></textarea>
+          <div class="field-hint" id="msg_token_hint"></div>
+        </div>
+        <div class="form-field full">
+          <label>Xem trước tin nhắn</label>
+          <textarea id="msg_preview" readonly style="min-height:90px;background:#F5F7FA;color:var(--text);font-weight:500;"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeMessageModal()">Đóng</button>
+      <button class="btn btn-primary" onclick="copyMessagePreview()">📋 Sao chép tin nhắn</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Thêm khách hàng mới</div>
+      <button class="close-x" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-field"><label>ID người quản lý *</label><input type="text" placeholder="VD: MG01" id="f_managerid" oninput="updateTelegramPreview()"></div>
+        <div class="form-field"><label>Số tài khoản <span style="font-weight:500;color:var(--text-muted);">(để trống nếu chưa mở TK)</span></label><input type="text" placeholder="VD: 091234" id="f_stk" maxlength="6"></div>
+        <div class="form-field"><label>Tên khách hàng *</label><input type="text" placeholder="Nguyễn Văn A" id="f_name" oninput="updateTelegramPreview()"></div>
+        <div class="form-field">
+          <label>Giới tính *</label>
+          <select id="f_gender" onchange="onGenderChange()"><option value="Nam">Nam</option><option value="Nữ">Nữ</option><option value="Khác">Khác</option></select>
+        </div>
+        <div class="form-field"><label>Năm sinh</label><input type="number" placeholder="VD: 1985" id="f_birthyear" min="1930" max="2020" oninput="onBirthYearChange()"></div>
+        <div class="form-field"><label>NAV hiện tại (VNĐ) *</label><input type="text" placeholder="500.000.000" id="f_nav" oninput="updateTelegramPreview()"></div>
+        <div class="form-field"><label>Phí tháng hiện tại (VNĐ) *</label><input type="text" placeholder="2.000.000" id="f_fee"></div>
+        <div class="form-field"><label>Ngày bắt đầu quản lý</label><input type="text" placeholder="dd/mm/yyyy — để trống = hôm nay" id="f_mgmtstart"></div>
+        <div class="form-field">
+          <label>Nhóm / Room *</label>
+          <select id="f_room" onchange="onRoomManualChange()">
+            <optgroup label="Room theo NAV">
+              <option value="1">Room 1 (&lt; 200tr)</option>
+              <option value="2">Room 2 (200–500tr)</option>
+              <option value="3">Room 3 (500tr–1 tỷ)</option>
+              <option value="4">Room 4 (1–3 tỷ)</option>
+              <option value="5">Room 5 (&gt; 3 tỷ)</option>
+            </optgroup>
+            <optgroup label="Nhóm đặc biệt">
+              <option value="Tự out">Tự out</option>
+              <option value="Chưa đủ điều kiện">Chưa đủ điều kiện</option>
+              <option value="Remove">Remove</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Trạng thái *</label>
+          <select id="f_status" onchange="onStatusChange()">
+            <option>Chờ xác nhận</option>
+            <option selected>Đang quản lý</option>
+            <option>Đã chuyển đi</option>
+          </select>
+        </div>
+        <div class="form-field full" id="f_removed_date_wrap" style="display:none;">
+          <label>Ngày remove <span style="font-weight:500;color:var(--text-muted);">(hệ thống tự ghi nhận)</span></label>
+          <input type="text" id="f_removed_date" readonly style="background:#F5F7FA;color:var(--text-muted);">
+          <div class="field-hint">Ghi lý do/chi tiết KH chuyển đi vào ô "Ghi chú" bên dưới.</div>
+        </div>
+        <div class="form-field full">
+          <label>Tên Telegram <span style="font-weight:500;color:var(--text-muted);">(tự sinh, có thể chỉnh xưng hô)</span></label>
+          <div style="display:flex;gap:8px;align-items:center;position:relative;">
+            <select id="f_pronoun" style="width:110px;flex-shrink:0;" onchange="updateTelegramPreview()"></select>
+            <button type="button" class="icon-btn" title="Thêm / bớt lựa chọn xưng hô" onclick="togglePronounManager()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+            <input type="text" id="f_telegram_preview" readonly style="flex:1;background:#F5F7FA;color:var(--text-muted);font-weight:600;">
+            <button type="button" class="icon-btn" title="Sao chép" onclick="copyTelegramPreview()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+
+            <div class="pronoun-manager" id="pronounManager">
+              <div class="pronoun-manager-title">Danh sách xưng hô</div>
+              <div class="pronoun-chip-list" id="pronounManagerList"></div>
+              <div class="pronoun-add-row">
+                <input type="text" id="newPronounInput" placeholder="Thêm xưng hô mới…" onkeydown="if(event.key==='Enter'){event.preventDefault();addPronoun();}">
+                <button type="button" class="btn btn-primary btn-sm" onclick="addPronoun()">Thêm</button>
+              </div>
+            </div>
+          </div>
+          <div class="field-hint">Cấu trúc: Xưng hô + Tên khách hàng + NAV quy ước (100.000.000 = 0.10T) + ID người quản lý. Xưng hô tự đề xuất theo năm sinh so với 1984 (sinh &lt;1984: Anh/Chị theo giới tính · sinh =1984: Bạn · sinh &gt;1984: Em) — bấm biểu tượng ⚙ để thêm/bớt lựa chọn xưng hô.</div>
+        </div>
+        <div class="form-field full"><label>Ghi chú</label><textarea placeholder="VD: KH ưu tiên, KH NV…" id="f_note"></textarea></div>
+        <div class="form-field full">
+          <label>Là cùng 1 người với KH khác? <span style="font-weight:500;color:var(--text-muted);">(nếu có 2 STK nhưng thực tế 1 người)</span></label>
+          <select id="f_linked"><option value="">— Không, đây là người riêng —</option></select>
+          <div class="field-hint">Chọn nếu KH này có STK khác đã tồn tại trong hệ thống, để không bị đếm trùng thành 2 người khi tính số lượng Room/Telegram.</div>
+        </div>
+      </div>
+      <div class="field-hint" style="margin-top:12px;">Sau khi lưu: khách sẽ xuất hiện trong danh sách, hệ thống tự tạo lịch sử tạo khách, và NAV/phí đầu tiên được lưu thành bản ghi lịch sử.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Hủy</button>
+      <button class="btn btn-primary" onclick="saveCustomer()" id="modalSaveBtn">Lưu khách hàng</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL SLIDEOVER -->
+<div class="slideover-scrim" id="soScrim" onclick="closeDetail()"></div>
+<div class="slideover" id="slideover">
+  <div class="so-header">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div>
+        <div class="so-name" id="soName">Nguyễn Văn An</div>
+        <div class="so-meta" id="soMeta">KH001 · STK 012345</div>
+      </div>
+      <button class="close-x" onclick="closeDetail()">✕</button>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:6px;">
+      <button class="btn btn-secondary btn-sm" onclick="editFromDetail()">Chỉnh sửa</button>
+      <button class="btn btn-secondary btn-sm" onclick="openMessageModal('room', currentDetailStk)">💬 Soạn tin nhắn</button>
+    </div>
+  </div>
+  <div class="so-body">
+    <div class="so-section-title">Thông tin cơ bản</div>
+    <div class="kv-grid">
+      <div class="kv"><div class="k">Telegram</div><div class="v" id="so_telegram">—</div></div>
+      <div class="kv"><div class="k">Nhóm hiện tại</div><div class="v" id="so_room">—</div></div>
+      <div class="kv"><div class="k">Trạng thái</div><div class="v" id="so_status">—</div></div>
+      <div class="kv"><div class="k">Ngày bắt đầu quản lý</div><div class="v" id="so_mgmtstart">—</div></div>
+      <div class="kv" style="grid-column:1/-1;"><div class="k">Ghi chú</div><div class="v" id="so_note">—</div></div>
+    </div>
+
+    <div class="so-section-title">Dữ liệu hiện tại</div>
+    <div class="kv-grid">
+      <div class="kv"><div class="k">NAV mới nhất</div><div class="v num" id="so_nav">—</div></div>
+      <div class="kv"><div class="k">Phí tháng hiện tại</div><div class="v num" id="so_fee">—</div></div>
+      <div class="kv" style="grid-column:1/-1;"><div class="k">Ngày cập nhật gần nhất</div><div class="v" id="so_updated">—</div></div>
+    </div>
+
+    <div class="so-section-title">Lịch sử NAV &amp; phí</div>
+    <table class="mini-table">
+      <thead><tr><th>Ngày</th><th class="num-col">NAV</th><th class="num-col">Phí</th></tr></thead>
+      <tbody id="so_history_body"></tbody>
+    </table>
+
+    <div class="so-section-title">Lịch sử thay đổi</div>
+    <div class="timeline" id="so_timeline"></div>
+  </div>
+</div>
+
+<script>
+// ================================================================
+// KẾT NỐI SUPABASE
+// ================================================================
+const SUPABASE_URL = 'https://fkgkmobwoiptfrbiverh.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZrZ2ttb2J3b2lwdGZyYml2ZXJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxMDkzODYsImV4cCI6MjEwMzY4NTM4Nn0.hw12yAhkP9PCm0v8TV1kUi6rMtdfFau4OLNr72fReEg';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUserEmail = null;
+let currentRole = 'editor'; // cập nhật thật sau khi đăng nhập, tra bảng user_roles
+
+// ---------------- HELPER NGÀY THÁNG (UI dùng dd/mm/yyyy, DB dùng yyyy-mm-dd) ----------------
+function toDbDate(ddmmyyyy){
+  if(!ddmmyyyy) return null;
+  const parts = ddmmyyyy.trim().split('/');
+  if(parts.length !== 3) return null;
+  const [d,m,y] = parts;
+  return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+}
+function fromDbDate(yyyymmdd){
+  if(!yyyymmdd) return '';
+  const [y,m,d] = yyyymmdd.split('-');
+  return `${d}/${m}/${y}`;
+}
+function todayDdMmYyyy(){
+  const d = new Date();
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+}
+
+// ---------------- ĐĂNG NHẬP ----------------
+async function loginWithEmail(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  document.getElementById('loginError').style.display = 'none';
+  document.getElementById('loginLoading').style.display = 'block';
+  document.getElementById('loginSubmitBtn').disabled = true;
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  document.getElementById('loginLoading').style.display = 'none';
+  document.getElementById('loginSubmitBtn').disabled = false;
+  if(error){
+    document.getElementById('loginError').textContent = 'Đăng nhập thất bại: sai email hoặc mật khẩu.';
+    document.getElementById('loginError').style.display = 'block';
+  } else {
+    checkAuthAndInit();
+  }
+}
+async function logout(){
+  await sb.auth.signOut();
+  window.location.reload();
+}
+
+async function checkAuthAndInit(){
+  const { data: { session } } = await sb.auth.getSession();
+  if(!session){
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('loadingScreen').style.display = 'none';
+    document.getElementById('appRoot').style.display = 'none';
+    return;
+  }
+  currentUserEmail = session.user.email;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('loadingScreen').style.display = 'flex';
+
+  // Tra vai trò từ user_roles — nếu email chưa được cấp quyền, chặn truy cập
+  const { data: roleRow, error: roleErr } = await sb.from('user_roles').select('*').eq('email', currentUserEmail).maybeSingle();
+  if(!roleRow){
+    document.getElementById('loadingScreen').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('loginError').textContent = `Email ${currentUserEmail} chưa được cấp quyền truy cập hệ thống này. Liên hệ Owner để được thêm tài khoản.`;
+    document.getElementById('loginError').style.display = 'block';
+    await sb.auth.signOut();
+    return;
+  }
+  currentRole = roleRow.role;
+
+  // Ghi nhật ký đăng nhập
+  sb.from('access_log').insert({ email: currentUserEmail, user_agent: navigator.userAgent }).then(()=>{});
+
+  await loadAllData();
+
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('appRoot').style.display = 'flex';
+  document.getElementById('currentUserRoleLabel').textContent = currentRole === 'owner' ? 'Owner' : 'Editor';
+  document.getElementById('currentUserAvatar').textContent = (roleRow.display_name||currentUserEmail)[0].toUpperCase();
+  document.querySelector('.uname').textContent = roleRow.display_name || currentUserEmail;
+  applyRoleVisibility();
+
+  renderDashboard();
+  renderCustomers();
+  renderRooms();
+  renderLoans();
+  renderRights();
+  setImportType('nav');
+  goImportStep(1);
+}
+
+function applyRoleVisibility(){
+  const isOwner = currentRole === 'owner';
+  const navAcc = document.getElementById('navAccounts');
+  const ownerLabel = document.getElementById('ownerGroupLabel');
+  if(navAcc) navAcc.style.display = isOwner ? 'flex' : 'none';
+  if(ownerLabel) ownerLabel.style.display = isOwner ? 'block' : 'none';
+}
+
+// ================================================================
+// TẢI TOÀN BỘ DỮ LIỆU TỪ SUPABASE
+// ================================================================
+async function loadAllData(){
+  // --- Rooms ---
+  const { data: roomRows } = await sb.from('rooms').select('*').order('room_id');
+  rooms = (roomRows||[]).map(r=>({ id:r.room_id, name:r.room_name, min:r.nav_min, max:r.nav_max===null?Infinity:r.nav_max, desc:r.description }));
+
+  // --- Customers (phân trang tránh giới hạn 1000 dòng mặc định của PostgREST) ---
+  let allCust = [];
+  let from = 0; const pageSize = 1000;
+  while(true){
+    const { data: page, error } = await sb.from('customers').select('*').range(from, from+pageSize-1);
+    if(error){ console.error('load customers error', error); break; }
+    allCust = allCust.concat(page||[]);
+    if(!page || page.length < pageSize) break;
+    from += pageSize;
+  }
+
+  // --- NAV / Fee history (gộp theo customer_id) ---
+  let navRows = [], feeRows = [];
+  from = 0;
+  while(true){
+    const { data: page } = await sb.from('nav_history').select('customer_id, update_date, nav').range(from, from+pageSize-1);
+    navRows = navRows.concat(page||[]);
+    if(!page || page.length < pageSize) break;
+    from += pageSize;
+  }
+  from = 0;
+  while(true){
+    const { data: page } = await sb.from('fee_history').select('customer_id, update_date, fee').range(from, from+pageSize-1);
+    feeRows = feeRows.concat(page||[]);
+    if(!page || page.length < pageSize) break;
+    from += pageSize;
+  }
+  const navByCust = {}, feeByCust = {};
+  navRows.forEach(r=>{ (navByCust[r.customer_id] = navByCust[r.customer_id]||{})[fromDbDate(r.update_date)] = r.nav; });
+  feeRows.forEach(r=>{ (feeByCust[r.customer_id] = feeByCust[r.customer_id]||{})[fromDbDate(r.update_date)] = r.fee; });
+
+  // map customer_id -> stk để resolve linked_to
+  const idToStk = {};
+  allCust.forEach(c=>{ idToStk[c.customer_id] = c.account_number; });
+
+  customers = allCust.map(c=>({
+    id: c.customer_id,
+    code: c.customer_id,
+    stk: c.account_number || '',
+    name: c.customer_name,
+    telegram: c.telegram_name || '',
+    gender: c.gender,
+    birthYear: c.birth_year,
+    managerId: c.manager_id,
+    mgmtStart: fromDbDate(c.management_start_date),
+    mgmtEnd: fromDbDate(c.removed_at),
+    nav: c.current_nav || 0,
+    fee: c.current_fee || 0,
+    room: c.special_room || c.current_room_id,
+    updated: fromDbDate(c.nav_updated_at || c.fee_updated_at) || fromDbDate(c.updated_at?.slice(0,10)) || '',
+    note: c.note || '',
+    status: c.status,
+    linkedTo: c.linked_to_customer_id ? idToStk[c.linked_to_customer_id] : null,
+    navHistory: navByCust[c.customer_id] || {},
+    feeHistory: feeByCust[c.customer_id] || {},
+  }));
+  // Room-mismatch cờ cảnh báo (NAV vượt ngưỡng Room hiện tại)
+  customers.forEach(c=>{
+    if(typeof c.room === 'number'){
+      const r = rooms.find(x=>x.id===c.room);
+      if(r && (c.nav < r.min || (r.max!==Infinity && c.nav > r.max))) c.mismatch = true;
+    }
+  });
+
+  // --- Loans ---
+  let loanRows = [];
+  from = 0;
+  while(true){
+    const { data: page } = await sb.from('loans').select('*').range(from, from+pageSize-1);
+    loanRows = loanRows.concat(page||[]);
+    if(!page || page.length < pageSize) break;
+    from += pageSize;
+  }
+  loans = loanRows.map(l=>({ id:l.loan_id, account:l.account_number, amount:l.amount, dueDate:fromDbDate(l.due_date), status:l.status, note:l.note||'' }));
+
+  // --- Rights ---
+  let rightRows = [];
+  from = 0;
+  while(true){
+    const { data: page } = await sb.from('rights_offerings').select('*').range(from, from+pageSize-1);
+    rightRows = rightRows.concat(page||[]);
+    if(!page || page.length < pageSize) break;
+    from += pageSize;
+  }
+  const stkToName = {}; customers.forEach(c=>{ stkToName[c.stk] = c.name; });
+  rights = rightRows.map(r=>({ id:r.right_id, stk:r.account_number, name: stkToName[r.account_number]||'', symbol:r.symbol, ratio:`${r.ratio_num}:${r.ratio_denom}`, price:r.price, qty:r.qty, recordDate:fromDbDate(r.record_date), deadline:fromDbDate(r.deadline), status:r.status }));
+
+  // --- Sự kiện "khách quay lại" (từ room_history) ---
+  const { data: returnEvents } = await sb.from('room_history').select('customer_id, entered_at, reason').ilike('reason', '%quay lại%');
+  window.returningEvents = returnEvents || [];
+
+  // --- Accounts (user_roles) ---
+  const { data: accRows } = await sb.from('user_roles').select('*').order('created_at');
+  accounts = (accRows||[]).map(a=>({ id:a.email, email:a.email, name:a.display_name||a.email, role:a.role, createdAt: a.created_at ? fromDbDate(a.created_at.slice(0,10)) : '' }));
+
+  loansGroupsInitialized = false;
+  expandedLoanGroups = new Set();
+}
+
+sb.auth.onAuthStateChange((event, session)=>{
+  if(event === 'SIGNED_IN' && !currentUserEmail) checkAuthAndInit();
+  if(event === 'SIGNED_OUT') window.location.reload();
+});
+checkAuthAndInit();
+
+let rooms = []; // nạp từ Supabase lúc khởi động
+
+let customers = []; // nạp từ Supabase lúc khởi động
+
+function fmt(n){ return n.toLocaleString('vi-VN'); }
+const SPECIAL_ROOMS = ['Tự out','Chưa đủ điều kiện','Remove'];
+let tempStkCounter = 1; // đã dùng TMP001 trong dữ liệu mẫu
+function generateTempStk(){
+  tempStkCounter++;
+  return 'TMP' + String(tempStkCounter).padStart(3,'0');
+}
+// Đếm số NGƯỜI THẬT (gộp các hồ sơ đã liên kết cùng 1 người qua linkedTo) — dùng cho Dashboard/Room
+function countDistinctPeople(list){
+  const seen = new Set();
+  list.forEach(c=>{ seen.add(c.linkedTo || c.stk); });
+  return seen.size;
+}
+function distinctPeopleList(list){
+  const seen = new Set(); const out = [];
+  list.forEach(c=>{
+    const key = c.linkedTo || c.stk;
+    if(!seen.has(key)){ seen.add(key); out.push(c); }
+  });
+  return out;
+}
+function roomLabel(room){
+  if(typeof room === 'string' && SPECIAL_ROOMS.includes(room)) return room;
+  const r = rooms.find(x=>x.id===room);
+  return r ? r.name : '—';
+}
+function roomBadgeClass(room){
+  if(room==='Remove') return 'badge-gray';
+  if(room==='Tự out') return 'badge-amber';
+  if(room==='Chưa đủ điều kiện') return 'badge-red';
+  return 'badge-blue';
+}
+function statusBadge(s){
+  if(s==="Đang quản lý") return '<span class="badge badge-green">Đang quản lý</span>';
+  if(s==="Chờ xác nhận") return '<span class="badge badge-amber">Chờ xác nhận</span>';
+  return '<span class="badge badge-gray">Đã chuyển đi</span>';
+}
+
+// ---------------- NAV / VIEW SWITCH ----------------
+function switchView(name){
+  if(name === 'accounts' && currentRole !== 'owner'){
+    alert('Chỉ Owner mới truy cập được mục Quản lý tài khoản.');
+    name = 'dashboard';
+  }
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active', el.dataset.view===name));
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  const titles = {
+    dashboard:["Dashboard","Tổng quan hoạt động quản lý khách hàng"],
+    customers:["Danh sách khách hàng","Toàn bộ khách hàng đang được quản lý"],
+    rooms:["Quản lý Room","Phân nhóm khách hàng theo quy mô NAV"],
+    loans:["Quản lý khoản vay","Theo dõi khoản vay margin và ngày đến hạn"],
+    rights:["Quản lý quyền mua","Theo dõi quyền mua cổ phiếu phát hành thêm"],
+    import:["Import dữ liệu Excel","Cập nhật NAV, phí hàng loạt từ file Excel"],
+    accounts:["Quản lý tài khoản","Tài khoản đăng nhập, sao lưu và bảo mật dữ liệu — chỉ Owner"],
+  };
+  document.getElementById('pageTitle').textContent = titles[name][0];
+  document.getElementById('pageSubtitle').textContent = titles[name][1];
+  if(name === 'accounts') renderAccounts();
+}
+document.querySelectorAll('.nav-item').forEach(el=>{
+  el.addEventListener('click', ()=>switchView(el.dataset.view));
+});
+function openImport(){ switchView('import'); goImportStep(1); }
+
+// ---------------- CỘT HIỂN THỊ (tuỳ chỉnh được) ----------------
+const FIXED_COLUMNS = [
+  {key:'stt',  label:'STT'},
+  {key:'name', label:'Tên khách hàng'},
+  {key:'stk',  label:'STK'},
+];
+const CORE_COLUMNS = [
+  {key:'nav_latest', label:'NAV (mới nhất)', sortable:true, num:true},
+  {key:'fee_latest', label:'Phí (mới nhất)', sortable:true, num:true},
+  {key:'gender',  label:'Giới tính'},
+  {key:'room',    label:'Room'},
+  {key:'updated', label:'Ngày cập nhật'},
+  {key:'note',    label:'Ghi chú'},
+  {key:'status',  label:'Trạng thái'},
+];
+// Các mốc ngày đã có dữ liệu lịch sử — trong bản thật sẽ lấy động từ nav_history / fee_history
+const NAV_DATES = ["27/08/2026","31/07/2026","30/06/2026"];
+const FEE_DATES = ["27/08/2026","31/07/2026"];
+
+let visibleCols = new Set(CORE_COLUMNS.filter(c=>c.key!=='gender').map(c=>c.key));   // mặc định ẩn Giới tính, hiện các cột còn lại
+let visibleNavDates = new Set();                          // mặc định chưa hiện cột NAV theo ngày
+let visibleFeeDates = new Set();                          // mặc định chưa hiện cột Phí theo ngày
+
+function shortDate(d){ const [dd,mm] = d.split('/'); return `${dd}/${mm}`; }
+
+function toggleColumnManager(){
+  document.getElementById('columnManager').classList.toggle('open');
+  renderColumnManagerList();
+}
+function renderColumnManagerList(){
+  const coreHtml = CORE_COLUMNS.map(c=>{
+    const checked = visibleCols.has(c.key) ? 'checked' : '';
+    return `<label class="col-check-row"><input type="checkbox" ${checked} onchange="toggleColumn('${c.key}')"> ${c.label}</label>`;
+  }).join('');
+  const navHtml = NAV_DATES.map(d=>{
+    const checked = visibleNavDates.has(d) ? 'checked' : '';
+    return `<label class="col-check-row"><input type="checkbox" ${checked} onchange="toggleNavDate('${d}')"> NAV ${shortDate(d)}</label>`;
+  }).join('');
+  const feeHtml = FEE_DATES.map(d=>{
+    const checked = visibleFeeDates.has(d) ? 'checked' : '';
+    return `<label class="col-check-row"><input type="checkbox" ${checked} onchange="toggleFeeDate('${d}')"> Phí ${shortDate(d)}</label>`;
+  }).join('');
+  document.getElementById('columnManagerList').innerHTML = `
+    <div class="pronoun-manager-title" style="margin-top:0;">Thông tin chung</div>
+    ${coreHtml}
+    <div class="pronoun-manager-title" style="margin-top:12px;">NAV theo mốc ngày</div>
+    ${navHtml}
+    <div class="pronoun-manager-title" style="margin-top:12px;">Phí theo mốc ngày</div>
+    ${feeHtml}
+  `;
+}
+function toggleColumn(key){
+  if(visibleCols.has(key)) visibleCols.delete(key); else visibleCols.add(key);
+  renderCustomers();
+}
+function toggleNavDate(d){
+  if(visibleNavDates.has(d)) visibleNavDates.delete(d); else visibleNavDates.add(d);
+  renderCustomers();
+}
+function toggleFeeDate(d){
+  if(visibleFeeDates.has(d)) visibleFeeDates.delete(d); else visibleFeeDates.add(d);
+  renderCustomers();
+}
+document.addEventListener('click', function(e){
+  const wrap = document.getElementById('columnManager');
+  const btn = e.target.closest('button');
+  if(wrap && wrap.classList.contains('open') && !wrap.contains(e.target) && !(btn && btn.getAttribute('onclick')==='toggleColumnManager()')){
+    wrap.classList.remove('open');
+  }
+});
+
+function activeColumns(){
+  const cols = [...FIXED_COLUMNS];
+  CORE_COLUMNS.forEach(c=>{ if(visibleCols.has(c.key)) cols.push(c); });
+  NAV_DATES.forEach(d=>{ if(visibleNavDates.has(d)) cols.push({key:'navdate:'+d, label:'NAV '+shortDate(d), num:true, date:d, type:'nav'}); });
+  FEE_DATES.forEach(d=>{ if(visibleFeeDates.has(d)) cols.push({key:'feedate:'+d, label:'Phí '+shortDate(d), num:true, date:d, type:'fee'}); });
+  return cols;
+}
+
+function cellValue(c, cust, idx){
+  if(c.type==='nav') return cust.navHistory[c.date] ? fmt(cust.navHistory[c.date]) : '<span style="color:var(--text-muted);">—</span>';
+  if(c.type==='fee') return cust.feeHistory[c.date] ? fmt(cust.feeHistory[c.date]) : '<span style="color:var(--text-muted);">—</span>';
+  switch(c.key){
+    case 'stt': return idx+1;
+    case 'name': return `<div class="cust-name">${cust.name}</div>`;
+    case 'stk': return cust.stk.startsWith('TMP')
+      ? `${cust.stk} <span class="tag-chip" title="Chưa có STK thật">chưa mở TK</span>`
+      : `${cust.stk}${cust.linkedTo?` <span class="tag-chip" title="Gộp với STK ${cust.linkedTo} — cùng 1 người">🔗 gộp</span>`:''}`;
+    case 'nav_latest': return `${fmt(cust.nav)} ${cust.mismatch?'<span title="NAV không phù hợp với Room hiện tại" class="warn-icon">⚠️</span>':''}`;
+    case 'fee_latest': return fmt(cust.fee);
+    case 'gender': return cust.gender || '—';
+    case 'room': return roomLabel(cust.room);
+    case 'updated': return cust.updated;
+    case 'note': return `<span style="color:var(--text-muted);">${cust.note||'—'}</span>`;
+    case 'status': return statusBadge(cust.status);
+    default: return '';
+  }
+}
+
+function renderCustomersHead(){
+  const cols = activeColumns();
+  const ths = cols.map(c=>{
+    const numCls = c.num ? ' num-col' : '';
+    if(c.sortable){
+      return `<th class="${numCls.trim()}" style="cursor:pointer;" onclick="sortBy('${c.key}')">${c.label} ↕</th>`;
+    }
+    return `<th class="${numCls.trim()}">${c.label}</th>`;
+  }).join('');
+  document.getElementById('customersHead').innerHTML = `<tr>${ths}<th></th></tr>`;
+}
+
+// ---------------- BỘ LỌC NÂNG CAO ----------------
+const FILTER_FIELDS = [
+  {key:'room',       label:'Room',              type:'select', options: ()=>[...rooms.map(r=>({value:r.id,label:r.name})), ...SPECIAL_ROOMS.map(s=>({value:s,label:s}))]},
+  {key:'status',     label:'Trạng thái',        type:'select', options: ()=>[{value:'Đang quản lý',label:'Đang quản lý'},{value:'Chờ xác nhận',label:'Chờ xác nhận'},{value:'Đã chuyển đi',label:'Đã chuyển đi'}]},
+  {key:'gender',     label:'Giới tính',         type:'select', options: ()=>[{value:'Nam',label:'Nam'},{value:'Nữ',label:'Nữ'},{value:'Khác',label:'Khác'}]},
+  {key:'nav_latest', label:'NAV (mới nhất)',    type:'number'},
+  {key:'fee_latest', label:'Phí (mới nhất)',    type:'number'},
+  {key:'nav_date',   label:'NAV theo ngày',     type:'number_date', dates: NAV_DATES},
+  {key:'fee_date',   label:'Phí theo ngày',     type:'number_date', dates: FEE_DATES},
+  {key:'birth_year', label:'Năm sinh',          type:'number'},
+];
+let advancedFilters = [];
+let filterIdCounter = 1;
+
+function toggleAdvFilterPanel(){
+  const panel = document.getElementById('advFilterPanel');
+  const open = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  if(!open) renderFilterRows();
+}
+
+function addFilterRow(){
+  advancedFilters.push({id: filterIdCounter++, field:'room', date: NAV_DATES[0], operator:'>', value:''});
+  renderFilterRows();
+}
+function removeFilterRow(id){
+  advancedFilters = advancedFilters.filter(f=>f.id!==id);
+  renderFilterRows();
+  renderCustomers();
+}
+function updateFilterField(id, field){
+  const f = advancedFilters.find(x=>x.id===id);
+  const cfg = FILTER_FIELDS.find(x=>x.key===field);
+  f.field = field;
+  f.operator = cfg.type==='select' ? '=' : '>';
+  f.date = (cfg.type==='number_date') ? cfg.dates[0] : null;
+  f.value = '';
+  renderFilterRows();
+  renderCustomers();
+}
+function updateFilterDate(id, date){ advancedFilters.find(x=>x.id===id).date = date; renderCustomers(); }
+function updateFilterOperator(id, op){ advancedFilters.find(x=>x.id===id).operator = op; renderCustomers(); }
+function updateFilterValue(id, val){ advancedFilters.find(x=>x.id===id).value = val; updateAdvFilterBadge(); renderCustomers(); }
+
+function renderFilterRows(){
+  const html = advancedFilters.map(f=>{
+    const cfg = FILTER_FIELDS.find(x=>x.key===f.field);
+    const fieldOptions = FILTER_FIELDS.map(x=>`<option value="${x.key}" ${x.key===f.field?'selected':''}>${x.label}</option>`).join('');
+    let dateHtml = '';
+    if(cfg.type==='number_date'){
+      dateHtml = `<select class="filter-select" onchange="updateFilterDate(${f.id}, this.value)">${cfg.dates.map(d=>`<option value="${d}" ${d===f.date?'selected':''}>${shortDate(d)}</option>`).join('')}</select>`;
+    }
+    let opHtml, valHtml;
+    if(cfg.type==='select'){
+      const opts = cfg.options();
+      opHtml = `<span class="filter-op-label">là</span>`;
+      valHtml = `<select class="filter-select" onchange="updateFilterValue(${f.id}, this.value)">
+        <option value="">— chọn —</option>
+        ${opts.map(o=>`<option value="${o.value}" ${String(o.value)===String(f.value)?'selected':''}>${o.label}</option>`).join('')}
+      </select>`;
+    } else {
+      const ops = [['>','&gt;'],['>=','&ge;'],['<','&lt;'],['<=','&le;'],['=','=']];
+      opHtml = `<select class="filter-select" style="width:64px;" onchange="updateFilterOperator(${f.id}, this.value)">${ops.map(([k,l])=>`<option value="${k}" ${k===f.operator?'selected':''}>${l}</option>`).join('')}</select>`;
+      valHtml = `<input type="text" class="filter-value-input" placeholder="VD: 100000000" value="${f.value}" oninput="updateFilterValue(${f.id}, this.value)">`;
+    }
+    return `<div class="filter-row">
+      <select class="filter-select" onchange="updateFilterField(${f.id}, this.value)">${fieldOptions}</select>
+      ${dateHtml}
+      ${opHtml}
+      ${valHtml}
+      <button class="icon-btn" onclick="removeFilterRow(${f.id})" title="Xóa điều kiện">✕</button>
+    </div>`;
+  }).join('');
+  document.getElementById('filterRowsContainer').innerHTML = html || '<div style="font-size:12.5px;color:var(--text-muted);">Chưa có điều kiện nào. Bấm "+ Thêm điều kiện" để bắt đầu.</div>';
+}
+
+function updateAdvFilterBadge(){
+  const count = advancedFilters.filter(f=>f.value!=='' && f.value!=null).length;
+  document.getElementById('btnAdvFilter').innerHTML = `🔎 Bộ lọc nâng cao${count?` <span class="filter-badge">${count}</span>`:''}`;
+}
+
+function matchesAdvancedFilters(c){
+  return advancedFilters.every(f=>{
+    if(f.value === '' || f.value === null || f.value === undefined) return true;
+    const cfg = FILTER_FIELDS.find(x=>x.key===f.field);
+    if(cfg.type==='select'){
+      let actual;
+      if(f.field==='room') actual = c.room;
+      else if(f.field==='status') actual = c.status;
+      else if(f.field==='gender') actual = c.gender;
+      return String(actual) === String(f.value);
+    }
+    let actual;
+    if(f.field==='nav_latest') actual = c.nav;
+    else if(f.field==='fee_latest') actual = c.fee;
+    else if(f.field==='birth_year') actual = c.birthYear;
+    else if(f.field==='nav_date') actual = c.navHistory[f.date];
+    else if(f.field==='fee_date') actual = c.feeHistory[f.date];
+    if(actual === undefined || actual === null) return false;
+    const num = parseFloat(String(f.value).replace(/[^\d.-]/g,''));
+    if(isNaN(num)) return true;
+    switch(f.operator){
+      case '>': return actual > num;
+      case '>=': return actual >= num;
+      case '<': return actual < num;
+      case '<=': return actual <= num;
+      case '=': return actual === num;
+      default: return true;
+    }
+  });
+}
+
+// ---------------- CUSTOMERS TABLE ----------------
+let sortState = {key:null, dir:1};
+function sortBy(key){
+  sortState.dir = (sortState.key===key) ? -sortState.dir : -1;
+  sortState.key = key;
+  renderCustomers();
+}
+function getFilteredSortedList(){
+  const q = (document.getElementById('searchInput').value||'').toLowerCase();
+  const roomF = document.getElementById('filterRoom').value;
+  const statusF = document.getElementById('filterStatus').value;
+  let list = customers.filter(c=>{
+    const matchQ = !q || c.code.toLowerCase().includes(q) || c.stk.includes(q) || c.name.toLowerCase().includes(q) || (c.telegram||'').toLowerCase().includes(q);
+    const matchRoom = !roomF || String(c.room)===roomF;
+    const matchStatus = !statusF || c.status===statusF;
+    return matchQ && matchRoom && matchStatus && matchesAdvancedFilters(c);
+  });
+  if(sortState.key){
+    const fieldMap = {nav_latest:'nav', fee_latest:'fee'};
+    const field = fieldMap[sortState.key] || sortState.key;
+    list = [...list].sort((a,b)=> (a[field]-b[field]) * sortState.dir);
+  }
+  return list;
+}
+function renderCustomers(){
+  renderCustomersHead();
+  updateAdvFilterBadge();
+  const list = getFilteredSortedList();
+  document.getElementById('resultCount').textContent = list.length + ' khách hàng';
+  const cols = activeColumns();
+  document.getElementById('customersBody').innerHTML = list.map((c,idx)=>{
+    const tds = cols.map(col=>{
+      const numCls = col.num ? ' class="num-col num"' : '';
+      return `<td${numCls}>${cellValue(col, c, idx)}</td>`;
+    }).join('');
+    return `
+    <tr onclick="openDetail('${c.code}')">
+      ${tds}
+      <td onclick="event.stopPropagation();">
+        <div class="row-actions">
+          <button class="icon-btn" title="Soạn tin nhắn" onclick="event.stopPropagation();openMessageModal('room', '${c.stk}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+          <button class="icon-btn" title="Sửa" onclick="event.stopPropagation();openEditModal('${c.stk}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>
+          <button class="icon-btn" title="Xem chi tiết" onclick="openDetail('${c.code}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ---------------- XUẤT EXCEL ----------------
+function rawCellValue(c, cust, idx){
+  if(c.type==='nav') return cust.navHistory[c.date] ?? '';
+  if(c.type==='fee') return cust.feeHistory[c.date] ?? '';
+  switch(c.key){
+    case 'stt': return idx+1;
+    case 'name': return cust.name;
+    case 'stk': return cust.stk;
+    case 'nav_latest': return cust.nav;
+    case 'fee_latest': return cust.fee;
+    case 'gender': return cust.gender || '';
+    case 'room': return roomLabel(cust.room);
+    case 'updated': return cust.updated;
+    case 'note': return cust.note || '';
+    case 'status': return cust.status;
+    default: return '';
+  }
+}
+function exportToExcel(){
+  const cols = activeColumns();
+  const list = getFilteredSortedList();
+  const header = cols.map(c=>c.label);
+  const rows = list.map((c,idx)=> cols.map(col=>rawCellValue(col, c, idx)));
+  const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+  ws['!cols'] = cols.map(()=>({wch:16}));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Danh sach KH');
+  const dateStr = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `Danh_sach_KH_${dateStr}.xlsx`);
+}
+
+// populate room filter
+document.getElementById('filterRoom').innerHTML += rooms.map(r=>`<option value="${r.id}">${r.name}</option>`).join('') + SPECIAL_ROOMS.map(s=>`<option value="${s}">${s}</option>`).join('');
+
+// ---------------- DASHBOARD ----------------
+const AVATAR_COLORS = ['#2358E8','#0E9F6E','#D97706','#DC2626','#7C3AED','#0891B2','#DB2777'];
+function avatarColor(name){
+  let h=0; for(let i=0;i<name.length;i++) h = name.charCodeAt(i) + ((h<<5)-h);
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
+}
+function initials(name){
+  const parts = name.trim().split(/\s+/);
+  return (parts[parts.length-1][0] + (parts.length>1?parts[0][0]:'')).toUpperCase();
+}
+
+function renderDashboard(){
+  const active = customers.filter(c=>c.status==="Đang quản lý");
+  document.getElementById('statTotalActive').textContent = countDistinctPeople(active);
+  document.getElementById('statTotalNav').textContent = fmt(active.reduce((s,c)=>s+c.nav,0));
+  document.getElementById('statTotalFee').textContent = fmt(active.reduce((s,c)=>s+c.fee,0));
+  const recent = [...customers].sort((a,b)=> b.updated.split('/').reverse().join('').localeCompare(a.updated.split('/').reverse().join(''))).slice(0,5);
+  document.getElementById('dashRecentBody').innerHTML = recent.map(c=>`
+    <tr onclick="openDetail('${c.code}')">
+      <td>
+        <div class="recent-row-name">
+          <div class="avatar-sm" style="background:${avatarColor(c.name)};">${initials(c.name)}</div>
+          <div class="cust-name">${c.name}</div>
+        </div>
+      </td>
+      <td class="cust-code">${c.stk}</td>
+      <td class="num-col num">${fmt(c.nav)}</td>
+      <td class="num-col num">${fmt(c.fee)}</td>
+      <td><span class="badge ${roomBadgeClass(c.room)}">${roomLabel(c.room)}</span></td>
+      <td>${c.updated}</td>
+      <td onclick="event.stopPropagation();"><button class="icon-btn" title="Thao tác" onclick="openDetail('${c.code}')">⋮</button></td>
+    </tr>
+  `).join('');
+
+  // Khoản vay đến hạn hôm nay
+  const dueTodayLoans = loans.filter(l=>daysUntil(l.dueDate)===0);
+  const dueTodayCard = document.getElementById('statLoansDueCard');
+  document.getElementById('statLoansDueToday').textContent = dueTodayLoans.length;
+  document.getElementById('statLoansDueDelta').innerHTML = dueTodayLoans.length
+    ? `<span style="color:var(--red);">${dueTodayLoans.map(l=>l.account).join(', ')}</span>`
+    : `<span style="color:var(--text-muted);">Không có</span>`;
+  dueTodayCard.style.borderColor = dueTodayLoans.length ? 'var(--red)' : 'var(--border)';
+
+  // Quyền mua hết hạn đăng ký hôm nay
+  const rightsDueToday = rights.filter(r=>daysUntil(r.deadline)===0 && r.status!=='Hết hạn' && r.status!=='Đã hủy');
+  const rightsDueCard = document.getElementById('statRightsDueCard');
+  document.getElementById('statRightsDueToday').textContent = rightsDueToday.length;
+  document.getElementById('statRightsDueDelta').innerHTML = rightsDueToday.length
+    ? `<span style="color:var(--red);">${rightsDueToday.map(r=>r.symbol+' ('+r.stk+')').join(', ')}</span>`
+    : `<span style="color:var(--text-muted);">Không có</span>`;
+  rightsDueCard.style.borderColor = rightsDueToday.length ? 'var(--red)' : 'var(--border)';
+
+  // Khách quay lại (từ room_history — có sự kiện "quay lại" trong tháng này)
+  const now = new Date();
+  const monthPrefix = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const returningEventsThisMonth = (window.returningEvents||[]).filter(e=>e.entered_at && e.entered_at.startsWith(monthPrefix));
+  const returningStkSet = new Set();
+  returningEventsThisMonth.forEach(e=>{
+    const c = customers.find(x=>x.id===e.customer_id);
+    if(c) returningStkSet.add(c.stk);
+  });
+  document.getElementById('statReturning').textContent = returningStkSet.size;
+  document.getElementById('statReturningDelta').innerHTML = returningStkSet.size
+    ? [...returningStkSet].join(', ')
+    : '<span style="color:var(--text-muted);">Không có</span>';
+
+  renderRoomComposition();
+  renderTransferPanel();
+  renderNotifications();
+}
+
+// ---------------- CHUÔNG THÔNG BÁO ----------------
+function computeAlerts(){
+  const rows = [];
+  const dueTodayLoans = loans.filter(l=>daysUntil(l.dueDate)===0);
+
+  customers.filter(c=>c.mismatch).forEach(c=>{
+    rows.push({icon:'purple', emoji:'🏠', title:'Khách ở Room chưa phù hợp', sub:`${c.stk} – ${c.name}: NAV ${navToTyUoc(c.nav)} nhưng đang ở ${roomLabel(c.room)}.`, view:'customers'});
+  });
+  const stale = customers.find(c=>c.stk==='067890');
+  if(stale) rows.push({icon:'amber', emoji:'⏱️', title:'Khách chưa cập nhật NAV quá 7 ngày', sub:`${stale.stk} – ${stale.name}.`, view:'customers'});
+  if(dueTodayLoans.length) rows.push({icon:'red', emoji:'📅', title:'Khoản vay đến hạn hôm nay', sub:`${dueTodayLoans.length} khoản vay`, view:'loans'});
+  const soonLoans = loans.filter(l=>{ const d=daysUntil(l.dueDate); return d>0 && d<=3 && l.status!=='KH xử lý xong' && l.status!=='Công ty đã xử lý'; });
+  if(soonLoans.length) rows.push({icon:'amber', emoji:'📅', title:'Khoản vay sắp đến hạn (3 ngày)', sub:`${soonLoans.length} khoản vay chưa xử lý xong`, view:'loans'});
+  const soonRights = rights.filter(r=>{ const d=daysUntil(r.deadline); return d>=0 && d<=7 && (r.status==='Chưa đăng ký'||r.status==='Đã đăng ký'); });
+  if(soonRights.length) rows.push({icon:'purple', emoji:'📈', title:'Quyền mua sắp hết hạn đăng ký', sub:`${soonRights.length} quyền mua trong 7 ngày tới`, view:'rights'});
+  rows.push({icon:'blue', emoji:'📄', title:'Dữ liệu lỗi trong lần import gần nhất (25/08/2026)', sub:'3 dòng dữ liệu — thiếu STK hoặc NAV không hợp lệ.', view:'import'});
+
+  // Gợi ý trùng người: tên giống nhau, STK khác nhau, chưa liên kết
+  const nameMap = {};
+  customers.forEach(c=>{
+    if(!nameMap[c.name]) nameMap[c.name] = [];
+    nameMap[c.name].push(c);
+  });
+  Object.values(nameMap).forEach(group=>{
+    if(group.length < 2) return;
+    const unlinkedPairExists = group.some((c,i)=> group.some((c2,j)=> i!==j && c.linkedTo!==c2.stk && c2.linkedTo!==c.stk));
+    if(unlinkedPairExists){
+      rows.push({icon:'purple', emoji:'🔗', title:'Có thể trùng người — tên giống nhau, STK khác nhau', sub:`"${group[0].name}": ${group.map(c=>c.stk).join(', ')}. Kiểm tra và liên kết nếu đúng là 1 người.`, view:'customers'});
+    }
+  });
+  return rows;
+}
+
+function renderNotifications(){
+  const alerts = computeAlerts();
+  const badge = document.getElementById('notifBadge');
+  if(alerts.length){ badge.style.display='flex'; badge.textContent = alerts.length; }
+  else badge.style.display='none';
+  document.getElementById('notifList').innerHTML = alerts.length ? alerts.map(r=>`
+    <div class="alert-row2" style="cursor:pointer;" onclick="switchView('${r.view}');toggleNotifPanel(true);">
+      <div class="alert-icon-badge ${r.icon}">${r.emoji}</div>
+      <div>
+        <div class="alert-row2-title">${r.title}</div>
+        <div class="alert-row2-sub">${r.sub}</div>
+      </div>
+    </div>`).join('') : '<div style="padding:14px 0;color:var(--text-muted);font-size:12.5px;">Không có cảnh báo nào.</div>';
+}
+function toggleNotifPanel(forceClose){
+  const panel = document.getElementById('notifPanel');
+  if(forceClose){ panel.classList.remove('open'); return; }
+  panel.classList.toggle('open');
+}
+document.addEventListener('click', function(e){
+  const panel = document.getElementById('notifPanel');
+  if(panel && panel.classList.contains('open') && !panel.contains(e.target) && e.target.id !== 'notifBellBtn' && !e.target.closest('#notifBellBtn')){
+    panel.classList.remove('open');
+  }
+});
+
+function renderRoomComposition(){
+  const active = customers.filter(c=>c.status==="Đang quản lý");
+  const total = countDistinctPeople(active) || 1;
+  const roomsWithData = rooms.map((r,idx)=>{
+    const members = distinctPeopleList(active.filter(c=>c.room===r.id));
+    return { r, count: members.length, pct: members.length/total*100, nav: members.reduce((s,c)=>s+c.nav,0), color: AVATAR_COLORS[idx % AVATAR_COLORS.length] };
+  });
+
+  // Vẽ donut bằng SVG (stroke-dasharray trick)
+  const size = 150, strokeW = 26, radius = (size - strokeW) / 2, cx = size/2, cy = size/2;
+  const circumference = 2 * Math.PI * radius;
+  let cumulative = 0;
+  let segments = '';
+  roomsWithData.forEach(d=>{
+    if(d.count === 0) return;
+    const segLen = (d.pct/100) * circumference;
+    const offset = -(cumulative/100) * circumference;
+    segments += `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="${d.color}" stroke-width="${strokeW}"
+      stroke-dasharray="${segLen.toFixed(1)} ${(circumference-segLen).toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}"
+      transform="rotate(-90 ${cx} ${cy})" stroke-linecap="butt"/>`;
+    cumulative += d.pct;
+  });
+
+  const legend = roomsWithData.map(d=>`
+    <div class="donut-legend-row">
+      <span class="dot" style="background:${d.color};"></span>
+      <span class="name">${d.r.name}</span>
+      <span class="val">${d.count} KH</span>
+      <span class="pct">${Math.round(d.pct)}%</span>
+    </div>`).join('');
+
+  document.getElementById('roomCompositionBody').innerHTML = `
+    <div class="donut-layout">
+      <div class="donut-wrap">
+        <svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
+          <circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="#F0F2F5" stroke-width="${strokeW}"/>
+          ${segments}
+        </svg>
+        <div class="donut-center"><div class="n">${total}</div><div class="l">KH đang quản lý</div></div>
+      </div>
+      <div class="donut-legend">${legend}</div>
+    </div>
+    <div class="field-hint" style="margin-top:8px;">Đã gộp các KH có 2 STK thuộc cùng 1 người, không tính trùng.</div>`;
+}
+
+// ---------------- BIỂU ĐỒ CHUYỂN VỀ / CHUYỂN ĐI ----------------
+// Tính thật từ management_start_date (chuyển về) và removed_at (chuyển đi) của khách hàng.
+function parseDdMmYyyy(s){
+  if(!s) return null;
+  const parts = s.split('/');
+  if(parts.length!==3) return null;
+  const [d,m,y] = parts.map(Number);
+  return new Date(y, m-1, d);
+}
+function fmtDdMm(d){ return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`; }
+function fmtDdMmYyyy(d){ return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`; }
+function getPeriodDays(){
+  const activeBtn = document.querySelector('#periodToggle button.active');
+  const period = activeBtn ? activeBtn.dataset.period : '30d';
+  const now = new Date();
+  switch(period){
+    case '7d': return 7;
+    case '30d': return 30;
+    case 'month': return now.getDate();
+    case '3m': return 90;
+    case '6m': return 180;
+    case '1y': return 365;
+    default: return 30;
+  }
+}
+
+function renderTransferPanel(){
+  const days = getPeriodDays();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const startDate = new Date(today); startDate.setDate(startDate.getDate() - (days-1));
+
+  const buckets = [];
+  for(let i=0;i<days;i++){
+    const d = new Date(startDate); d.setDate(d.getDate()+i);
+    buckets.push({ dateObj:d, dateStr: fmtDdMmYyyy(d), inCount:0, inNav:0, outCount:0, outNav:0 });
+  }
+  const bucketByStr = {}; buckets.forEach(b=>bucketByStr[b.dateStr]=b);
+
+  customers.forEach(c=>{
+    if(c.mgmtStart && bucketByStr[c.mgmtStart]){
+      bucketByStr[c.mgmtStart].inCount++;
+      bucketByStr[c.mgmtStart].inNav += c.nav||0;
+    }
+    if(c.mgmtEnd && bucketByStr[c.mgmtEnd]){
+      bucketByStr[c.mgmtEnd].outCount++;
+      bucketByStr[c.mgmtEnd].outNav += c.nav||0;
+    }
+  });
+
+  const totalIn = buckets.reduce((s,b)=>s+b.inCount,0);
+  const totalInNav = buckets.reduce((s,b)=>s+b.inNav,0);
+  const totalOut = buckets.reduce((s,b)=>s+b.outCount,0);
+  const totalOutNav = buckets.reduce((s,b)=>s+b.outNav,0);
+  document.getElementById('transferInCount').textContent = totalIn + ' KH';
+  document.getElementById('transferInNav').textContent = fmt(totalInNav) + ' NAV về';
+  document.getElementById('transferOutCount').textContent = totalOut + ' KH';
+  document.getElementById('transferOutNav').textContent = fmt(totalOutNav) + ' NAV đi';
+  const net = totalInNav - totalOutNav;
+  document.getElementById('navRongValue').textContent = (net>=0?'+':'') + fmt(net);
+  document.getElementById('navRongValue').style.color = net>=0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('transferDateRange').textContent = `📅 ${fmtDdMmYyyy(startDate)} → ${fmtDdMmYyyy(today)}`;
+
+  const activeDays = buckets.filter(b=>b.inCount>0 || b.outCount>0).sort((a,b)=>b.dateObj-a.dateObj);
+  const rowsHtml = activeDays.length ? activeDays.map(e=>{
+    const rong = e.inNav - e.outNav;
+    return `<tr>
+      <td>${e.dateStr}</td>
+      <td class="num-col">${e.inCount}</td>
+      <td class="num-col">${fmt(e.inNav)}</td>
+      <td class="num-col">${e.outCount}</td>
+      <td class="num-col">${fmt(e.outNav)}</td>
+      <td class="num-col ${rong>=0?'tcell-pos':'tcell-neg'}">${rong>=0?'':'-'}${fmt(Math.abs(rong))}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:14px;">Chưa có hoạt động chuyển về/chuyển đi trong khoảng thời gian này.</td></tr>`;
+  document.getElementById('transferTableBody').innerHTML = rowsHtml + `<tr class="total-row">
+      <td>Tổng</td>
+      <td class="num-col">${totalIn}</td>
+      <td class="num-col">${fmt(totalInNav)}</td>
+      <td class="num-col">${totalOut}</td>
+      <td class="num-col">${fmt(totalOutNav)}</td>
+      <td class="num-col ${net>=0?'tcell-pos':'tcell-neg'}">${net>=0?'':'-'}${fmt(Math.abs(net))}</td>
+    </tr>`;
+
+  // Vẽ biểu đồ SVG — mỗi cột = NAV ròng (về − đi) của ngày đó
+  const chartData = buckets.map(b=>({ dateObj:b.dateObj, value: b.inNav - b.outNav }));
+  const W = 660, H = 230, padL = 60, padR = 10, padTop = 10, padBottom = 26;
+  const chartW = W - padL - padR, chartH = H - padTop - padBottom;
+  const maxAbs = Math.max(1, ...chartData.map(d=>Math.abs(d.value)));
+  const scale = (chartH/2) / (maxAbs * 1.15);
+  const midY = padTop + chartH/2;
+  const barW = Math.max(1, chartW / chartData.length * 0.62);
+  const gap = chartW / chartData.length;
+
+  let bars = '';
+  chartData.forEach((d,i)=>{
+    const x = padL + i*gap + (gap-barW)/2;
+    const h = Math.abs(d.value) * scale;
+    const y = d.value >= 0 ? midY - h : midY;
+    if(h > 0.3) bars += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="${d.value>=0?'#0E9F6E':'#DC2626'}" opacity="0.88"/>`;
+  });
+
+  const yTicks = [1, 0.5, 0, -0.5, -1];
+  let yLabels = '';
+  yTicks.forEach(t=>{
+    const y = midY - (t*maxAbs*1.15)*scale;
+    const label = t===0 ? '0' : navToTyUoc(Math.abs(t*maxAbs*1.15)) + (t<0?' (đi)':'');
+    yLabels += `<text x="${padL-8}" y="${(y+3).toFixed(1)}" text-anchor="end" font-size="10" fill="#9AA5B4">${label}</text>`;
+    yLabels += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="#F0F2F5" stroke-width="1"/>`;
+  });
+
+  const labelStep = Math.max(1, Math.ceil(chartData.length / 7));
+  let xLabels = '';
+  chartData.forEach((d,i)=>{
+    if(i % labelStep !== 0 && i !== chartData.length-1) return;
+    const x = padL + i*gap + gap/2;
+    xLabels += `<text x="${x.toFixed(1)}" y="${H-8}" text-anchor="middle" font-size="10" fill="#9AA5B4">${fmtDdMm(d.dateObj)}</text>`;
+  });
+
+  document.getElementById('transferChartWrap').innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;">
+      ${yLabels}
+      ${bars}
+      <line x1="${padL}" y1="${midY.toFixed(1)}" x2="${W-padR}" y2="${midY.toFixed(1)}" stroke="#D3D9E2" stroke-width="1"/>
+      ${xLabels}
+    </svg>
+    <div style="display:flex;gap:16px;justify-content:center;margin-top:4px;font-size:11.5px;color:var(--text-muted);">
+      <span>🟩 NAV ròng dương (về nhiều hơn đi)</span><span>🟥 NAV ròng âm (đi nhiều hơn về)</span>
+    </div>`;
+}
+
+document.getElementById('periodToggle')?.addEventListener('click', function(e){
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  this.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTransferPanel();
+});
+
+// ---------------- ROOMS ----------------
+function renderRooms(showRefreshFeedback){
+  document.getElementById('roomGrid').innerHTML = rooms.map(r=>{
+    const members = customers.filter(c=>c.room===r.id && c.status==="Đang quản lý");
+    const totalNav = members.reduce((s,c)=>s+c.nav,0);
+    const totalFee = members.reduce((s,c)=>s+c.fee,0);
+    const rangeLabel = r.max===Infinity ? `Trên ${fmt(r.min)}` : `${fmt(r.min)} – ${fmt(r.max)}`;
+    return `
+    <div class="room-card" id="room-card-${r.id}">
+      <div class="room-card-top">
+        <div>
+          <div class="room-name">${r.name}</div>
+          <div class="room-range">${r.desc}</div>
+        </div>
+        <button class="icon-btn" title="Chỉnh sửa Room" onclick="openRoomModal(${r.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>
+      </div>
+      <div class="room-stats">
+        <div class="room-stat"><div class="l">Số khách</div><div class="v">${members.length}</div></div>
+        <div class="room-stat"><div class="l">Tổng NAV</div><div class="v num" style="font-size:13px;">${fmt(totalNav)}</div></div>
+        <div class="room-stat"><div class="l">Tổng phí</div><div class="v num" style="font-size:13px;">${fmt(totalFee)}</div></div>
+        <div class="room-stat"><div class="l">Ngưỡng</div><div class="v" style="font-size:12px;font-weight:600;">${rangeLabel}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  if(showRefreshFeedback){
+    document.querySelectorAll('.room-card').forEach(el=>{
+      el.style.borderColor = 'var(--accent)';
+      setTimeout(()=>{ el.style.borderColor = 'var(--border)'; }, 600);
+    });
+  }
+}
+
+let roomIdCounter = 100;
+let editingRoomId = null;
+
+function openRoomModal(roomId){
+  editingRoomId = roomId || null;
+  const r = roomId ? rooms.find(x=>x.id===roomId) : null;
+  document.getElementById('roomModalTitle').textContent = r ? 'Chỉnh sửa Room' : 'Thêm Room mới';
+  document.getElementById('room_name').value = r ? r.name : '';
+  document.getElementById('room_min').value = r ? r.min : '';
+  document.getElementById('room_max').value = (r && r.max!==Infinity) ? r.max : '';
+  document.getElementById('room_desc').value = r ? r.desc : '';
+  const memberCount = r ? customers.filter(c=>c.room===r.id).length : 0;
+  document.getElementById('roomModalWarning').textContent = memberCount ? `⚠️ Room này đang có ${memberCount} khách hàng. Xóa Room sẽ khiến các khách hàng này mất gán Room, cần chuyển họ sang Room khác trước.` : '';
+  document.getElementById('roomDeleteBtn').style.display = r ? 'inline-flex' : 'none';
+  document.getElementById('roomModalOverlay').classList.add('active');
+}
+function closeRoomModal(){ document.getElementById('roomModalOverlay').classList.remove('active'); }
+async function saveRoom(){
+  const name = document.getElementById('room_name').value.trim();
+  const min = parseFloat(document.getElementById('room_min').value.replace(/[^\d]/g,'')) || 0;
+  const maxRaw = document.getElementById('room_max').value.trim();
+  const max = maxRaw ? (parseFloat(maxRaw.replace(/[^\d]/g,'')) || null) : null; // null trong DB = không giới hạn
+  const desc = document.getElementById('room_desc').value.trim();
+  if(!name){ alert('Vui lòng nhập tên Room.'); return; }
+  try {
+    if(editingRoomId){
+      const { error } = await sb.from('rooms').update({ room_name:name, nav_min:min, nav_max:max, description:desc }).eq('room_id', editingRoomId);
+      if(error) throw error;
+    } else {
+      const { error } = await sb.from('rooms').insert({ room_name:name, nav_min:min, nav_max:max, description:desc });
+      if(error) throw error;
+    }
+    await loadAllData();
+    closeRoomModal();
+    renderRooms();
+    renderCustomers();
+  } catch(err){ alert('Lỗi khi lưu Room: ' + err.message); }
+}
+async function deleteRoom(){
+  if(!editingRoomId) return;
+  const memberCount = customers.filter(c=>c.room===editingRoomId).length;
+  if(memberCount > 0){
+    alert(`Không thể xóa: còn ${memberCount} khách hàng đang gán Room này. Vui lòng chuyển họ sang Room khác trước.`);
+    return;
+  }
+  if(!confirm('Xóa Room này? Thao tác không thể hoàn tác.')) return;
+  try {
+    const { error } = await sb.from('rooms').delete().eq('room_id', editingRoomId);
+    if(error) throw error;
+    await loadAllData();
+    closeRoomModal();
+    renderRooms();
+  } catch(err){ alert('Lỗi khi xóa Room (có thể do bạn không phải Owner): ' + err.message); }
+}
+
+// ---------------- MODAL ----------------
+let editingCustomerStk = null;
+
+function openAddModal(prefillStk){
+  editingCustomerStk = null;
+  document.getElementById('modalOverlay').classList.add('active');
+  document.getElementById('modalTitle').textContent = 'Thêm khách hàng mới';
+  document.getElementById('modalSaveBtn').textContent = 'Lưu khách hàng';
+  renderPronounSelect();
+
+  document.getElementById('f_stk').value = prefillStk || '';
+  document.getElementById('f_stk').disabled = false;
+  document.getElementById('f_managerid').value = '';
+  document.getElementById('f_name').value = '';
+  document.getElementById('f_gender').value = 'Nam';
+  document.getElementById('f_birthyear').value = '';
+  document.getElementById('f_nav').value = '';
+  document.getElementById('f_fee').value = '';
+  document.getElementById('f_mgmtstart').value = '';
+  document.getElementById('f_room').value = '1';
+  document.getElementById('f_status').value = 'Đang quản lý';
+  document.getElementById('f_note').value = '';
+  document.getElementById('f_removed_date_wrap').style.display = 'none';
+  renderLinkedSelect(null);
+  updateTelegramPreview();
+}
+
+function renderLinkedSelect(excludeStk){
+  const sel = document.getElementById('f_linked');
+  sel.innerHTML = '<option value="">— Không, đây là người riêng —</option>' +
+    customers.filter(c=>c.stk!==excludeStk).map(c=>`<option value="${c.stk}">${c.name} — ${c.stk}</option>`).join('');
+}
+
+function openEditModal(stk){
+  const c = customers.find(x=>x.stk===stk);
+  if(!c){ alert('Không tìm thấy khách hàng với STK ' + stk); return; }
+  editingCustomerStk = stk;
+  document.getElementById('modalOverlay').classList.add('active');
+  document.getElementById('modalTitle').textContent = 'Sửa khách hàng — ' + c.name;
+  document.getElementById('modalSaveBtn').textContent = 'Lưu thay đổi';
+  renderPronounSelect();
+
+  document.getElementById('f_stk').value = c.stk;
+  document.getElementById('f_stk').disabled = true; // không đổi STK khi sửa
+  document.getElementById('f_managerid').value = c.managerId || '';
+  document.getElementById('f_name').value = c.name;
+  document.getElementById('f_gender').value = c.gender || 'Nam';
+  document.getElementById('f_birthyear').value = c.birthYear || '';
+  document.getElementById('f_nav').value = c.nav;
+  document.getElementById('f_fee').value = c.fee;
+  document.getElementById('f_mgmtstart').value = c.mgmtStart || '';
+  document.getElementById('f_room').value = c.room;
+  document.getElementById('f_status').value = c.status;
+  document.getElementById('f_note').value = c.note || '';
+  document.getElementById('f_pronoun').value = c.pronoun || '';
+  renderLinkedSelect(c.stk);
+  document.getElementById('f_linked').value = c.linkedTo || '';
+  const dateWrap = document.getElementById('f_removed_date_wrap');
+  if(c.status === 'Đã chuyển đi'){
+    dateWrap.style.display = 'block';
+    document.getElementById('f_removed_date').value = c.mgmtEnd || new Date().toLocaleDateString('vi-VN');
+  } else {
+    dateWrap.style.display = 'none';
+  }
+  updateTelegramPreview();
+}
+
+function editFromDetail(){
+  if(!currentDetailStk) return;
+  closeDetail();
+  openEditModal(currentDetailStk);
+}
+
+async function saveCustomer(){
+  let stk = document.getElementById('f_stk').value.trim();
+  const name = document.getElementById('f_name').value.trim();
+  if(!name){ alert('Vui lòng nhập Tên khách hàng.'); return; }
+  if(stk && stk.length !== 6){ alert('Số tài khoản phải đúng 6 ký tự (hoặc để trống nếu KH chưa mở tài khoản).'); return; }
+  if(!editingCustomerStk && !stk) stk = generateTempStk();
+
+  const nav = parseFloat(document.getElementById('f_nav').value.replace(/[^\d]/g,'')) || 0;
+  const fee = parseFloat(document.getElementById('f_fee').value.replace(/[^\d]/g,'')) || 0;
+  const roomRaw = document.getElementById('f_room').value;
+  const isSpecialRoom = SPECIAL_ROOMS.includes(roomRaw);
+  const status = document.getElementById('f_status').value;
+  const today = todayDdMmYyyy();
+  const mgmtStart = document.getElementById('f_mgmtstart').value.trim() || today;
+  const linkedToStk = document.getElementById('f_linked').value || null;
+  const linkedCust = linkedToStk ? customers.find(x=>x.stk===linkedToStk) : null;
+
+  const gender = document.getElementById('f_gender').value;
+  const birthYear = parseInt(document.getElementById('f_birthyear').value) || null;
+  const managerId = document.getElementById('f_managerid').value.trim() || null;
+  const note = document.getElementById('f_note').value.trim();
+
+  const dbPayload = {
+    account_number: stk || null,
+    customer_name: name,
+    gender, birth_year: birthYear,
+    manager_id: managerId,
+    telegram_name: document.getElementById('f_telegram_preview').value,
+    current_room_id: isSpecialRoom ? null : parseInt(roomRaw),
+    special_room: isSpecialRoom ? roomRaw : null,
+    status,
+    current_nav: nav, current_fee: fee,
+    nav_updated_at: toDbDate(today), fee_updated_at: toDbDate(today),
+    note,
+    management_start_date: toDbDate(mgmtStart),
+    linked_to_customer_id: linkedCust ? linkedCust.id : null,
+    updated_at: new Date().toISOString(),
+  };
+
+  document.getElementById('modalSaveBtn').disabled = true;
+  document.getElementById('modalSaveBtn').textContent = 'Đang lưu…';
+
+  try {
+    if(editingCustomerStk){
+      const c = customers.find(x=>x.stk===editingCustomerStk);
+      const wasActive = c.status !== 'Đã chuyển đi';
+      const wasRemoved = c.status === 'Đã chuyển đi';
+      const isReturning = wasRemoved && status !== 'Đã chuyển đi';
+      if(status === 'Đã chuyển đi' && wasActive){
+        dbPayload.removed_at = toDbDate(document.getElementById('f_removed_date').value || today);
+      }
+      if(isReturning){
+        dbPayload.removed_at = null; // KH quay lại — xoá mốc remove cũ
+      }
+      const { error } = await sb.from('customers').update(dbPayload).eq('customer_id', c.id);
+      if(error) throw error;
+
+      // Ghi lịch sử NAV/phí nếu có thay đổi
+      if(nav !== c.nav) await sb.from('nav_history').insert({ customer_id: c.id, update_date: toDbDate(today), nav, source: 'manual' });
+      if(fee !== c.fee) await sb.from('fee_history').insert({ customer_id: c.id, update_date: toDbDate(today), fee, source: 'manual' });
+
+      // Lịch sử Room: ghi nhận sự kiện Remove hoặc Quay lại
+      if(status === 'Đã chuyển đi' && wasActive){
+        await sb.from('room_history').insert({ customer_id: c.id, special_room: 'Remove', entered_at: dbPayload.removed_at, reason: note || 'Chuyển sang Remove' });
+      }
+      if(isReturning){
+        await sb.from('room_history').insert({
+          customer_id: c.id,
+          room_id: isSpecialRoom ? null : parseInt(roomRaw),
+          special_room: isSpecialRoom ? roomRaw : null,
+          entered_at: toDbDate(today),
+          reason: 'Khách quay lại sau khi Remove'
+        });
+      }
+    } else {
+      if(customers.some(x=>x.stk===stk)){ alert('STK này đã tồn tại trong hệ thống.'); document.getElementById('modalSaveBtn').disabled=false; document.getElementById('modalSaveBtn').textContent='Lưu khách hàng'; return; }
+      dbPayload.created_at = new Date().toISOString();
+      const { data: inserted, error } = await sb.from('customers').insert(dbPayload).select().single();
+      if(error) throw error;
+      await sb.from('nav_history').insert({ customer_id: inserted.customer_id, update_date: toDbDate(today), nav, source: 'manual' });
+      await sb.from('fee_history').insert({ customer_id: inserted.customer_id, update_date: toDbDate(today), fee, source: 'manual' });
+      await sb.from('room_history').insert({
+        customer_id: inserted.customer_id,
+        room_id: isSpecialRoom ? null : parseInt(roomRaw),
+        special_room: isSpecialRoom ? roomRaw : null,
+        entered_at: toDbDate(mgmtStart),
+        reason: 'Tạo khách hàng'
+      });
+    }
+    await loadAllData();
+    closeModal();
+    renderCustomers();
+    renderDashboard();
+    renderRooms();
+  } catch(err){
+    alert('Lỗi khi lưu khách hàng: ' + err.message);
+  } finally {
+    document.getElementById('modalSaveBtn').disabled = false;
+    document.getElementById('modalSaveBtn').textContent = editingCustomerStk ? 'Lưu thay đổi' : 'Lưu khách hàng';
+  }
+}
+
+function onStatusChange(){
+  const status = document.getElementById('f_status').value;
+  const roomSel = document.getElementById('f_room');
+  const dateWrap = document.getElementById('f_removed_date_wrap');
+  if(status === 'Đã chuyển đi'){
+    roomSel.value = 'Remove';
+    dateWrap.style.display = 'block';
+    document.getElementById('f_removed_date').value = new Date().toLocaleDateString('vi-VN');
+  } else {
+    dateWrap.style.display = 'none';
+  }
+}
+function onRoomManualChange(){
+  const room = document.getElementById('f_room').value;
+  if(room === 'Remove'){
+    document.getElementById('f_status').value = 'Đã chuyển đi';
+    document.getElementById('f_removed_date_wrap').style.display = 'block';
+    document.getElementById('f_removed_date').value = new Date().toLocaleDateString('vi-VN');
+  }
+}
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('active');
+  editingCustomerStk = null;
+  document.getElementById('f_stk').disabled = false;
+}
+
+// ---------------- XƯNG HÔ (tuỳ chỉnh được) ----------------
+let pronounOptions = ['Anh','Chị','Bạn','Em'];
+
+function renderPronounSelect(){
+  const sel = document.getElementById('f_pronoun');
+  const current = sel.value;
+  sel.innerHTML = pronounOptions.map(p=>`<option value="${p}">${p}</option>`).join('');
+  if(pronounOptions.includes(current)) sel.value = current;
+}
+
+function togglePronounManager(){
+  document.getElementById('pronounManager').classList.toggle('open');
+  renderPronounManagerList();
+}
+
+function renderPronounManagerList(){
+  document.getElementById('pronounManagerList').innerHTML = pronounOptions.map((p,i)=>`
+    <div class="pronoun-chip">
+      <span>${p}</span>
+      <button type="button" class="chip-remove" title="Xóa" onclick="removePronoun(${i})">×</button>
+    </div>`).join('');
+}
+
+function addPronoun(){
+  const input = document.getElementById('newPronounInput');
+  const val = input.value.trim();
+  if(!val) return;
+  if(pronounOptions.includes(val)){ input.value=''; return; }
+  pronounOptions.push(val);
+  input.value='';
+  renderPronounManagerList();
+  renderPronounSelect();
+}
+
+function removePronoun(idx){
+  if(pronounOptions.length <= 1){ alert('Cần giữ lại ít nhất 1 lựa chọn xưng hô.'); return; }
+  pronounOptions.splice(idx,1);
+  renderPronounManagerList();
+  renderPronounSelect();
+  recomputePronoun();
+}
+
+document.addEventListener('click', function(e){
+  const wrap = document.getElementById('pronounManager');
+  const btn = e.target.closest('[title="Thêm / bớt lựa chọn xưng hô"]');
+  if(wrap && wrap.classList.contains('open') && !wrap.contains(e.target) && !btn){
+    wrap.classList.remove('open');
+  }
+});
+
+function onGenderChange(){ recomputePronoun(); }
+function onBirthYearChange(){ recomputePronoun(); }
+
+// Xưng hô: dựa trên năm sinh so với 1984.
+// Sinh < 1984 (lớn tuổi hơn) -> Anh (Nam) / Chị (Nữ) / Bạn (Khác).
+// Sinh = 1984 (cùng tuổi) -> Bạn.
+// Sinh > 1984 (trẻ hơn) -> Em, không phân biệt giới tính.
+// Chưa nhập năm sinh -> Bạn (mặc định trung tính).
+function recomputePronoun(){
+  const gender = document.getElementById('f_gender').value;
+  const year = parseInt(document.getElementById('f_birthyear').value);
+  let pronoun = 'Bạn';
+  if(year){
+    if(year === 1984){
+      pronoun = 'Bạn';
+    } else if(year < 1984){
+      pronoun = (gender==='Nam') ? 'Anh' : (gender==='Nữ') ? 'Chị' : 'Bạn';
+    } else {
+      pronoun = 'Em';
+    }
+  }
+  if(!pronounOptions.includes(pronoun)) pronoun = pronounOptions[0] || 'Bạn';
+  document.getElementById('f_pronoun').value = pronoun;
+  updateTelegramPreview();
+}
+
+// NAV quy ước: 100.000.000 = 0.1T  →  chia cho 1 tỷ, giữ 2 chữ số thập phân
+function navToTyUoc(rawNav){
+  const n = parseFloat(String(rawNav).replace(/[^\d]/g,''));
+  if(!n || isNaN(n)) return '0.00T';
+  const ty = n / 1000000000;
+  return ty.toFixed(2) + 'T';
+}
+
+function updateTelegramPreview(){
+  const pronoun = document.getElementById('f_pronoun').value || 'Anh';
+  const name = document.getElementById('f_name').value.trim() || 'Tên khách hàng';
+  const nav = navToTyUoc(document.getElementById('f_nav').value);
+  const managerId = document.getElementById('f_managerid').value.trim() || 'ID quản lý';
+  document.getElementById('f_telegram_preview').value = `${pronoun} ${name} ${nav} ${managerId}`;
+}
+function copyTelegramPreview(){
+  const text = document.getElementById('f_telegram_preview').value;
+  navigator.clipboard.writeText(text).then(()=>{
+    alert('Đã sao chép: ' + text);
+  }).catch(()=>{
+    alert('Không thể tự động sao chép trên trình duyệt này — vui lòng bôi đen và copy thủ công.');
+  });
+}
+
+// ---------------- DETAIL SLIDEOVER ----------------
+let currentDetailStk = null;
+
+async function openDetail(code){
+  const c = customers.find(x=>x.code===code) || customers[0];
+  currentDetailStk = c.stk;
+  document.getElementById('soName').textContent = c.name;
+  document.getElementById('soMeta').textContent = `STK ${c.stk || '(chưa mở TK)'}`;
+
+  document.getElementById('so_telegram').textContent = c.telegram || '—';
+  document.getElementById('so_room').textContent = roomLabel(c.room);
+  document.getElementById('so_status').textContent = c.status;
+  document.getElementById('so_mgmtstart').textContent = c.mgmtStart || '—';
+  document.getElementById('so_note').textContent = c.note || '—';
+  document.getElementById('so_nav').textContent = fmt(c.nav);
+  document.getElementById('so_fee').textContent = fmt(c.fee);
+  document.getElementById('so_updated').textContent = c.updated;
+
+  // Lịch sử NAV & phí — gộp tất cả mốc ngày có trong navHistory/feeHistory
+  const navH = c.navHistory || {};
+  const feeH = c.feeHistory || {};
+  const allDates = [...new Set([...Object.keys(navH), ...Object.keys(feeH)])]
+    .sort((a,b)=> b.split('/').reverse().join('').localeCompare(a.split('/').reverse().join('')));
+  document.getElementById('so_history_body').innerHTML = allDates.length ? allDates.map(d=>`
+    <tr><td>${d}</td>
+      <td class="num-col num">${navH[d]!==undefined ? fmt(navH[d]) : '—'}</td>
+      <td class="num-col num">${feeH[d]!==undefined ? fmt(feeH[d]) : '—'}</td>
+    </tr>`).join('') : '<tr><td colspan="3" style="color:var(--text-muted);text-align:center;">Chưa có lịch sử</td></tr>';
+
+  document.getElementById('so_timeline').innerHTML = '<div style="color:var(--text-muted);font-size:12.5px;">Đang tải lịch sử…</div>';
+  document.getElementById('slideover').classList.add('active');
+  document.getElementById('soScrim').classList.add('active');
+
+  // Timeline thật — nhiều chu kỳ vào/ra Room qua room_history + thay đổi NAV/phí
+  const tl = [];
+  if(c.mismatch) tl.push({date:c.updated, text:`NAV vượt ngưỡng ${roomLabel(c.room)} — cần xem xét đổi Room`});
+  allDates.slice(0,3).forEach(d=>{
+    if(navH[d]!==undefined) tl.push({date:d, text:`Cập nhật NAV: <b>${fmt(navH[d])}</b>`});
+    if(feeH[d]!==undefined) tl.push({date:d, text:`Cập nhật phí: <b>${fmt(feeH[d])}</b>`});
+  });
+  try {
+    const { data: rhRows } = await sb.from('room_history').select('room_id, special_room, entered_at, reason').eq('customer_id', c.id).order('entered_at', {ascending:false});
+    (rhRows||[]).forEach(rh=>{
+      const roomName = rh.special_room || roomLabel(rh.room_id);
+      tl.push({date: fromDbDate(rh.entered_at), text: `${rh.reason || 'Vào Room'} — <b>${roomName}</b>`});
+    });
+  } catch(e){ /* bỏ qua nếu không tải được lịch sử Room */ }
+
+  tl.sort((a,b)=>{
+    const da = parseDdMmYyyy(a.date), db = parseDdMmYyyy(b.date);
+    if(!da || !db) return 0;
+    return db - da;
+  });
+  document.getElementById('so_timeline').innerHTML = tl.length ? tl.map(t=>`
+    <div class="tl-item"><div class="tl-date">${t.date}</div><div class="tl-text">${t.text}</div></div>`).join('')
+    : '<div style="color:var(--text-muted);font-size:12.5px;">Chưa có lịch sử thay đổi.</div>';
+}
+function closeDetail(){
+  document.getElementById('slideover').classList.remove('active');
+  document.getElementById('soScrim').classList.remove('active');
+}
+
+// ---------------- KHOẢN VAY MARGIN ----------------
+// Số tài khoản khoản vay = 7 ký tự = STK gốc (6 ký tự đầu, khớp customers.stk) + 1 ký tự tiểu khoản.
+// Tiểu khoản: 1=Thường, 3=Margin đặc biệt, 6=Margin, 8=Phái sinh. Khoản vay chỉ phát sinh ở tiểu khoản 3 hoặc 6.
+const TIEU_KHOAN_LABELS = {'1':'Thường','3':'Margin đặc biệt','6':'Margin','8':'Phái sinh'};
+function tieuKhoanLabel(digit){ return TIEU_KHOAN_LABELS[digit] || ('TK'+digit); }
+function findCustomerByAccountNumber(accNum){
+  const baseStk = accNum.slice(0,6);
+  return customers.find(c=>c.stk===baseStk);
+}
+let loans = []; // nạp từ Supabase lúc khởi động
+function loanStatusBadge(s){
+  const map = {
+    "Chưa xử lý":"badge-red", "Đã check":"badge-blue", "Đã liên hệ":"badge-amber",
+    "KH xử lý xong":"badge-green", "Công ty đã xử lý":"badge-gray"
+  };
+  return `<span class="badge ${map[s]||'badge-gray'}">${s}</span>`;
+}
+function daysUntil(dateStr){
+  const [d,m,y] = dateStr.split('/').map(Number);
+  const target = new Date(y, m-1, d);
+  const today = new Date(2026, 7, 28); // 28/08/2026 — ngày hiện tại của hệ thống
+  const diff = Math.round((target - today) / (1000*60*60*24));
+  return diff;
+}
+function customerOptionsHtml(){
+  return customers.map(c=>`<option value="${c.stk}">${c.name} — ${c.stk}</option>`).join('');
+}
+function openLoanModal(preselectStk){
+  document.getElementById('loan_stk').innerHTML = customerOptionsHtml();
+  if(preselectStk) document.getElementById('loan_stk').value = preselectStk;
+  document.getElementById('loan_tk').value = '6';
+  document.getElementById('loan_amount').value = '';
+  document.getElementById('loan_due').value = '';
+  document.getElementById('loan_status').value = 'Chưa xử lý';
+  document.getElementById('loan_note').value = '';
+  document.getElementById('loanModalOverlay').classList.add('active');
+}
+function closeLoanModal(){ document.getElementById('loanModalOverlay').classList.remove('active'); }
+async function saveLoan(){
+  const stk = document.getElementById('loan_stk').value;
+  const tk = document.getElementById('loan_tk').value;
+  const account = stk + tk;
+  const amount = parseFloat(document.getElementById('loan_amount').value.replace(/[^\d]/g,'')) || 0;
+  const due = document.getElementById('loan_due').value.trim();
+  if(!due){ alert('Vui lòng nhập ngày đến hạn (dd/mm/yyyy).'); return; }
+  try {
+    const { error } = await sb.from('loans').insert({
+      account_number: account, amount, due_date: toDbDate(due),
+      status: document.getElementById('loan_status').value,
+      note: document.getElementById('loan_note').value.trim()
+    });
+    if(error) throw error;
+    await loadAllData();
+    expandedLoanGroups.add(stk);
+    closeLoanModal();
+    renderLoans();
+    renderDashboard();
+  } catch(err){ alert('Lỗi khi lưu khoản vay: ' + err.message); }
+}
+
+let expandedLoanGroups = new Set(); // các STK (6 ký tự) đang mở rộng
+let loansGroupsInitialized = false;
+let loanIdCounter = 100;
+let loanStatusPillFilter = ''; // '' = tất cả
+let loanDatePillFilter = '';   // '' | 'today' | 'overdue' | 'soon'
+let bulkSelectMode = false;
+let bulkSelectedLoanIds = new Set();
+
+function toggleLoanGroup(stk){
+  if(bulkSelectMode) return; // trong chế độ chọn để xoá, nhóm luôn mở để chọn chi tiết
+  if(expandedLoanGroups.has(stk)) expandedLoanGroups.delete(stk);
+  else expandedLoanGroups.add(stk);
+  renderLoans();
+}
+
+function overallLoanStatus(custLoans){
+  const nearest = Math.min(...custLoans.map(l=>daysUntil(l.dueDate)));
+  if(nearest < 0) return {label:'QUÁ HẠN', cls:'overall-badge-overdue'};
+  if(nearest <= 3) return {label:'SẮP ĐẾN HẠN', cls:'overall-badge-soon'};
+  return {label:'BÌNH THƯỜNG', cls:'overall-badge-ok'};
+}
+
+async function updateLoanNote(id, newNote){
+  const l = loans.find(x=>x.id===id);
+  if(l) l.note = newNote;
+  const { error } = await sb.from('loans').update({ note: newNote, updated_at: new Date().toISOString() }).eq('loan_id', id);
+  if(error) alert('Lỗi khi lưu ghi chú: ' + error.message);
+}
+async function updateLoanStatus(id, newStatus){
+  const l = loans.find(x=>x.id===id);
+  if(l) l.status = newStatus;
+  renderLoans();
+  renderDashboard();
+  const { error } = await sb.from('loans').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('loan_id', id);
+  if(error){ alert('Lỗi khi cập nhật trạng thái: ' + error.message); await loadAllData(); renderLoans(); renderDashboard(); }
+}
+async function deleteLoanEntry(id){
+  const idx = loans.findIndex(x=>x.id===id);
+  if(idx===-1) return;
+  if(!confirm('Xóa khoản vay này? Thao tác này không thể hoàn tác.')) return;
+  try {
+    const { error } = await sb.from('loans').delete().eq('loan_id', id);
+    if(error) throw error;
+    loans.splice(idx,1);
+    renderLoans();
+    renderDashboard();
+  } catch(err){ alert('Lỗi khi xóa (có thể do bạn không phải Owner): ' + err.message); }
+}
+function toggleBulkSelectMode(){
+  bulkSelectMode = !bulkSelectMode;
+  bulkSelectedLoanIds.clear();
+  document.getElementById('btnBulkSelect').textContent = bulkSelectMode ? '✕ Hủy chọn' : '🗑 Chọn để xoá';
+  renderLoans();
+}
+function toggleBulkSelectLoan(id){
+  if(bulkSelectedLoanIds.has(id)) bulkSelectedLoanIds.delete(id); else bulkSelectedLoanIds.add(id);
+  renderLoans();
+}
+function toggleBulkSelectGroup(stk, checked){
+  loans.filter(l=>l.account.slice(0,6)===stk).forEach(l=>{
+    if(checked) bulkSelectedLoanIds.add(l.id); else bulkSelectedLoanIds.delete(l.id);
+  });
+  renderLoans();
+}
+function quickSelectResolved(){
+  const RESOLVED = ['KH xử lý xong','Công ty đã xử lý'];
+  loans.filter(l=>RESOLVED.includes(l.status)).forEach(l=>bulkSelectedLoanIds.add(l.id));
+  renderLoans();
+}
+async function deleteBulkSelected(){
+  if(bulkSelectedLoanIds.size===0) return;
+  if(!confirm(`Xóa ${bulkSelectedLoanIds.size} khoản vay đã chọn? Không thể hoàn tác.`)) return;
+  try {
+    const ids = [...bulkSelectedLoanIds];
+    const { error } = await sb.from('loans').delete().in('loan_id', ids);
+    if(error) throw error;
+    for(let i=loans.length-1;i>=0;i--){
+      if(bulkSelectedLoanIds.has(loans[i].id)) loans.splice(i,1);
+    }
+    bulkSelectMode = false;
+    bulkSelectedLoanIds.clear();
+    document.getElementById('btnBulkSelect').textContent = '🗑 Chọn để xoá';
+    renderLoans();
+    renderDashboard();
+  } catch(err){ alert('Lỗi khi xóa hàng loạt (có thể do bạn không phải Owner): ' + err.message); }
+}
+function setLoanStatusFromDropdown(val){
+  loanStatusPillFilter = val;
+  renderLoans();
+}
+function refreshLoans(){
+  document.getElementById('loanSearchInput').value = '';
+  document.getElementById('loanShowAll').checked = true;
+  document.getElementById('loanStatusDropdown').value = '';
+  loanStatusPillFilter = '';
+  loanDatePillFilter = '';
+  expandedLoanGroups.clear();
+  renderLoans();
+}
+function setLoanStatusPill(status){
+  loanStatusPillFilter = (loanStatusPillFilter === status) ? '' : status;
+  document.getElementById('loanStatusDropdown').value = loanStatusPillFilter;
+  renderLoans();
+}
+function setLoanDatePill(key){
+  loanDatePillFilter = (loanDatePillFilter === key) ? '' : key;
+  renderLoans();
+}
+
+function renderLoans(){
+  const q = (document.getElementById('loanSearchInput').value||'').toLowerCase();
+  const showAll = document.getElementById('loanShowAll').checked;
+  const RESOLVED = ['KH xử lý xong','Công ty đã xử lý'];
+
+  // Đếm số liệu cho các pill (tính trên toàn bộ loans, không phụ thuộc bộ lọc khác — giống hệ thống cũ)
+  const statusCounts = {};
+  ['Chưa xử lý','Đã check','Đã liên hệ','KH xử lý xong','Công ty đã xử lý'].forEach(s=>{
+    statusCounts[s] = loans.filter(l=>l.status===s).length;
+  });
+  const todayCount = loans.filter(l=>daysUntil(l.dueDate)===0).length;
+  const overdueCount = loans.filter(l=>daysUntil(l.dueDate)<0).length;
+  const soonCount = loans.filter(l=>{const d=daysUntil(l.dueDate);return d>0 && d<=7;}).length;
+
+  document.getElementById('loanStatusPills').innerHTML = ['Chưa xử lý','Đã check','Đã liên hệ'].map(s=>`
+    <div class="loan-pill ${loanStatusPillFilter===s?'active':''}" onclick="setLoanStatusPill('${s}')">${s} <span class="cnt">${statusCounts[s]}</span></div>
+  `).join('');
+  document.getElementById('loanDatePills').innerHTML = `
+    <div class="loan-pill ${loanDatePillFilter==='today'?'active':''}" onclick="setLoanDatePill('today')">Đến hạn hôm nay <span class="cnt">${todayCount}</span></div>
+    <div class="loan-pill ${loanDatePillFilter==='overdue'?'active':''}" onclick="setLoanDatePill('overdue')">Quá hạn <span class="cnt">${overdueCount}</span></div>
+    <div class="loan-pill ${loanDatePillFilter==='soon'?'active':''}" onclick="setLoanDatePill('soon')">Sắp đến hạn (7 ngày) <span class="cnt">${soonCount}</span></div>
+  `;
+
+  const filtered = loans.filter(l=>{
+    const c = findCustomerByAccountNumber(l.account);
+    const name = c ? c.name : '';
+    const matchQ = !q || name.toLowerCase().includes(q) || l.account.includes(q) || (c && c.stk.includes(q));
+    const matchResolved = showAll || !RESOLVED.includes(l.status);
+    const matchStatusPill = !loanStatusPillFilter || l.status===loanStatusPillFilter;
+    const d = daysUntil(l.dueDate);
+    const matchDatePill = !loanDatePillFilter ||
+      (loanDatePillFilter==='today' && d===0) ||
+      (loanDatePillFilter==='overdue' && d<0) ||
+      (loanDatePillFilter==='soon' && d>0 && d<=7);
+    return matchQ && matchResolved && matchStatusPill && matchDatePill;
+  });
+  document.getElementById('loanResultCount').textContent = filtered.length + ' khoản vay';
+  document.getElementById('loanSidebarTotal').innerHTML = `Tổng: <b>${loans.length}</b> khoản vay${showAll?'':' (đang ẩn khoản đã xử lý)'}`;
+
+  // Nhóm theo khách hàng (STK 6 ký tự)
+  const byCustomer = {};
+  filtered.forEach(l=>{
+    const stk = l.account.slice(0,6);
+    if(!byCustomer[stk]) byCustomer[stk] = [];
+    byCustomer[stk].push(l);
+  });
+
+  if(!loansGroupsInitialized){
+    Object.keys(byCustomer).forEach(stk=>expandedLoanGroups.add(stk));
+    loansGroupsInitialized = true;
+  }
+
+  const STATUS_OPTIONS = ["Chưa xử lý","Đã check","Đã liên hệ","KH xử lý xong","Công ty đã xử lý"];
+
+  let bulkBar = '';
+  if(bulkSelectMode){
+    bulkBar = `<div class="notice" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <span>Đã chọn <b>${bulkSelectedLoanIds.size}</b> khoản vay. Tick vào từng dòng để chọn/bỏ chọn.</span>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondary btn-sm" onclick="quickSelectResolved()">Chọn tất cả khoản đã xử lý</button>
+        <button class="btn btn-primary btn-sm" onclick="deleteBulkSelected()" ${bulkSelectedLoanIds.size===0?'disabled style="opacity:.5;"':''}>Xóa các mục đã chọn</button>
+      </div>
+    </div>`;
+  }
+
+  let html = bulkBar;
+  Object.entries(byCustomer).forEach(([stk, custLoans])=>{
+    const c = customers.find(x=>x.stk===stk);
+    const isOpen = bulkSelectMode || expandedLoanGroups.has(stk);
+    const nearest = Math.min(...custLoans.map(l=>daysUntil(l.dueDate)));
+    const nearestLoan = custLoans.find(l=>daysUntil(l.dueDate)===nearest);
+    const totalAmount = custLoans.reduce((s,l)=>s+l.amount,0);
+    const overall = overallLoanStatus(custLoans);
+    const groupIds = custLoans.map(l=>l.id);
+    const allSelected = groupIds.every(id=>bulkSelectedLoanIds.has(id));
+    const someSelected = groupIds.some(id=>bulkSelectedLoanIds.has(id));
+
+    html += `<div class="loan-card">
+      <div class="loan-card-header" onclick="toggleLoanGroup('${stk}')">
+        ${bulkSelectMode
+          ? `<input type="checkbox" class="bulk-checkbox" ${allSelected?'checked':''} ${!allSelected&&someSelected?'data-indeterminate="1"':''} title="Chọn tất cả khoản của KH này" onclick="event.stopPropagation();toggleBulkSelectGroup('${stk}', this.checked)">`
+          : `<span class="chevron ${isOpen?'open':''}">▸</span>`}
+        <div>
+          <div class="loan-col-value">${c ? c.name : `<span style="color:var(--red);">Không tìm thấy KH</span> <button class="btn btn-secondary btn-sm" style="padding:2px 8px;font-size:11px;" onclick="event.stopPropagation();openAddModal('${stk}')">+ Tạo KH</button>`}</div>
+          <span class="loan-stk-pill">🆔 ${stk}</span>
+        </div>
+        <div><div class="loan-col-label">ID phụ trách</div><div class="loan-col-value">${c ? (c.managerId||'—') : '—'}</div></div>
+        <div><div class="loan-col-label">Số khoản</div><div class="loan-col-value">${custLoans.length}</div></div>
+        <div><div class="loan-col-label">Khoản sắp đến hạn nhất</div><div class="loan-col-value" style="color:${nearest<0?'var(--red)':nearest<=3?'var(--amber)':'var(--text)'};">${nearest<0?'⚠️ ':nearest<=3?'⚠️ ':''}${nearestLoan.dueDate}</div></div>
+        <div><div class="loan-col-label">Tổng dư nợ</div><div class="loan-col-value num">${fmt(totalAmount)}</div></div>
+        <div><span class="badge ${overall.cls}">${overall.label}</span></div>
+        <div onclick="event.stopPropagation();">
+          ${bulkSelectMode ? '' : `
+          <button class="icon-btn" title="Soạn tin nhắn nhắc tất cả khoản vay của KH này" onclick="openMessageModal('loan_multi', '${stk}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+          <button class="icon-btn" title="Thêm khoản vay cho KH này" onclick="openLoanModal('${stk}')">＋</button>`}
+        </div>
+      </div>`;
+
+    if(isOpen){
+      const byAccount = {};
+      custLoans.forEach(l=>{ (byAccount[l.account] = byAccount[l.account]||[]).push(l); });
+      let rowsHtml = '';
+      Object.entries(byAccount).forEach(([account, accLoans])=>{
+        accLoans.forEach((l, i)=>{
+          const days = daysUntil(l.dueDate);
+          const dueLabel = days < 0 ? `<span style="color:var(--red);font-weight:700;">⚠️ ${l.dueDate}</span>` :
+                            days <= 3 ? `<span style="color:var(--amber);font-weight:700;">⚠️ ${l.dueDate}</span>` :
+                            l.dueDate;
+          rowsHtml += `<tr>
+            ${bulkSelectMode ? `<td><input type="checkbox" class="bulk-checkbox" ${bulkSelectedLoanIds.has(l.id)?'checked':''} onchange="toggleBulkSelectLoan(${l.id})"></td>` : ''}
+            <td>${i+1}</td>
+            <td>${account}</td>
+            <td>${dueLabel}</td>
+            <td class="num-col num">${l.amount ? fmt(l.amount) : '—'}</td>
+            <td>
+              <select class="status-select" onchange="updateLoanStatus(${l.id}, this.value)">
+                ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${s===l.status?'selected':''}>${s}</option>`).join('')}
+              </select>
+            </td>
+            <td><input type="text" class="loan-note-input" value="${(l.note||'').replace(/"/g,'&quot;')}" placeholder="Thêm ghi chú…" onchange="updateLoanNote(${l.id}, this.value)"></td>
+            <td>
+              <div class="row-actions" style="opacity:1;">
+                <button class="icon-btn" title="Soạn tin nhắn" onclick="openMessageModal('loan', '${account}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+                <button class="icon-btn" title="Xóa khoản vay" onclick="deleteLoanEntry(${l.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+              </div>
+            </td>
+          </tr>`;
+        });
+      });
+      html += `<table class="loan-detail-table">
+        <thead><tr>${bulkSelectMode?'<th></th>':''}<th>#</th><th>Số tài khoản</th><th>Ngày đến hạn</th><th class="num-col">Tiền</th><th>Trạng thái</th><th>Ghi chú</th><th></th></tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+      <div class="loan-card-footer"><span>Tổng số khoản: <b>${custLoans.length}</b></span><span>Tổng dư nợ: <b>${fmt(totalAmount)}</b></span></div>`;
+    }
+    html += `</div>`;
+  });
+
+  document.getElementById('loansContainer').innerHTML = html || (bulkBar + '<div style="color:var(--text-muted);font-size:13px;padding:20px;text-align:center;">Không có khoản vay nào khớp bộ lọc.</div>');
+  document.querySelectorAll('.loan-card-header input[data-indeterminate="1"]').forEach(el=>{ el.indeterminate = true; });
+}
+
+// ---------------- QUYỀN MUA CỔ PHIẾU ----------------
+let rights = []; // nạp từ Supabase lúc khởi động
+let rightIdCounter = 100;
+function rightStatusBadge(s){
+  const map = {
+    "Chưa đăng ký":"badge-amber", "Đã đăng ký":"badge-blue", "Đã nộp tiền":"badge-green",
+    "Hết hạn":"badge-gray", "Đã hủy":"badge-red"
+  };
+  return `<span class="badge ${map[s]||'badge-gray'}">${s}</span>`;
+}
+function openRightModal(){
+  document.getElementById('right_stk').innerHTML = customerOptionsHtml();
+  document.getElementById('right_symbol').value = '';
+  document.getElementById('right_price').value = '';
+  document.getElementById('right_ratio_num').value = 1;
+  document.getElementById('right_ratio_denom').value = 5;
+  document.getElementById('right_holdings').value = '';
+  document.getElementById('right_record_date').value = '';
+  document.getElementById('right_deadline').value = '';
+  document.getElementById('right_status').value = 'Chưa đăng ký';
+  computeRightQty();
+  document.getElementById('rightModalOverlay').classList.add('active');
+}
+function closeRightModal(){ document.getElementById('rightModalOverlay').classList.remove('active'); }
+function computeRightQty(){
+  const num = parseFloat(document.getElementById('right_ratio_num').value) || 0;
+  const denom = parseFloat(document.getElementById('right_ratio_denom').value) || 1;
+  const holdings = parseFloat(document.getElementById('right_holdings').value) || 0;
+  const qty = Math.floor(holdings / denom) * num;
+  document.getElementById('right_qty_preview').value = qty ? fmt(qty) + ' CP' : '0 CP';
+}
+async function saveRight(){
+  const stk = document.getElementById('right_stk').value;
+  const num = parseFloat(document.getElementById('right_ratio_num').value) || 1;
+  const denom = parseFloat(document.getElementById('right_ratio_denom').value) || 1;
+  const holdings = parseFloat(document.getElementById('right_holdings').value) || 0;
+  const qty = Math.floor(holdings / denom) * num;
+  const deadline = document.getElementById('right_deadline').value.trim();
+  const recordDate = document.getElementById('right_record_date').value.trim();
+  if(!deadline || !recordDate){ alert('Vui lòng nhập đầy đủ Ngày chốt quyền và Hạn đăng ký (dd/mm/yyyy).'); return; }
+  try {
+    const { error } = await sb.from('rights_offerings').insert({
+      account_number: stk,
+      symbol: document.getElementById('right_symbol').value.trim().toUpperCase(),
+      ratio_num: num, ratio_denom: denom,
+      price: parseFloat(document.getElementById('right_price').value.replace(/[^\d]/g,'')) || 0,
+      holdings, qty,
+      record_date: toDbDate(recordDate), deadline: toDbDate(deadline),
+      status: document.getElementById('right_status').value
+    });
+    if(error) throw error;
+    await loadAllData();
+    closeRightModal();
+    renderRights();
+    renderDashboard();
+  } catch(err){ alert('Lỗi khi lưu quyền mua: ' + err.message); }
+}
+
+async function updateRightStatus(id, newStatus){
+  const r = rights.find(x=>x.id===id);
+  if(r) r.status = newStatus;
+  renderRights();
+  renderDashboard();
+  const { error } = await sb.from('rights_offerings').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('right_id', id);
+  if(error){ alert('Lỗi khi cập nhật trạng thái: ' + error.message); await loadAllData(); renderRights(); renderDashboard(); }
+}
+
+const RIGHT_STATUS_OPTIONS = ["Chưa đăng ký","Đã đăng ký","Đã nộp tiền","Hết hạn","Đã hủy"];
+
+function renderRights(){
+  const q = (document.getElementById('rightSearchInput').value||'').toLowerCase();
+  const statusF = document.getElementById('rightFilterStatus').value;
+  const list = rights.filter(r=>{
+    const matchQ = !q || r.name.toLowerCase().includes(q) || r.stk.includes(q) || r.symbol.toLowerCase().includes(q);
+    const matchStatus = !statusF || r.status===statusF;
+    return matchQ && matchStatus;
+  });
+  document.getElementById('rightResultCount').textContent = list.length + ' quyền mua';
+  document.getElementById('rightsBody').innerHTML = list.map((r,idx)=>`
+    <tr>
+      <td>${idx+1}</td>
+      <td class="cust-name">${r.name}</td>
+      <td>${r.stk}</td>
+      <td><b>${r.symbol}</b></td>
+      <td>${r.ratio}</td>
+      <td class="num-col num">${fmt(r.price)}</td>
+      <td class="num-col num">${fmt(r.qty)}</td>
+      <td>${r.recordDate}</td>
+      <td>${r.deadline}</td>
+      <td>
+        <select class="status-select" onchange="updateRightStatus(${r.id}, this.value)">
+          ${RIGHT_STATUS_OPTIONS.map(s=>`<option value="${s}" ${s===r.status?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </td>
+      <td><button class="icon-btn" title="Soạn tin nhắn" onclick="openMessageModal('right', '${r.stk}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button></td>
+    </tr>`).join('');
+}
+
+// ---------------- IMPORT WIZARD ----------------
+const importTypes = {
+  customerlist: {
+    filename: "📄 Danh_sach_KH_hien_co.xlsx (410KB)",
+    hint: "Kéo thả file danh sách khách hàng hiện có vào đây, hoặc bấm để chọn file",
+    subhint: 'Dùng 1 lần khi mới bắt đầu, để nạp toàn bộ KH đang quản lý (từ Zoom/Excel) vào hệ thống',
+    mapping: [
+      ["STK", "Số tài khoản (định danh, 6 ký tự) — bắt buộc"],
+      ["Tên KH", "Tên khách hàng — bắt buộc"],
+      ["Giới tính", "Nam / Nữ / Khác — để trống mặc định 'Khác'"],
+      ["Năm sinh", "Dùng để tự đề xuất xưng hô — có thể để trống"],
+      ["ID QL", "ID người quản lý — bắt buộc"],
+      ["NAV", "NAV hiện tại — bắt buộc"],
+      ["Phí", "Phí tháng hiện tại — để trống = 0"],
+      ["Room", "Để trống → hệ thống tự gán theo ngưỡng NAV, có thể sửa tay sau"],
+      ["Trạng thái", "Để trống → mặc định 'Đang quản lý'"],
+      ["Ngày bắt đầu QL", "Để trống → mặc định = ngày chạy import này"],
+      ["Ghi chú", "Tuỳ chọn"],
+    ],
+    note: 'Chưa có skill tổng hợp riêng cho danh sách KH ban đầu — đây là cấu trúc cột mình đề xuất dựa trên các trường hệ thống đang dùng. Bạn xem lại có khớp với file bạn đang có trong Zoom không, cần thêm/bớt cột gì thì báo mình chỉnh lại trước khi build thật.'
+  },
+  nav: {
+    filename: "📄 Tong_hop_NAV_thang08.xlsx (198KB)",
+    hint: "Kéo thả file NAV đã tổng hợp vào đây, hoặc bấm để chọn file",
+    subhint: 'File đầu ra từ bước "Tổng hợp NAV" — sheet "Tong hop NAV"',
+    mapping: [
+      ["STK", "Số tài khoản (định danh khách hàng)"],
+      ["Tên KH", "Tên khách hàng"],
+      ["Tổng", "NAV hiện tại"],
+      ["MKT ID", "ID người quản lý"],
+    ]
+  },
+  bc12: {
+    filename: "📄 Tong_hop_BC12_thang08.xlsx (256KB)",
+    hint: "Kéo thả file BC12 đã tổng hợp vào đây, hoặc bấm để chọn file",
+    subhint: 'File đầu ra từ bước "Tổng hợp BC12" — sheet "Tong hop"',
+    mapping: [
+      ["Số tài khoản", "Số tài khoản (định danh khách hàng)"],
+      ["Tên chủ tài khoản", "Tên khách hàng"],
+      ["Phí giao dịch", "Phí tháng hiện tại"],
+      ["ID", "ID người quản lý"],
+    ]
+  },
+  loan: {
+    filename: "📄 Dao_han_17_08_2026.xlsx (94KB)",
+    hint: "Kéo thả file Khoản vay đến hạn đã tổng hợp vào đây, hoặc bấm để chọn file",
+    subhint: 'File đầu ra từ skill "Chuyển đổi đáo hạn" — mỗi sheet là 1 ngày chốt số liệu',
+    mapping: [
+      ["Số tài khoản", "7 ký tự: 6 số đầu khớp STK khách hàng, số cuối là tiểu khoản (3=Margin đặc biệt, 6=Margin)"],
+      ["Ngày đáo hạn", "Ngày đến hạn"],
+      ["MKT ID", "ID người quản lý"],
+    ],
+    note: 'File nguồn này không có "Số tiền vay" — sau khi import, khoản vay được tạo với số tiền = 0. Bạn sẽ bổ sung số tiền vay bằng tay cho từng khoản sau khi import (đã xác nhận, không cần ghép thêm nguồn dữ liệu khác).'
+  },
+  right: {
+    filename: "📄 Quyen_mua_thang08.xlsx (72KB)",
+    hint: "Kéo thả file Quyền mua vào đây, hoặc bấm để chọn file",
+    subhint: 'Cấu trúc đề xuất — cần bạn xác nhận trước khi áp dụng chính thức',
+    mapping: [
+      ["Số tài khoản", "Số tài khoản (định danh khách hàng)"],
+      ["Mã CP", "Mã cổ phiếu"],
+      ["Tỷ lệ", "Tỷ lệ quyền mua (vd 1:5)"],
+      ["Giá", "Giá quyền mua"],
+      ["Số CP nắm giữ", "Dùng để tự tính Số lượng được mua"],
+      ["Ngày chốt quyền", "Ngày chốt quyền"],
+      ["Hạn đăng ký", "Hạn đăng ký / nộp tiền"],
+    ],
+    note: 'Chưa có skill tổng hợp riêng cho quyền mua như NAV/BC12/đáo hạn — đây là cấu trúc cột mình đề xuất, bạn xác nhận hoặc chỉnh lại trước khi build thật.'
+  }
+};
+function setImportType(type){
+  currentImportType = type;
+  const map = {customerlist:'btnTypeCustomerList', nav:'btnTypeNav', bc12:'btnTypeBc12', loan:'btnTypeLoan', right:'btnTypeRight'};
+  Object.entries(map).forEach(([t,id])=>{
+    document.getElementById(id).className = 'btn btn-sm ' + (t===type ? 'btn-primary' : 'btn-secondary');
+  });
+  const cfg = importTypes[type];
+  document.getElementById('uploadHint').textContent = cfg.hint;
+  document.getElementById('uploadSubHint').textContent = cfg.subhint;
+  document.getElementById('fixedMappingBody').innerHTML = cfg.mapping.map(([a,b])=>`<tr><td><b>${a}</b></td><td>${b}</td></tr>`).join('');
+  const noteEl = document.getElementById('importTypeNote');
+  if(cfg.note){ noteEl.style.display='block'; noteEl.textContent = '⚠️ ' + cfg.note; }
+  else { noteEl.style.display='none'; }
+  resetFileSelection();
+}
+
+function resetFileSelection(){
+  document.getElementById('fileInput').value = '';
+  document.getElementById('uploadFilename').style.display = 'none';
+  document.getElementById('uploadHint').style.display = 'block';
+  document.getElementById('uploadSubHint').style.display = 'block';
+}
+
+function triggerFilePicker(){ document.getElementById('fileInput').click(); }
+
+function formatFileSize(bytes){
+  if(bytes < 1024) return bytes + ' B';
+  if(bytes < 1024*1024) return (bytes/1024).toFixed(0) + 'KB';
+  return (bytes/(1024*1024)).toFixed(1) + 'MB';
+}
+
+function handleFileSelected(fileList){
+  if(!fileList || !fileList.length) return;
+  const file = fileList[0];
+  const valid = /\.(xlsx|xls)$/i.test(file.name);
+  const box = document.getElementById('uploadFilename');
+  box.style.display = 'inline-flex';
+  document.getElementById('uploadHint').style.display = 'none';
+  document.getElementById('uploadSubHint').style.display = 'none';
+  if(valid){
+    box.style.background = 'var(--accent-soft)';
+    box.style.color = 'var(--accent-dark)';
+    box.textContent = `📄 ${file.name} (${formatFileSize(file.size)})`;
+  } else {
+    box.style.background = 'var(--red-soft)';
+    box.style.color = 'var(--red)';
+    box.textContent = `⚠️ ${file.name} — chỉ hỗ trợ .xlsx hoặc .xls`;
+  }
+}
+
+(function initDragDrop(){
+  const box = document.getElementById('uploadBox');
+  ['dragenter','dragover'].forEach(evt=>{
+    box.addEventListener(evt, e=>{ e.preventDefault(); e.stopPropagation(); box.classList.add('dragover'); });
+  });
+  ['dragleave','drop'].forEach(evt=>{
+    box.addEventListener(evt, e=>{ e.preventDefault(); e.stopPropagation(); box.classList.remove('dragover'); });
+  });
+  box.addEventListener('drop', e=>{
+    const files = e.dataTransfer.files;
+    if(files && files.length) handleFileSelected(files);
+  });
+})();
+
+let currentImportType = 'nav';
+const importStepLabels = ["Upload file","Kiểm tra dữ liệu","Xem trước thay đổi","Hoàn tất"];
+function renderImportSteps(current){
+  document.getElementById('importSteps').innerHTML = importStepLabels.map((label,i)=>{
+    const n = i+1;
+    const cls = n<current ? 'done' : (n===current ? 'active' : '');
+    const line = n<importStepLabels.length ? '<div class="step-line"></div>' : '';
+    return `<div class="step ${cls}"><div class="step-num">${n<current?'✓':n}</div><div class="step-label">${label}</div></div>${line}`;
+  }).join('');
+}
+function goImportStep(step){
+  for(let i=1;i<=4;i++){ document.getElementById('importStep'+i).style.display = (i===step) ? 'block' : 'none'; }
+  renderImportSteps(step);
+}
+
+let pendingImportPlan = null;
+
+function getCol(row, ...names){
+  const keys = Object.keys(row);
+  for(const name of names){
+    const found = keys.find(k=>k.trim().toLowerCase()===name.trim().toLowerCase());
+    if(found !== undefined && row[found] !== undefined) return row[found];
+  }
+  return '';
+}
+function parseNum(v){
+  if(typeof v === 'number') return v;
+  const s = String(v||'').replace(/[^\d.-]/g,'');
+  return s ? Math.round(parseFloat(s)) : 0;
+}
+function parseDateCell(v){
+  if(v instanceof Date) return `${String(v.getDate()).padStart(2,'0')}/${String(v.getMonth()+1).padStart(2,'0')}/${v.getFullYear()}`;
+  if(typeof v === 'number' && window.XLSX && XLSX.SSF){
+    const d = XLSX.SSF.parse_date_code(v);
+    if(d) return `${String(d.d).padStart(2,'0')}/${String(d.m).padStart(2,'0')}/${d.y}`;
+  }
+  return String(v||'').trim();
+}
+function autoAssignRoom(nav){
+  const r = rooms.find(r => nav >= r.min && (r.max===Infinity || nav <= r.max));
+  return r ? r.id : (rooms[0] ? rooms[0].id : null);
+}
+
+async function proceedFromUpload(){
+  const input = document.getElementById('fileInput');
+  if(!input.files || !input.files.length){ alert('Vui lòng chọn hoặc kéo thả 1 file trước khi tiếp tục.'); return; }
+  const file = input.files[0];
+  const btn = document.querySelector('#importStep1 .btn-primary');
+  btn.disabled = true; btn.textContent = 'Đang đọc file…';
+  try {
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, {type:'array', cellDates:true});
+    let rows = [];
+    wb.SheetNames.forEach(name=>{
+      const sheetRows = XLSX.utils.sheet_to_json(wb.Sheets[name], {defval:''});
+      rows = rows.concat(sheetRows);
+    });
+    if(rows.length === 0){ alert('File không có dữ liệu hoặc sai định dạng.'); return; }
+    pendingImportPlan = analyzeImportRows(currentImportType, rows);
+    renderImportStep2(pendingImportPlan);
+    goImportStep(2);
+  } catch(err){
+    alert('Không đọc được file: ' + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Tiếp tục — Kiểm tra dữ liệu →';
+  }
+}
+
+function analyzeImportRows(type, rows){
+  const plan = { type, valid:[], errors:[], newCount:0, changedCount:0, unchangedCount:0 };
+  rows.forEach((row, idx)=>{
+    const lineNo = idx+2;
+    if(type==='nav' || type==='customerlist' || type==='bc12'){
+      let stk,name,nav,fee,managerId,gender,birthYear,roomRaw,status,mgmtStart,note;
+      if(type==='nav'){
+        stk = String(getCol(row,'STK')).trim();
+        name = String(getCol(row,'Tên KH')).trim();
+        nav = parseNum(getCol(row,'Tổng'));
+        managerId = String(getCol(row,'MKT ID')).trim();
+      } else if(type==='bc12'){
+        stk = String(getCol(row,'Số tài khoản')).trim();
+        name = String(getCol(row,'Tên chủ tài khoản')).trim();
+        fee = parseNum(getCol(row,'Phí giao dịch'));
+        managerId = String(getCol(row,'ID')).trim();
+      } else {
+        stk = String(getCol(row,'STK')).trim();
+        name = String(getCol(row,'Tên KH')).trim();
+        gender = String(getCol(row,'Giới tính')).trim() || 'Khác';
+        birthYear = parseInt(getCol(row,'Năm sinh')) || null;
+        managerId = String(getCol(row,'ID QL')).trim();
+        nav = parseNum(getCol(row,'NAV'));
+        fee = parseNum(getCol(row,'Phí'));
+        roomRaw = String(getCol(row,'Room')).trim();
+        status = String(getCol(row,'Trạng thái')).trim() || 'Đang quản lý';
+        mgmtStart = String(getCol(row,'Ngày bắt đầu QL')).trim();
+        note = String(getCol(row,'Ghi chú')).trim();
+      }
+      if(!stk || stk.length!==6){ plan.errors.push({line:lineNo, content:`STK: ${stk||'(trống)'}`, error:'Thiếu hoặc sai định dạng STK (cần đúng 6 ký tự)'}); return; }
+      if(!name){ plan.errors.push({line:lineNo, content:`STK ${stk}`, error:'Thiếu Tên khách hàng'}); return; }
+      const existing = customers.find(c=>c.stk===stk);
+      const item = {stk,name,nav,fee,managerId,gender,birthYear,roomRaw,status,mgmtStart,note,existing};
+      if(!existing){ item.isNew = true; plan.newCount++; }
+      else {
+        const navChanged = nav!==undefined && type!=='bc12' && nav !== existing.nav;
+        const feeChanged = fee!==undefined && (type==='bc12'||type==='customerlist') && fee !== existing.fee;
+        item.navChanged = navChanged; item.feeChanged = feeChanged;
+        if(navChanged || feeChanged) plan.changedCount++; else plan.unchangedCount++;
+      }
+      plan.valid.push(item);
+    }
+    else if(type==='loan'){
+      const accRaw = String(getCol(row,'Số tài khoản')).trim();
+      const due = parseDateCell(getCol(row,'Ngày đáo hạn'));
+      const managerId = String(getCol(row,'MKT ID')).trim();
+      if(!accRaw || accRaw.length!==7){ plan.errors.push({line:lineNo, content:`STK: ${accRaw||'(trống)'}`, error:'Số tài khoản phải đúng 7 ký tự'}); return; }
+      if(!due){ plan.errors.push({line:lineNo, content:`TK ${accRaw}`, error:'Thiếu ngày đáo hạn'}); return; }
+      const dup = loans.find(l=>l.account===accRaw && l.dueDate===due);
+      const item = {account:accRaw, dueDate:due, managerId, isNew: !dup, isDup: !!dup};
+      if(dup) plan.unchangedCount++; else plan.newCount++;
+      plan.valid.push(item);
+    }
+    else if(type==='right'){
+      const stk = String(getCol(row,'Số tài khoản')).trim();
+      const symbol = String(getCol(row,'Mã CP')).trim().toUpperCase();
+      const ratioRaw = String(getCol(row,'Tỷ lệ')).trim();
+      const price = parseNum(getCol(row,'Giá'));
+      const holdings = parseNum(getCol(row,'Số CP nắm giữ'));
+      const recordDate = parseDateCell(getCol(row,'Ngày chốt quyền'));
+      const deadline = parseDateCell(getCol(row,'Hạn đăng ký'));
+      if(!stk || stk.length!==6){ plan.errors.push({line:lineNo, content:`STK: ${stk||'(trống)'}`, error:'Thiếu hoặc sai định dạng STK'}); return; }
+      if(!symbol){ plan.errors.push({line:lineNo, content:`STK ${stk}`, error:'Thiếu Mã CP'}); return; }
+      if(!deadline || !recordDate){ plan.errors.push({line:lineNo, content:`STK ${stk} - ${symbol}`, error:'Thiếu ngày chốt quyền / hạn đăng ký'}); return; }
+      const rp = ratioRaw.split(':');
+      const ratioNum = parseInt(rp[0])||1, ratioDenom = parseInt(rp[1])||1;
+      const qty = Math.floor(holdings/ratioDenom)*ratioNum;
+      const dup = rights.find(r=>r.stk===stk && r.symbol===symbol && r.recordDate===recordDate);
+      const item = {stk,symbol,ratioNum,ratioDenom,price,holdings,qty,recordDate,deadline,isNew: !dup, isDup: !!dup};
+      if(dup) plan.unchangedCount++; else plan.newCount++;
+      plan.valid.push(item);
+    }
+  });
+  return plan;
+}
+
+function renderImportStep2(plan){
+  document.getElementById('sumValid').textContent = plan.valid.length;
+  document.getElementById('sumNew').textContent = plan.newCount;
+  document.getElementById('sumChanged').textContent = plan.changedCount;
+  document.getElementById('sumUnchanged').textContent = plan.unchangedCount;
+  document.getElementById('sumError').textContent = plan.errors.length;
+  const errPanel = document.getElementById('errorPanel');
+  if(plan.errors.length){
+    errPanel.style.display = 'block';
+    document.getElementById('importErrorBody').innerHTML = plan.errors.slice(0,200).map(e=>`<tr><td>${e.line}</td><td>${e.content}</td><td><span class="badge badge-red">${e.error}</span></td></tr>`).join('');
+  } else { errPanel.style.display = 'none'; }
+  document.getElementById('btnToStep3').style.opacity = plan.valid.length===0 ? '.5' : '1';
+  document.getElementById('btnToStep3').disabled = plan.valid.length===0;
+}
+
+function goToImportStep3(){
+  const plan = pendingImportPlan;
+  if(!plan) return;
+  const head = document.getElementById('previewTableHead');
+  const body = document.getElementById('previewTableBody');
+  document.getElementById('previewTitle').textContent = `Xem trước ${plan.valid.length} dòng sẽ áp dụng`;
+  if(plan.type==='nav' || plan.type==='bc12' || plan.type==='customerlist'){
+    head.innerHTML = `<tr><th>STK</th><th>Tên KH</th><th class="num-col">NAV cũ</th><th class="num-col">NAV mới</th><th class="num-col">Phí cũ</th><th class="num-col">Phí mới</th><th>Trạng thái</th></tr>`;
+    body.innerHTML = plan.valid.slice(0,300).map(it=>{
+      const navOld = it.existing ? fmt(it.existing.nav) : '—';
+      const navNew = it.nav!==undefined ? fmt(it.nav) : '—';
+      const feeOld = it.existing ? fmt(it.existing.fee) : '—';
+      const feeNew = it.fee!==undefined ? fmt(it.fee) : '—';
+      const tag = it.isNew ? '<span class="badge badge-blue">Mới</span>' : ((it.navChanged||it.feeChanged) ? '<span class="badge badge-green">Thay đổi</span>' : '<span class="badge badge-gray">Không đổi</span>');
+      return `<tr><td>${it.stk}</td><td>${it.name}</td><td class="num-col ${it.navChanged?'diff-old':''} num">${navOld}</td><td class="num-col ${it.navChanged?'diff-new':''} num">${navNew}</td><td class="num-col ${it.feeChanged?'diff-old':''} num">${feeOld}</td><td class="num-col ${it.feeChanged?'diff-new':''} num">${feeNew}</td><td>${tag}</td></tr>`;
+    }).join('') + (plan.valid.length>300 ? `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:14px;">… và ${plan.valid.length-300} dòng khác</td></tr>` : '');
+  } else if(plan.type==='loan'){
+    head.innerHTML = `<tr><th>Số tài khoản</th><th>Ngày đến hạn</th><th>ID QL</th><th>Trạng thái</th></tr>`;
+    body.innerHTML = plan.valid.slice(0,300).map(it=>`<tr><td>${it.account}</td><td>${it.dueDate}</td><td>${it.managerId||'—'}</td><td>${it.isDup?'<span class="badge badge-gray">Đã tồn tại, bỏ qua</span>':'<span class="badge badge-blue">Mới</span>'}</td></tr>`).join('');
+  } else if(plan.type==='right'){
+    head.innerHTML = `<tr><th>STK</th><th>Mã CP</th><th>Tỷ lệ</th><th class="num-col">Giá</th><th class="num-col">SL được mua</th><th>Ngày chốt</th><th>Hạn ĐK</th><th>Trạng thái</th></tr>`;
+    body.innerHTML = plan.valid.slice(0,300).map(it=>`<tr><td>${it.stk}</td><td>${it.symbol}</td><td>${it.ratioNum}:${it.ratioDenom}</td><td class="num-col num">${fmt(it.price)}</td><td class="num-col num">${fmt(it.qty)}</td><td>${it.recordDate}</td><td>${it.deadline}</td><td>${it.isDup?'<span class="badge badge-gray">Đã tồn tại, bỏ qua</span>':'<span class="badge badge-blue">Mới</span>'}</td></tr>`).join('');
+  }
+  goImportStep(3);
+}
+
+async function confirmImportToDatabase(){
+  const plan = pendingImportPlan;
+  if(!plan) return;
+  const btn = document.getElementById('btnConfirmImport');
+  btn.disabled = true; btn.textContent = 'Đang cập nhật…';
+  const today = todayDdMmYyyy();
+  let newCount=0, updatedCount=0, errCount=0;
+  try {
+    if(plan.type==='nav' || plan.type==='bc12' || plan.type==='customerlist'){
+      for(const it of plan.valid){
+        try {
+          if(it.isNew){
+            let roomId=null, specialRoom=null;
+            if(plan.type==='customerlist' && it.roomRaw && SPECIAL_ROOMS.includes(it.roomRaw)) specialRoom = it.roomRaw;
+            else roomId = autoAssignRoom(it.nav||0);
+            const { data: ins, error } = await sb.from('customers').insert({
+              account_number: it.stk, customer_name: it.name,
+              gender: it.gender||null, birth_year: it.birthYear||null,
+              manager_id: it.managerId||null,
+              current_room_id: roomId, special_room: specialRoom,
+              status: it.status || 'Đang quản lý',
+              current_nav: it.nav||0, current_fee: it.fee||0,
+              nav_updated_at: toDbDate(today), fee_updated_at: toDbDate(today),
+              note: it.note||null,
+              management_start_date: toDbDate(it.mgmtStart||today),
+            }).select().single();
+            if(error) throw error;
+            if(it.nav) await sb.from('nav_history').insert({customer_id:ins.customer_id, update_date:toDbDate(today), nav:it.nav, source: plan.type==='bc12'?'import_bc12':'import_nav'});
+            if(it.fee) await sb.from('fee_history').insert({customer_id:ins.customer_id, update_date:toDbDate(today), fee:it.fee, source: plan.type==='bc12'?'import_bc12':'import_nav'});
+            newCount++;
+          } else if(it.navChanged || it.feeChanged){
+            const payload = { updated_at: new Date().toISOString() };
+            if(it.navChanged){ payload.current_nav = it.nav; payload.nav_updated_at = toDbDate(today); }
+            if(it.feeChanged){ payload.current_fee = it.fee; payload.fee_updated_at = toDbDate(today); }
+            const { error } = await sb.from('customers').update(payload).eq('customer_id', it.existing.id);
+            if(error) throw error;
+            if(it.navChanged) await sb.from('nav_history').insert({customer_id:it.existing.id, update_date:toDbDate(today), nav:it.nav, source: plan.type==='bc12'?'import_bc12':'import_nav'});
+            if(it.feeChanged) await sb.from('fee_history').insert({customer_id:it.existing.id, update_date:toDbDate(today), fee:it.fee, source: plan.type==='bc12'?'import_bc12':'import_nav'});
+            updatedCount++;
+          }
+        } catch(e){ errCount++; }
+      }
+      await sb.from('import_batches').insert({ import_type: plan.type==='bc12'?'bc12':'nav', file_name: document.getElementById('fileInput').files[0]?.name, imported_by: currentUserEmail, total_rows: plan.valid.length+plan.errors.length, new_customers:newCount, updated_rows:updatedCount, error_rows: plan.errors.length+errCount });
+      document.getElementById('importResultTitle').textContent = 'Đã cập nhật thành công';
+      document.getElementById('importResultSub').textContent = `${newCount} khách mới được thêm · ${updatedCount} khách được cập nhật NAV/phí${errCount?` · ${errCount} dòng lỗi khi ghi`:''} · Dữ liệu cũ vẫn được lưu giữ nguyên vẹn.`;
+    }
+    else if(plan.type==='loan'){
+      const toInsert = plan.valid.filter(it=>it.isNew).map(it=>({ account_number: it.account, due_date: toDbDate(it.dueDate), status:'Chưa xử lý' }));
+      if(toInsert.length){ const { error } = await sb.from('loans').insert(toInsert); if(error) throw error; }
+      document.getElementById('importResultTitle').textContent = `Đã import ${toInsert.length} khoản vay mới`;
+      document.getElementById('importResultSub').textContent = `${plan.valid.length-toInsert.length} dòng trùng với dữ liệu đã có, đã bỏ qua. Số tiền vay = 0, cần bổ sung tay cho từng khoản.`;
+    }
+    else if(plan.type==='right'){
+      const toInsert = plan.valid.filter(it=>it.isNew).map(it=>({ account_number: it.stk, symbol: it.symbol, ratio_num: it.ratioNum, ratio_denom: it.ratioDenom, price: it.price, holdings: it.holdings, qty: it.qty, record_date: toDbDate(it.recordDate), deadline: toDbDate(it.deadline), status:'Chưa đăng ký' }));
+      if(toInsert.length){ const { error } = await sb.from('rights_offerings').insert(toInsert); if(error) throw error; }
+      document.getElementById('importResultTitle').textContent = `Đã import ${toInsert.length} quyền mua mới`;
+      document.getElementById('importResultSub').textContent = `${plan.valid.length-toInsert.length} dòng trùng với dữ liệu đã có, đã bỏ qua.`;
+    }
+
+    await loadAllData();
+    renderCustomers(); renderDashboard(); renderRooms(); renderLoans(); renderRights();
+    goImportStep(4);
+  } catch(err){
+    alert('Lỗi khi cập nhật dữ liệu: ' + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Xác nhận cập nhật ✓';
+  }
+}
+
+// ---------------- SOẠN TIN NHẮN (DÙNG CHUNG: Room / Khoản vay / Quyền mua) ----------------
+const MESSAGE_TEMPLATES = {
+  room: {
+    title: "Soạn tin nhắn — Nhắc NAV / Room",
+    tokens: "{xung_ho}, {ten_kh}, {nav}, {nav_quy_uoc}, {room}, {phi}, {id_ql}",
+    default: "{xung_ho} {ten_kh} ơi, NAV hiện tại của {xung_ho} đang ở mức {nav} ({nav_quy_uoc}), thuộc {room}. Phí quản lý tháng này là {phi}. Bên em thông báo để {xung_ho} nắm được ạ."
+  },
+  loan: {
+    title: "Soạn tin nhắn — Nhắc khoản vay margin",
+    tokens: "{xung_ho}, {ten_kh}, {so_tien}, {ngay_den_han}, {con_lai}, {id_ql}",
+    default: "{xung_ho} {ten_kh} ơi, khoản vay margin {so_tien} sẽ đến hạn thanh toán vào ngày {ngay_den_han} (còn {con_lai} ngày). Bên em nhắc {xung_ho} sắp xếp thanh toán đúng hạn để tránh phát sinh lãi phạt ạ."
+  },
+  loan_multi: {
+    title: "Soạn tin nhắn — Nhắc nhiều khoản vay cùng lúc",
+    tokens: "{xung_ho}, {ten_kh}, {so_khoan}, {danh_sach_khoan}, {tong_du_no}, {id_ql}",
+    default: "{xung_ho} {ten_kh} ơi, bên em xin nhắc {xung_ho} hiện đang có {so_khoan} khoản vay margin:\n{danh_sach_khoan}\nTổng dư nợ: {tong_du_no}. Mong {xung_ho} sắp xếp thanh toán đúng hạn ạ."
+  },
+  right: {
+    title: "Soạn tin nhắn — Nhắc quyền mua cổ phiếu",
+    tokens: "{xung_ho}, {ten_kh}, {ma_cp}, {ty_le}, {gia}, {sl}, {han_dang_ky}, {id_ql}",
+    default: "{xung_ho} {ten_kh} ơi, mã {ma_cp} đang có đợt phát hành quyền mua tỷ lệ {ty_le}, giá {gia}/CP, số lượng {xung_ho} được mua là {sl} CP. Hạn đăng ký và nộp tiền là {han_dang_ky}. Bên em nhắc {xung_ho} không bỏ lỡ ạ."
+  }
+};
+let currentMsgContext = null;
+let currentMsgData = null;
+
+function buildMsgTokens(context, stk){
+  if(context === 'room'){
+    const c = customers.find(x=>x.stk===stk);
+    return {
+      __name: c.name,
+      xung_ho: computePronounFor(c.gender, c.birthYear),
+      ten_kh: c.name,
+      nav: fmt(c.nav),
+      nav_quy_uoc: navToTyUoc(c.nav),
+      room: roomLabel(c.room),
+      phi: fmt(c.fee),
+      id_ql: 'MG01'
+    };
+  }
+  if(context === 'loan'){
+    const l = loans.find(x=>x.account===stk);
+    const c = findCustomerByAccountNumber(l.account);
+    return {
+      __name: c ? c.name : '',
+      xung_ho: computePronounFor(c?.gender, c?.birthYear),
+      ten_kh: c ? c.name : '',
+      so_tien: fmt(l.amount),
+      ngay_den_han: l.dueDate,
+      con_lai: String(daysUntil(l.dueDate)),
+      id_ql: 'MG01'
+    };
+  }
+  if(context === 'loan_multi'){
+    const c = customers.find(x=>x.stk===stk);
+    const custLoans = loans.filter(l=>l.account.slice(0,6)===stk)
+      .sort((a,b)=> daysUntil(a.dueDate)-daysUntil(b.dueDate));
+    const danhSach = custLoans.map((l,i)=>{
+      const overdue = daysUntil(l.dueDate) < 0 ? ' (quá hạn)' : '';
+      return `- Khoản ${i+1} (${l.account}): ${fmt(l.amount)}, đến hạn ${l.dueDate}${overdue}`;
+    }).join('\n');
+    return {
+      __name: c ? c.name : '',
+      xung_ho: computePronounFor(c?.gender, c?.birthYear),
+      ten_kh: c ? c.name : '',
+      so_khoan: String(custLoans.length),
+      danh_sach_khoan: danhSach,
+      tong_du_no: fmt(custLoans.reduce((s,l)=>s+l.amount,0)),
+      id_ql: 'MG01'
+    };
+  }
+  if(context === 'right'){
+    const r = rights.find(x=>x.stk===stk);
+    const c = customers.find(x=>x.stk===stk);
+    return {
+      __name: r.name,
+      xung_ho: computePronounFor(c?.gender, c?.birthYear),
+      ten_kh: r.name,
+      ma_cp: r.symbol,
+      ty_le: r.ratio,
+      gia: fmt(r.price),
+      sl: fmt(r.qty),
+      han_dang_ky: r.deadline,
+      id_ql: 'MG01'
+    };
+  }
+  return {};
+}
+
+// Tính xưng hô mặc định theo năm sinh (dùng lại đúng quy tắc ở form Thêm khách hàng)
+function computePronounFor(gender, year){
+  if(!year) return 'Bạn';
+  if(year === 1984) return 'Bạn';
+  if(year < 1984) return (gender==='Nam') ? 'Anh' : (gender==='Nữ') ? 'Chị' : 'Bạn';
+  return 'Em';
+}
+
+function openMessageModal(context, stk){
+  currentMsgContext = context;
+  currentMsgData = buildMsgTokens(context, stk);
+  const cfg = MESSAGE_TEMPLATES[context];
+  document.getElementById('msgModalTitle').textContent = cfg.title;
+  document.getElementById('msg_customer_label').value = `${currentMsgData.ten_kh} — STK ${stk}`;
+  document.getElementById('msg_token_hint').textContent = 'Token khả dụng: ' + cfg.tokens;
+  document.getElementById('msg_template').value = cfg.default;
+
+  const pronounSel = document.getElementById('msg_pronoun');
+  pronounSel.innerHTML = pronounOptions.map(p=>`<option value="${p}">${p}</option>`).join('');
+  if(pronounOptions.includes(currentMsgData.xung_ho)) pronounSel.value = currentMsgData.xung_ho;
+
+  renderMessagePreview();
+  document.getElementById('msgModalOverlay').classList.add('active');
+}
+function closeMessageModal(){ document.getElementById('msgModalOverlay').classList.remove('active'); }
+
+function renderMessagePreview(){
+  if(!currentMsgData) return;
+  const xungHo = document.getElementById('msg_pronoun').value;
+  const tokens = {...currentMsgData, xung_ho: xungHo};
+  let text = document.getElementById('msg_template').value;
+  text = text.replace(/\{(\w+)\}/g, (m,key)=> tokens[key] !== undefined ? tokens[key] : m);
+  document.getElementById('msg_preview').value = text;
+}
+function copyMessagePreview(){
+  const text = document.getElementById('msg_preview').value;
+  navigator.clipboard.writeText(text).then(()=>{
+    alert('Đã sao chép tin nhắn vào clipboard.');
+  }).catch(()=>{
+    alert('Không thể tự động sao chép trên trình duyệt này — vui lòng bôi đen và copy thủ công.');
+  });
+}
+
+// ---------------- SOẠN TIN NHẮN (DÙNG CHUNG) hết ----------------
+
+// ---------------- QUẢN LÝ TÀI KHOẢN ĐĂNG NHẬP ----------------
+let accounts = []; // nạp từ Supabase (bảng user_roles) lúc khởi động
+let accountIdCounter = 100;
+let editingAccountId = null;
+
+function renderAccounts(){
+  document.getElementById('accountsBody').innerHTML = accounts.map(a=>{
+    const ownerCount = accounts.filter(x=>x.role==='owner').length;
+    const isLastOwner = a.role==='owner' && ownerCount<=1;
+    return `<tr>
+      <td>${a.email}</td>
+      <td class="cust-name">${a.name}</td>
+      <td><span class="badge ${a.role==='owner'?'badge-blue':'badge-gray'}">${a.role==='owner'?'Owner':'Editor'}</span></td>
+      <td>${a.createdAt}</td>
+      <td>
+        <div class="row-actions" style="opacity:1;">
+          <button class="icon-btn" title="Sửa" onclick="openAccountModal('${a.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>
+          <button class="icon-btn" title="${isLastOwner?'Không thể xóa Owner duy nhất':'Xóa'}" ${isLastOwner?'disabled style="opacity:.4;"':''} onclick="deleteAccount('${a.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+function openAccountModal(id){
+  editingAccountId = id || null;
+  const a = id ? accounts.find(x=>x.id===id) : null;
+  document.getElementById('accountModalTitle').textContent = a ? 'Sửa tài khoản' : 'Thêm tài khoản';
+  document.getElementById('acc_email').value = a ? a.email : '';
+  document.getElementById('acc_email').disabled = !!a;
+  document.getElementById('acc_name').value = a ? a.name : '';
+  document.getElementById('acc_role').value = a ? a.role : 'editor';
+  document.getElementById('accountModalOverlay').classList.add('active');
+}
+function closeAccountModal(){ document.getElementById('accountModalOverlay').classList.remove('active'); editingAccountId=null; document.getElementById('acc_email').disabled=false; }
+async function saveAccount(){
+  const email = document.getElementById('acc_email').value.trim();
+  const name = document.getElementById('acc_name').value.trim();
+  const role = document.getElementById('acc_role').value;
+  if(!email || !email.includes('@')){ alert('Vui lòng nhập email hợp lệ.'); return; }
+  if(!name){ alert('Vui lòng nhập tên hiển thị.'); return; }
+  try {
+    if(editingAccountId){
+      const a = accounts.find(x=>x.id===editingAccountId);
+      if(a.role==='owner' && role!=='owner' && accounts.filter(x=>x.role==='owner').length<=1){
+        alert('Không thể đổi vai trò — đây là Owner duy nhất, cần có ít nhất 1 Owner.');
+        return;
+      }
+      const { error } = await sb.from('user_roles').update({ display_name:name, role }).eq('email', a.email);
+      if(error) throw error;
+    } else {
+      if(accounts.some(x=>x.email===email)){ alert('Email này đã tồn tại trong hệ thống.'); return; }
+      const { error } = await sb.from('user_roles').insert({ email, display_name:name, role });
+      if(error) throw error;
+    }
+    await loadAllData();
+    closeAccountModal();
+    renderAccounts();
+  } catch(err){ alert('Lỗi khi lưu tài khoản (chỉ Owner được thêm/sửa): ' + err.message); }
+}
+async function deleteAccount(id){
+  const a = accounts.find(x=>x.id===id);
+  if(!a) return;
+  if(a.role==='owner' && accounts.filter(x=>x.role==='owner').length<=1){
+    alert('Không thể xóa — cần có ít nhất 1 Owner trong hệ thống.');
+    return;
+  }
+  if(!confirm(`Xóa tài khoản ${a.email}? Người này sẽ không đăng nhập được nữa.`)) return;
+  try {
+    const { error } = await sb.from('user_roles').delete().eq('email', a.email);
+    if(error) throw error;
+    accounts.splice(accounts.indexOf(a),1);
+    renderAccounts();
+  } catch(err){ alert('Lỗi khi xóa tài khoản (chỉ Owner được xóa): ' + err.message); }
+}
+
+// ---------------- SAO LƯU TOÀN BỘ DỮ LIỆU (Owner only) ----------------
+async function exportFullBackup(){
+  if(currentRole !== 'owner'){ alert('Chỉ Owner mới có quyền tải file sao lưu toàn bộ dữ liệu.'); return; }
+  await loadAllData();
+
+  const wb = XLSX.utils.book_new();
+
+  const custRows = customers.map(c=>({
+    STK:c.stk, 'Tên KH':c.name, 'Giới tính':c.gender||'', 'Năm sinh':c.birthYear||'',
+    'ID quản lý':c.managerId||'', Room:roomLabel(c.room), 'Trạng thái':c.status,
+    NAV:c.nav, Phí:c.fee, 'Ngày bắt đầu QL':c.mgmtStart||'', 'Ngày remove':c.mgmtEnd||'',
+    'Liên kết với STK':c.linkedTo||'', 'Cập nhật gần nhất':c.updated, 'Ghi chú':c.note||''
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(custRows), 'Khach_hang');
+
+  const loanRows = loans.map(l=>{
+    const c = findCustomerByAccountNumber(l.account);
+    return { 'Số TK':l.account, 'STK gốc':l.account.slice(0,6), 'Tên KH':c?c.name:'', 'Số tiền vay':l.amount, 'Ngày đến hạn':l.dueDate, 'Trạng thái':l.status, 'Ghi chú':l.note||'' };
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(loanRows), 'Khoan_vay');
+
+  const rightRows = rights.map(r=>({ STK:r.stk, 'Tên KH':r.name, 'Mã CP':r.symbol, 'Tỷ lệ':r.ratio, 'Giá':r.price, 'SL được mua':r.qty, 'Ngày chốt quyền':r.recordDate, 'Hạn đăng ký':r.deadline, 'Trạng thái':r.status }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rightRows), 'Quyen_mua');
+
+  const roomRows = rooms.map(r=>({ 'Tên Room':r.name, 'Ngưỡng từ':r.min, 'Ngưỡng đến':r.max===Infinity?'':r.max, 'Mô tả':r.desc }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(roomRows), 'Rooms');
+
+  const navHistRows = [];
+  customers.forEach(c=>{ Object.entries(c.navHistory||{}).forEach(([date,val])=>{ navHistRows.push({STK:c.stk,'Tên KH':c.name, Ngày:date, NAV:val}); }); });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(navHistRows), 'Lich_su_NAV');
+
+  const feeHistRows = [];
+  customers.forEach(c=>{ Object.entries(c.feeHistory||{}).forEach(([date,val])=>{ feeHistRows.push({STK:c.stk,'Tên KH':c.name, Ngày:date, Phí:val}); }); });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(feeHistRows), 'Lich_su_Phi');
+
+  const accRows = accounts.map(a=>({ Email:a.email, 'Tên hiển thị':a.name, 'Vai trò':a.role, 'Ngày tạo':a.createdAt }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(accRows), 'Tai_khoan');
+
+  const dateStr = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `Sao_luu_toan_bo_${dateStr}.xlsx`);
+}
+
+// ---------------- XÓA TOÀN BỘ DỮ LIỆU (Owner only) ----------------
+function openWipeConfirm(){
+  if(currentRole !== 'owner'){ alert('Chỉ Owner mới có quyền xóa toàn bộ dữ liệu.'); return; }
+  document.getElementById('wipeConfirmInput').value = '';
+  document.getElementById('wipeModalOverlay').classList.add('active');
+}
+function closeWipeConfirm(){ document.getElementById('wipeModalOverlay').classList.remove('active'); }
+async function confirmWipeData(){
+  const val = document.getElementById('wipeConfirmInput').value.trim();
+  if(val !== 'XOA TOAN BO'){ alert('Vui lòng gõ đúng "XOA TOAN BO" để xác nhận.'); return; }
+  if(currentRole !== 'owner'){ alert('Chỉ Owner mới có quyền xóa toàn bộ dữ liệu.'); return; }
+  try {
+    // Xóa customers sẽ tự động cascade xóa nav_history/fee_history/change_log/room_history liên quan
+    const { error: e1 } = await sb.from('customers').delete().not('customer_id','is',null);
+    if(e1) throw e1;
+    const { error: e2 } = await sb.from('loans').delete().not('loan_id','is',null);
+    if(e2) throw e2;
+    const { error: e3 } = await sb.from('rights_offerings').delete().not('right_id','is',null);
+    if(e3) throw e3;
+    await loadAllData();
+    closeWipeConfirm();
+    renderCustomers();
+    renderLoans();
+    renderRights();
+    renderDashboard();
+    renderRooms();
+    alert('Đã xóa toàn bộ dữ liệu Khách hàng, Khoản vay, Quyền mua khỏi hệ thống.');
+  } catch(err){
+    alert('Lỗi khi xóa dữ liệu: ' + err.message);
+  }
+}
+// (Khởi tạo thật sự diễn ra trong checkAuthAndInit() sau khi đăng nhập + tải dữ liệu xong)
+</script>
+</body>
+</html>
