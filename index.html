@@ -30,7 +30,7 @@
   --radius:8px;
 }
 *{box-sizing:border-box;}
-body{margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);font-size:14px;}
+body{margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;}
 .num{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;font-weight:500;}
 a{color:inherit;text-decoration:none;}
 button{font-family:inherit;cursor:pointer;}
@@ -42,7 +42,7 @@ button{font-family:inherit;cursor:pointer;}
 .brand-mark{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,var(--accent),#5B8DEF);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;}
 .brand-name{font-weight:600;font-size:14.5px;line-height:1.25;}
 .brand-sub{font-size:11px;color:var(--sidebar-text);}
-.nav-group-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#5C6B84;padding:14px 12px 6px;}
+.nav-group-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#5C6B84;padding:14px 12px 6px;}
 .nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;color:var(--sidebar-text);font-size:13.5px;font-weight:500;margin-bottom:2px;cursor:pointer;}
 .nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:.85;}
 .nav-item:hover{background:var(--sidebar-hover);color:#fff;}
@@ -56,7 +56,7 @@ button{font-family:inherit;cursor:pointer;}
 
 .main{flex:1;min-width:0;display:flex;flex-direction:column;}
 .topbar{height:60px;border-bottom:1px solid var(--border);background:var(--panel);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:20;}
-.page-title{font-size:17px;font-weight:700;}
+.page-title{font-size:19px;font-weight:700;}
 .page-subtitle{font-size:12.5px;color:var(--text-muted);margin-top:1px;}
 .content{padding:24px;flex:1;}
 
@@ -85,7 +85,7 @@ button{font-family:inherit;cursor:pointer;}
 
 .panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);}
 .panel-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.panel-title{font-size:14px;font-weight:700;}
+.panel-title{font-size:15px;font-weight:700;}
 .panel-body{padding:16px 18px;}
 
 .alert-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #F0F2F5;}
@@ -109,9 +109,9 @@ select.filter-select{padding:8px 10px;border:1px solid var(--border);border-radi
 
 /* ---- table ---- */
 table{width:100%;border-collapse:collapse;}
-thead th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--text-muted);font-weight:600;padding:10px 14px;border-bottom:1px solid var(--border);background:#FAFBFC;white-space:nowrap;}
+thead th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--text-muted);font-weight:600;padding:11px 14px;border-bottom:1px solid var(--border);background:#FAFBFC;white-space:nowrap;}
 thead th.num-col{text-align:right;}
-tbody td{padding:11px 14px;border-bottom:1px solid #F0F2F5;font-size:13.3px;vertical-align:middle;}
+tbody td{padding:12px 14px;border-bottom:1px solid #F0F2F5;font-size:14px;vertical-align:middle;}
 tbody td.num-col{text-align:right;}
 tbody tr:hover{background:#FAFBFF;}
 tbody tr{cursor:pointer;}
@@ -238,7 +238,7 @@ tbody tr:hover .row-actions{opacity:1;}
 .tsi-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;}
 .tsi-icon.green{background:var(--green-soft);color:var(--green);}
 .tsi-icon.red{background:var(--red-soft);color:var(--red);}
-.tsi-label{font-size:10.5px;font-weight:700;letter-spacing:.03em;color:var(--text-muted);}
+.tsi-label{font-size:11px;font-weight:700;letter-spacing:.03em;color:var(--text-muted);}
 .tsi-value{font-size:16px;font-weight:700;margin-top:2px;}
 .tsi-sub{font-size:11.5px;color:var(--text-muted);margin-top:1px;}
 
@@ -246,7 +246,7 @@ tbody tr:hover .row-actions{opacity:1;}
 .nav-rong-value{font-size:22px;font-weight:700;color:var(--green);font-family:'IBM Plex Mono',monospace;}
 .transfer-date-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
 .transfer-table{width:100%;border-collapse:collapse;}
-.transfer-table th{font-size:10.5px;text-transform:uppercase;color:var(--text-muted);text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);font-weight:600;}
+.transfer-table th{font-size:11px;text-transform:uppercase;color:var(--text-muted);text-align:left;padding:7px 8px;border-bottom:1px solid var(--border);font-weight:600;}
 .transfer-table th.num-col{text-align:right;}
 .transfer-table td{font-size:12px;padding:7px 8px;border-bottom:1px solid #F3F4F6;font-family:'IBM Plex Mono',monospace;}
 .transfer-table td:first-child{font-family:'Inter',sans-serif;}
@@ -282,7 +282,7 @@ tbody tr:hover .row-actions{opacity:1;}
 .donut-wrap{position:relative;flex-shrink:0;width:150px;height:150px;}
 .donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .donut-center .n{font-size:22px;font-weight:700;}
-.donut-center .l{font-size:10.5px;color:var(--text-muted);}
+.donut-center .l{font-size:11px;color:var(--text-muted);}
 .donut-legend{flex:1;display:flex;flex-direction:column;gap:9px;}
 .donut-legend-row{display:flex;align-items:center;gap:9px;}
 .donut-legend-row .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
@@ -319,7 +319,7 @@ tbody tr:hover .row-actions{opacity:1;}
 .loan-card-header{display:grid;grid-template-columns:20px 1fr 90px 76px 150px 130px 120px auto;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;background:#FAFBFD;}
 .loan-card-header:hover{background:#F3F5F9;}
 .loan-stk-pill{display:inline-flex;align-items:center;gap:6px;background:#EEF1F5;padding:4px 10px;border-radius:20px;font-weight:700;font-size:12.5px;}
-.loan-col-label{font-size:10.5px;text-transform:uppercase;color:var(--text-muted);font-weight:600;letter-spacing:.02em;}
+.loan-col-label{font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;letter-spacing:.02em;}
 .loan-col-value{font-size:13px;font-weight:600;margin-top:1px;}
 .loan-detail-table{width:100%;border-collapse:collapse;}
 .loan-detail-table thead th{font-size:11px;text-transform:uppercase;color:var(--text-muted);padding:8px 16px;border-bottom:1px solid var(--border);text-align:left;background:#FCFCFD;font-weight:600;}
@@ -881,6 +881,47 @@ tbody tr:hover .row-actions{opacity:1;}
   </div>
 </div>
 
+<!-- LINK MANAGEMENT MODAL (Chỉnh liên kết tài khoản Chính/Phụ) -->
+<div class="overlay" id="linkModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🔗 Chỉnh liên kết tài khoản</div>
+      <button class="close-x" onclick="closeLinkModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-hint" style="margin-bottom:14px;font-size:12.5px;">Đang chỉnh cho: <b id="link_current_label">—</b></div>
+
+      <div id="link_as_secondary_section">
+        <div class="so-section-title" style="margin-top:0;">STK này là tài khoản Phụ của ai?</div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="link_primary_input" list="link_primary_datalist" placeholder="Gõ tên hoặc STK người là tài khoản Chính…" autocomplete="off" style="flex:1;">
+          <button class="btn btn-primary btn-sm" onclick="saveLinkAsSecondary()">Lưu</button>
+        </div>
+        <datalist id="link_primary_datalist"></datalist>
+      </div>
+
+      <div id="link_unlink_section" style="display:none;">
+        <div class="so-section-title" style="margin-top:0;">Đang là tài khoản Phụ của</div>
+        <div class="kv" style="margin-bottom:10px;"><div class="v" id="link_primary_display" style="font-weight:600;">—</div></div>
+        <button class="btn btn-secondary btn-sm" onclick="unlinkSelf()">Bỏ liên kết (trở thành tài khoản Chính độc lập)</button>
+      </div>
+
+      <div class="so-section-title">Tài khoản Phụ đang trỏ về STK này</div>
+      <div id="link_secondary_list" style="margin-bottom:10px;color:var(--text-muted);font-size:12.5px;">Không có</div>
+
+      <div class="so-section-title">Thêm 1 tài khoản Phụ khác vào đây</div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="link_add_secondary_input" list="link_add_secondary_datalist" placeholder="Gõ tên hoặc STK khách hàng cần gắn làm tài khoản Phụ…" autocomplete="off" style="flex:1;">
+        <button class="btn btn-secondary btn-sm" onclick="addSecondaryToThis()">Thêm</button>
+      </div>
+      <datalist id="link_add_secondary_datalist"></datalist>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeLinkModal()">Đóng</button>
+    </div>
+  </div>
+</div>
+
 <!-- ADD LOAN MODAL -->
 <div class="overlay" id="loanModalOverlay">
   <div class="modal">
@@ -1055,20 +1096,7 @@ tbody tr:hover .row-actions{opacity:1;}
         <div class="form-field"><label>Ngày bắt đầu quản lý</label><input type="text" placeholder="dd/mm/yyyy — để trống = hôm nay" id="f_mgmtstart"></div>
         <div class="form-field">
           <label>Nhóm / Room *</label>
-          <select id="f_room" onchange="onRoomManualChange()">
-            <optgroup label="Room theo NAV">
-              <option value="1">Room 1 (&lt; 200tr)</option>
-              <option value="2">Room 2 (200–500tr)</option>
-              <option value="3">Room 3 (500tr–1 tỷ)</option>
-              <option value="4">Room 4 (1–3 tỷ)</option>
-              <option value="5">Room 5 (&gt; 3 tỷ)</option>
-            </optgroup>
-            <optgroup label="Nhóm đặc biệt">
-              <option value="Tự out">Tự out</option>
-              <option value="Chưa đủ điều kiện">Chưa đủ điều kiện</option>
-              <option value="Remove">Remove</option>
-            </optgroup>
-          </select>
+          <select id="f_room" onchange="onRoomManualChange()"></select>
         </div>
         <div class="form-field">
           <label>Trạng thái *</label>
@@ -1076,6 +1104,7 @@ tbody tr:hover .row-actions{opacity:1;}
             <option>Chờ xác nhận</option>
             <option selected>Đang quản lý</option>
             <option>Đã chuyển đi</option>
+            <option>KH ưu tiên</option>
           </select>
         </div>
         <div class="form-field full" id="f_removed_date_wrap" style="display:none;">
@@ -1108,9 +1137,13 @@ tbody tr:hover .row-actions{opacity:1;}
         </div>
         <div class="form-field full"><label>Ghi chú</label><textarea placeholder="VD: KH ưu tiên, KH NV…" id="f_note"></textarea></div>
         <div class="form-field full">
-          <label>Là cùng 1 người với KH khác? <span style="font-weight:500;color:var(--text-muted);">(nếu có 2 STK nhưng thực tế 1 người)</span></label>
-          <select id="f_linked"><option value="">— Không, đây là người riêng —</option></select>
-          <div class="field-hint">Chọn nếu KH này có STK khác đã tồn tại trong hệ thống, để không bị đếm trùng thành 2 người khi tính số lượng Room/Telegram.</div>
+          <label>STK này là tài khoản <b>phụ</b> của khách hàng nào? <span style="font-weight:500;color:var(--text-muted);">(nếu 1 người có nhiều STK)</span></label>
+          <input type="text" id="f_linked" list="f_linked_datalist" placeholder="Để trống nếu STK này là tài khoản CHÍNH (độc lập) — gõ tên hoặc STK để tìm tài khoản chính…" autocomplete="off">
+          <datalist id="f_linked_datalist"></datalist>
+          <div class="field-hint">
+            <b>Để trống</b> → STK đang thêm/sửa này là <b>tài khoản CHÍNH</b>.<br>
+            <b>Chọn 1 người</b> → STK đang thêm/sửa này trở thành <b>tài khoản PHỤ</b>, gắn vào đúng người bạn chọn (người đó là tài khoản CHÍNH). Khi đếm số người trong Room/Telegram, tài khoản phụ sẽ không bị tính thêm thành 1 người mới.
+          </div>
         </div>
       </div>
       <div class="field-hint" style="margin-top:12px;">Sau khi lưu: khách sẽ xuất hiện trong danh sách, hệ thống tự tạo lịch sử tạo khách, và NAV/phí đầu tiên được lưu thành bản ghi lịch sử.</div>
@@ -1145,6 +1178,11 @@ tbody tr:hover .row-actions{opacity:1;}
       <div class="kv"><div class="k">Nhóm hiện tại</div><div class="v" id="so_room">—</div></div>
       <div class="kv"><div class="k">Trạng thái</div><div class="v" id="so_status">—</div></div>
       <div class="kv"><div class="k">Ngày bắt đầu quản lý</div><div class="v" id="so_mgmtstart">—</div></div>
+      <div class="kv" style="grid-column:1/-1;">
+        <div class="k">Liên kết tài khoản</div>
+        <div class="v" id="so_linked" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">—</div>
+        <button class="btn btn-secondary btn-sm" style="margin-top:6px;" onclick="openLinkModal()">🔗 Chỉnh sửa liên kết</button>
+      </div>
       <div class="kv" style="grid-column:1/-1;"><div class="k">Ghi chú</div><div class="v" id="so_note">—</div></div>
     </div>
 
@@ -1580,7 +1618,7 @@ function cellValue(c, cust, idx){
     case 'name': return `<div class="cust-name">${cust.name}</div>`;
     case 'stk': return cust.stk.startsWith('TMP')
       ? `${cust.stk} <span class="tag-chip" title="Chưa có STK thật">chưa mở TK</span>`
-      : `${cust.stk}${cust.linkedTo?` <span class="tag-chip" title="Gộp với STK ${cust.linkedTo} — cùng 1 người">🔗 gộp</span>`:''}`;
+      : `${cust.stk}${cust.linkedTo?` <span class="tag-chip" title="Tài khoản Phụ của STK ${cust.linkedTo}">🔗 Phụ</span>`:''}`;
     case 'nav_latest': return `${fmt(cust.nav)} ${cust.mismatch?'<span title="NAV không phù hợp với Room hiện tại" class="warn-icon">⚠️</span>':''}`;
     case 'fee_latest': return fmt(cust.fee);
     case 'gender': return cust.gender || '—';
@@ -2219,18 +2257,157 @@ function openAddModal(prefillStk){
   document.getElementById('f_nav').value = '';
   document.getElementById('f_fee').value = '';
   document.getElementById('f_mgmtstart').value = '';
-  document.getElementById('f_room').value = '1';
+  renderRoomSelect();
+  document.getElementById('f_room').value = rooms[0] ? rooms[0].id : '1';
   document.getElementById('f_status').value = 'Đang quản lý';
   document.getElementById('f_note').value = '';
   document.getElementById('f_removed_date_wrap').style.display = 'none';
   renderLinkedSelect(null);
+  const telegramInput = document.getElementById('f_telegram_preview');
+  telegramInput.readOnly = true;
+  telegramInput.style.background = '#F5F7FA';
+  telegramInput.style.color = 'var(--text-muted)';
+  telegramInput.placeholder = '';
   updateTelegramPreview();
 }
 
-function renderLinkedSelect(excludeStk){
-  const sel = document.getElementById('f_linked');
-  sel.innerHTML = '<option value="">— Không, đây là người riêng —</option>' +
-    customers.filter(c=>c.stk!==excludeStk).map(c=>`<option value="${c.stk}">${c.name} — ${c.stk}</option>`).join('');
+function renderRoomSelect(){
+  const sel = document.getElementById('f_room');
+  const current = sel.value;
+  const navOptions = rooms.map(r=>{
+    const rangeLabel = r.max===Infinity ? `Trên ${fmt(r.min)}` : `${fmt(r.min)} – ${fmt(r.max)}`;
+    return `<option value="${r.id}">${r.name} (${rangeLabel})</option>`;
+  }).join('');
+  sel.innerHTML = `
+    <optgroup label="Room theo NAV">${navOptions}</optgroup>
+    <optgroup label="Nhóm đặc biệt">
+      <option value="Tự out">Tự out</option>
+      <option value="Chưa đủ điều kiện">Chưa đủ điều kiện</option>
+      <option value="Remove">Remove</option>
+    </optgroup>`;
+  if(current) sel.value = current;
+}
+
+function renderLinkedSelect(excludeStk, prefillStk){
+  const datalist = document.getElementById('f_linked_datalist');
+  datalist.innerHTML = customers.filter(c=>c.stk!==excludeStk)
+    .map(c=>`<option value="${c.name} (${c.stk})"></option>`).join('');
+  const input = document.getElementById('f_linked');
+  if(prefillStk){
+    const c = customers.find(x=>x.stk===prefillStk);
+    input.value = c ? `${c.name} (${c.stk})` : '';
+  } else {
+    input.value = '';
+  }
+}
+// Đọc STK thật từ ô gõ tự do "Tên (STK)" — chỉ chấp nhận nếu khớp đúng 1 KH có sẵn,
+// bỏ qua an toàn nếu người dùng gõ chữ không khớp gì (không lưu liên kết rác).
+function resolveLinkedStk(){
+  const raw = document.getElementById('f_linked').value.trim();
+  if(!raw) return null;
+  const match = raw.match(/\(([^)]+)\)\s*$/);
+  const stk = match ? match[1].trim() : null;
+  return (stk && customers.some(c=>c.stk===stk)) ? stk : null;
+}
+
+// ---------------- QUẢN LÝ LIÊN KẾT TÀI KHOẢN CHÍNH/PHỤ (từ màn Chi tiết KH) ----------------
+function parsePickedStk(inputEl){
+  const raw = inputEl.value.trim();
+  if(!raw) return null;
+  const match = raw.match(/\(([^)]+)\)\s*$/);
+  const stk = match ? match[1].trim() : null;
+  return (stk && customers.some(c=>c.stk===stk)) ? stk : null;
+}
+
+function openLinkModal(){
+  if(!currentDetailStk) return;
+  const c = customers.find(x=>x.stk===currentDetailStk);
+  if(!c) return;
+
+  document.getElementById('link_current_label').textContent = `${c.name} (STK ${c.stk})`;
+
+  const isSecondary = !!c.linkedTo;
+  document.getElementById('link_as_secondary_section').style.display = isSecondary ? 'none' : 'block';
+  document.getElementById('link_unlink_section').style.display = isSecondary ? 'block' : 'none';
+  if(isSecondary){
+    const primary = customers.find(x=>x.stk===c.linkedTo);
+    document.getElementById('link_primary_display').textContent = primary ? `${primary.name} (STK ${primary.stk})` : c.linkedTo;
+  }
+
+  // Datalist chọn tài khoản Chính (loại trừ chính nó và các tài khoản đã là Phụ của người khác)
+  const eligiblePrimary = customers.filter(x=>x.stk!==c.stk);
+  document.getElementById('link_primary_datalist').innerHTML = eligiblePrimary.map(x=>`<option value="${x.name} (${x.stk})"></option>`).join('');
+  document.getElementById('link_primary_input').value = '';
+
+  // Danh sách tài khoản Phụ đang trỏ về STK này
+  const secondaries = customers.filter(x=>x.linkedTo===c.stk);
+  const listEl = document.getElementById('link_secondary_list');
+  listEl.innerHTML = secondaries.length ? secondaries.map(s=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #F0F2F5;">
+      <span style="color:var(--text);font-weight:600;font-size:13px;">${s.name} <span style="color:var(--text-muted);font-weight:400;">(${s.stk})</span></span>
+      <button class="btn btn-secondary btn-sm" onclick="removeSecondary('${s.stk}')">Bỏ liên kết</button>
+    </div>`).join('') : 'Không có';
+
+  // Datalist thêm tài khoản Phụ mới (loại trừ chính nó, các tài khoản đã là Phụ của người khác, và bản thân là Chính có Phụ khác)
+  const eligibleSecondary = customers.filter(x=>x.stk!==c.stk && x.linkedTo!==c.stk);
+  document.getElementById('link_add_secondary_datalist').innerHTML = eligibleSecondary.map(x=>`<option value="${x.name} (${x.stk})"></option>`).join('');
+  document.getElementById('link_add_secondary_input').value = '';
+
+  document.getElementById('linkModalOverlay').classList.add('active');
+}
+function closeLinkModal(){ document.getElementById('linkModalOverlay').classList.remove('active'); }
+
+async function saveLinkAsSecondary(){
+  const primaryStk = parsePickedStk(document.getElementById('link_primary_input'));
+  if(!primaryStk){ alert('Vui lòng chọn đúng 1 khách hàng có sẵn từ danh sách gợi ý.'); return; }
+  const c = customers.find(x=>x.stk===currentDetailStk);
+  const primary = customers.find(x=>x.stk===primaryStk);
+  try {
+    const { error } = await sb.from('customers').update({ linked_to_customer_id: primary.id }).eq('customer_id', c.id);
+    if(error) throw error;
+    await loadAllData();
+    openDetail(c.code);
+    openLinkModal();
+    renderCustomers(); renderDashboard(); renderRooms();
+  } catch(err){ alert('Lỗi khi lưu liên kết: ' + err.message); }
+}
+async function unlinkSelf(){
+  const c = customers.find(x=>x.stk===currentDetailStk);
+  if(!confirm(`Bỏ liên kết? "${c.name}" sẽ trở thành tài khoản Chính độc lập.`)) return;
+  try {
+    const { error } = await sb.from('customers').update({ linked_to_customer_id: null }).eq('customer_id', c.id);
+    if(error) throw error;
+    await loadAllData();
+    openDetail(c.code);
+    openLinkModal();
+    renderCustomers(); renderDashboard(); renderRooms();
+  } catch(err){ alert('Lỗi khi bỏ liên kết: ' + err.message); }
+}
+async function addSecondaryToThis(){
+  const secStk = parsePickedStk(document.getElementById('link_add_secondary_input'));
+  if(!secStk){ alert('Vui lòng chọn đúng 1 khách hàng có sẵn từ danh sách gợi ý.'); return; }
+  const primary = customers.find(x=>x.stk===currentDetailStk);
+  const secondary = customers.find(x=>x.stk===secStk);
+  try {
+    const { error } = await sb.from('customers').update({ linked_to_customer_id: primary.id }).eq('customer_id', secondary.id);
+    if(error) throw error;
+    await loadAllData();
+    openDetail(primary.code);
+    openLinkModal();
+    renderCustomers(); renderDashboard(); renderRooms();
+  } catch(err){ alert('Lỗi khi thêm tài khoản phụ: ' + err.message); }
+}
+async function removeSecondary(secStk){
+  const secondary = customers.find(x=>x.stk===secStk);
+  if(!confirm(`Bỏ liên kết "${secondary.name}" khỏi tài khoản Chính này?`)) return;
+  try {
+    const { error } = await sb.from('customers').update({ linked_to_customer_id: null }).eq('customer_id', secondary.id);
+    if(error) throw error;
+    await loadAllData();
+    openDetail(currentDetailStk);
+    openLinkModal();
+    renderCustomers(); renderDashboard(); renderRooms();
+  } catch(err){ alert('Lỗi khi bỏ liên kết: ' + err.message); }
 }
 
 function openEditModal(stk){
@@ -2251,20 +2428,31 @@ function openEditModal(stk){
   document.getElementById('f_nav').value = c.nav;
   document.getElementById('f_fee').value = c.fee;
   document.getElementById('f_mgmtstart').value = c.mgmtStart || '';
+  renderRoomSelect();
   document.getElementById('f_room').value = c.room;
   document.getElementById('f_status').value = c.status;
   document.getElementById('f_note').value = c.note || '';
   document.getElementById('f_pronoun').value = c.pronoun || '';
-  renderLinkedSelect(c.stk);
-  document.getElementById('f_linked').value = c.linkedTo || '';
+  renderLinkedSelect(c.stk, c.linkedTo);
   const dateWrap = document.getElementById('f_removed_date_wrap');
+  const telegramInput = document.getElementById('f_telegram_preview');
+  if(c.status === 'KH ưu tiên'){
+    telegramInput.readOnly = false;
+    telegramInput.style.background = '#fff';
+    telegramInput.style.color = 'var(--text)';
+    telegramInput.value = c.telegram || '';
+  } else {
+    telegramInput.readOnly = true;
+    telegramInput.style.background = '#F5F7FA';
+    telegramInput.style.color = 'var(--text-muted)';
+  }
   if(c.status === 'Đã chuyển đi'){
     dateWrap.style.display = 'block';
     document.getElementById('f_removed_date').value = c.mgmtEnd || new Date().toLocaleDateString('vi-VN');
   } else {
     dateWrap.style.display = 'none';
   }
-  updateTelegramPreview();
+  if(c.status !== 'KH ưu tiên') updateTelegramPreview();
 }
 
 function editFromDetail(){
@@ -2275,8 +2463,16 @@ function editFromDetail(){
 
 async function saveCustomer(){
   let stk = document.getElementById('f_stk').value.trim();
-  const name = document.getElementById('f_name').value.trim();
-  if(!name){ alert('Vui lòng nhập Tên khách hàng.'); return; }
+  let name = document.getElementById('f_name').value.trim();
+  const status = document.getElementById('f_status').value;
+  const telegramVal = document.getElementById('f_telegram_preview').value.trim();
+
+  if(status === 'KH ưu tiên'){
+    if(!telegramVal){ alert('Vui lòng nhập Tên Telegram cho KH ưu tiên.'); return; }
+    if(!name) name = telegramVal; // KH ưu tiên: Tên KH không bắt buộc, tự lấy theo Tên Telegram nếu để trống
+  } else {
+    if(!name){ alert('Vui lòng nhập Tên khách hàng.'); return; }
+  }
   if(stk && stk.length !== 6){ alert('Số tài khoản phải đúng 6 ký tự (hoặc để trống nếu KH chưa mở tài khoản).'); return; }
   if(!editingCustomerStk && !stk) stk = generateTempStk();
 
@@ -2284,10 +2480,9 @@ async function saveCustomer(){
   const fee = parseFloat(document.getElementById('f_fee').value.replace(/[^\d]/g,'')) || 0;
   const roomRaw = document.getElementById('f_room').value;
   const isSpecialRoom = SPECIAL_ROOMS.includes(roomRaw);
-  const status = document.getElementById('f_status').value;
   const today = todayDdMmYyyy();
   const mgmtStart = document.getElementById('f_mgmtstart').value.trim() || today;
-  const linkedToStk = document.getElementById('f_linked').value || null;
+  const linkedToStk = resolveLinkedStk();
   const linkedCust = linkedToStk ? customers.find(x=>x.stk===linkedToStk) : null;
 
   const gender = document.getElementById('f_gender').value;
@@ -2300,7 +2495,7 @@ async function saveCustomer(){
     customer_name: name,
     gender, birth_year: birthYear,
     manager_id: managerId,
-    telegram_name: document.getElementById('f_telegram_preview').value,
+    telegram_name: telegramVal,
     current_room_id: isSpecialRoom ? null : parseInt(roomRaw),
     special_room: isSpecialRoom ? roomRaw : null,
     status,
@@ -2379,12 +2574,26 @@ function onStatusChange(){
   const status = document.getElementById('f_status').value;
   const roomSel = document.getElementById('f_room');
   const dateWrap = document.getElementById('f_removed_date_wrap');
+  const telegramInput = document.getElementById('f_telegram_preview');
   if(status === 'Đã chuyển đi'){
     roomSel.value = 'Remove';
     dateWrap.style.display = 'block';
     document.getElementById('f_removed_date').value = new Date().toLocaleDateString('vi-VN');
   } else {
     dateWrap.style.display = 'none';
+  }
+  if(status === 'KH ưu tiên'){
+    // KH ưu tiên: chỉ bắt buộc Tên Telegram, các trường khác không bắt buộc —
+    // cho gõ tay trực tiếp vì có thể chưa đủ dữ liệu (STK, NAV...) để tự sinh tên.
+    telegramInput.readOnly = false;
+    telegramInput.style.background = '#fff';
+    telegramInput.style.color = 'var(--text)';
+    telegramInput.placeholder = 'Nhập tên Telegram trực tiếp (VD: Anh Tuấn VIP)';
+  } else {
+    telegramInput.readOnly = true;
+    telegramInput.style.background = '#F5F7FA';
+    telegramInput.style.color = 'var(--text-muted)';
+    updateTelegramPreview();
   }
 }
 function onRoomManualChange(){
@@ -2514,6 +2723,18 @@ async function openDetail(code){
   document.getElementById('so_room').textContent = roomLabel(c.room);
   document.getElementById('so_status').textContent = c.status;
   document.getElementById('so_mgmtstart').textContent = c.mgmtStart || '—';
+
+  // Liên kết tài khoản — hiện cả 2 chiều: đây là tài khoản Phụ của ai (nếu có),
+  // hoặc đây là tài khoản Chính có những tài khoản Phụ nào trỏ về (nếu có).
+  const secondaryAccounts = customers.filter(x=>x.linkedTo===c.stk);
+  if(c.linkedTo){
+    const primary = customers.find(x=>x.stk===c.linkedTo);
+    document.getElementById('so_linked').innerHTML = `Là <b>tài khoản Phụ</b> của: <b>${primary?primary.name:'—'}</b> (STK ${c.linkedTo})`;
+  } else if(secondaryAccounts.length){
+    document.getElementById('so_linked').innerHTML = `Là <b>tài khoản Chính</b> — có ${secondaryAccounts.length} tài khoản Phụ: ${secondaryAccounts.map(x=>`${x.name} (${x.stk})`).join(', ')}`;
+  } else {
+    document.getElementById('so_linked').textContent = 'Không liên kết — tài khoản độc lập';
+  }
   document.getElementById('so_note').textContent = c.note || '—';
   document.getElementById('so_nav').textContent = fmt(c.nav);
   document.getElementById('so_fee').textContent = fmt(c.fee);
