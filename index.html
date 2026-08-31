@@ -1260,6 +1260,47 @@ async function checkAuthAndInit(){
   renderRights();
   setImportType('nav');
   goImportStep(1);
+
+  subscribeRealtime();
+}
+
+// ---------------- CẬP NHẬT THỜI GIAN THỰC (Supabase Realtime) ----------------
+// Khi bất kỳ ai (kể cả người khác đang mở hệ thống ở máy khác) thêm/sửa/xóa
+// dữ liệu trên các bảng chính, tự động tải lại và vẽ lại đúng màn hình đang xem —
+// không cần ai phải bấm "làm mới". Có debounce để gộp nhiều thay đổi liên tiếp
+// (VD: lúc import hàng loạt) thành 1 lần tải lại duy nhất, tránh giật/lag.
+let realtimeChannel = null;
+let realtimeRefreshTimer = null;
+
+function scheduleRealtimeRefresh(){
+  clearTimeout(realtimeRefreshTimer);
+  realtimeRefreshTimer = setTimeout(async ()=>{
+    await loadAllData();
+    renderCurrentView();
+  }, 600);
+}
+
+function renderCurrentView(){
+  const activeView = document.querySelector('.view.active');
+  if(!activeView) return;
+  const viewId = activeView.id.replace('view-','');
+  renderDashboard(); // số liệu tổng quan + chuông thông báo luôn cần đúng, chi phí render nhẹ
+  if(viewId==='customers') renderCustomers();
+  else if(viewId==='rooms') renderRooms();
+  else if(viewId==='loans') renderLoans();
+  else if(viewId==='rights') renderRights();
+  else if(viewId==='accounts' && currentRole==='owner') renderAccounts();
+}
+
+function subscribeRealtime(){
+  if(realtimeChannel) return; // tránh đăng ký trùng nếu gọi lại
+  realtimeChannel = sb.channel('app-realtime-changes');
+  ['customers','loans','rights_offerings','rooms','user_roles'].forEach(table=>{
+    realtimeChannel.on('postgres_changes', { event:'*', schema:'public', table }, ()=>{
+      scheduleRealtimeRefresh();
+    });
+  });
+  realtimeChannel.subscribe();
 }
 
 function applyRoleVisibility(){
