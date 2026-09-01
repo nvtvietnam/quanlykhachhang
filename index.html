@@ -3463,6 +3463,9 @@ function proceedFromMapping(){
 
 function analyzeImportRows(type, rows, mapping){
   const plan = { type, valid:[], errors:[], newCount:0, changedCount:0, unchangedCount:0 };
+  const seenStks = new Set(); // chặn trùng STK trong cùng 1 file — chỉ dòng đầu tiên được xử lý
+  const seenLoanKeys = new Set(); // chặn trùng (account+ngày đến hạn) trong cùng 1 file
+  const seenRightKeys = new Set(); // chặn trùng (stk+mã CP+ngày chốt) trong cùng 1 file
   rows.forEach((row, idx)=>{
     const lineNo = idx+2;
     if(type==='nav' || type==='customerlist' || type==='bc12'){
@@ -3490,6 +3493,8 @@ function analyzeImportRows(type, rows, mapping){
 
       if(!stk || stk.length!==6){ plan.errors.push({line:lineNo, content:`STK: ${stk||'(trống)'}`, error:'Thiếu hoặc sai định dạng STK (cần đúng 6 ký tự)'}); return; }
       if(!name){ plan.errors.push({line:lineNo, content:`STK ${stk}`, error:'Thiếu Tên khách hàng (và không có Tên Telegram để thay thế)'}); return; }
+      if(seenStks.has(stk)){ plan.errors.push({line:lineNo, content:`STK ${stk} — ${name}`, error:'Trùng STK trong file (đã có ở dòng trước) — chỉ dòng đầu tiên được xử lý'}); return; }
+      seenStks.add(stk);
 
       const existing = customers.find(c=>c.stk===stk);
       const item = {stk,name,telegram,nav,fee,managerId,gender,birthYear,roomRaw,status,mgmtStart,note,existing};
@@ -3508,6 +3513,9 @@ function analyzeImportRows(type, rows, mapping){
       const managerId = String(getMapped(row,mapping,'managerId')).trim();
       if(!accRaw || accRaw.length!==7){ plan.errors.push({line:lineNo, content:`STK: ${accRaw||'(trống)'}`, error:'Số tài khoản phải đúng 7 ký tự'}); return; }
       if(!due){ plan.errors.push({line:lineNo, content:`TK ${accRaw}`, error:'Thiếu ngày đáo hạn'}); return; }
+      const loanKey = accRaw + '|' + due;
+      if(seenLoanKeys.has(loanKey)){ plan.errors.push({line:lineNo, content:`TK ${accRaw} — ${due}`, error:'Trùng số TK + ngày đáo hạn trong file — chỉ dòng đầu tiên được xử lý'}); return; }
+      seenLoanKeys.add(loanKey);
       const dup = loans.find(l=>l.account===accRaw && l.dueDate===due);
       const item = {account:accRaw, dueDate:due, managerId, isNew: !dup, isDup: !!dup};
       if(dup) plan.unchangedCount++; else plan.newCount++;
@@ -3527,6 +3535,9 @@ function analyzeImportRows(type, rows, mapping){
       const rp = ratioRaw.split(':');
       const ratioNum = parseInt(rp[0])||1, ratioDenom = parseInt(rp[1])||1;
       const qty = Math.floor(holdings/ratioDenom)*ratioNum;
+      const rightKey = stk + '|' + symbol + '|' + recordDate;
+      if(seenRightKeys.has(rightKey)){ plan.errors.push({line:lineNo, content:`STK ${stk} — ${symbol}`, error:'Trùng STK + Mã CP + Ngày chốt quyền trong file — chỉ dòng đầu tiên được xử lý'}); return; }
+      seenRightKeys.add(rightKey);
       const dup = rights.find(r=>r.stk===stk && r.symbol===symbol && r.recordDate===recordDate);
       const item = {stk,symbol,ratioNum,ratioDenom,price,holdings,qty,recordDate,deadline,isNew: !dup, isDup: !!dup};
       if(dup) plan.unchangedCount++; else plan.newCount++;
@@ -3557,7 +3568,24 @@ function goToImportStep4(){
   const head = document.getElementById('previewTableHead');
   const body = document.getElementById('previewTableBody');
   document.getElementById('previewTitle').textContent = `Xem trước ${plan.valid.length} dòng sẽ áp dụng`;
-  if(plan.type==='nav' || plan.type==='bc12' || plan.type==='customerlist'){
+  if(plan.type==='customerlist'){
+    head.innerHTML = `<tr><th>STK</th><th>Tên KH</th><th>Room</th><th class="num-col">NAV cũ</th><th class="num-col">NAV mới</th><th class="num-col">Phí cũ</th><th class="num-col">Phí mới</th><th>Trạng thái</th></tr>`;
+    body.innerHTML = plan.valid.slice(0,300).map(it=>{
+      const navOld = it.existing ? fmt(it.existing.nav) : '—';
+      const navNew = it.nav!==undefined ? fmt(it.nav) : '—';
+      const feeOld = it.existing ? fmt(it.existing.fee) : '—';
+      const feeNew = it.fee!==undefined ? fmt(it.fee) : '—';
+      const tag = it.isNew ? '<span class="badge badge-blue">Mới</span>' : ((it.navChanged||it.feeChanged) ? '<span class="badge badge-green">Thay đổi</span>' : '<span class="badge badge-gray">Không đổi</span>');
+      let roomCell;
+      if(!it.roomRaw) roomCell = `<span style="color:var(--text-muted);">— (tự gán theo NAV)</span>`;
+      else if(SPECIAL_ROOMS.includes(it.roomRaw)) roomCell = it.roomRaw;
+      else {
+        const matched = resolveRoomByName(it.roomRaw);
+        roomCell = matched ? roomLabel(matched) : `<span style="color:var(--amber);" title="Không khớp tên Room nào đang có — sẽ tự gán theo ngưỡng NAV">⚠️ ${it.roomRaw}</span>`;
+      }
+      return `<tr><td>${it.stk}</td><td>${it.name}</td><td>${roomCell}</td><td class="num-col ${it.navChanged?'diff-old':''} num">${navOld}</td><td class="num-col ${it.navChanged?'diff-new':''} num">${navNew}</td><td class="num-col ${it.feeChanged?'diff-old':''} num">${feeOld}</td><td class="num-col ${it.feeChanged?'diff-new':''} num">${feeNew}</td><td>${tag}</td></tr>`;
+    }).join('') + (plan.valid.length>300 ? `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:14px;">… và ${plan.valid.length-300} dòng khác</td></tr>` : '');
+  } else if(plan.type==='nav' || plan.type==='bc12'){
     head.innerHTML = `<tr><th>STK</th><th>Tên KH</th><th class="num-col">NAV cũ</th><th class="num-col">NAV mới</th><th class="num-col">Phí cũ</th><th class="num-col">Phí mới</th><th>Trạng thái</th></tr>`;
     body.innerHTML = plan.valid.slice(0,300).map(it=>{
       const navOld = it.existing ? fmt(it.existing.nav) : '—';
