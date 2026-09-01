@@ -625,7 +625,7 @@ tbody tr:hover .row-actions{opacity:1;}
         </div>
         <div class="toolbar">
           <div class="spacer"></div>
-          <button class="btn btn-secondary btn-sm" onclick="renderRooms(true)">🔄 Cập nhật lại thông số</button>
+          <button class="btn btn-secondary btn-sm" id="btnRefreshRooms" onclick="refreshRoomStats()">🔄 Cập nhật lại thông số</button>
           <button class="btn btn-primary btn-sm" onclick="openRoomModal()">+ Thêm Room</button>
         </div>
         <div class="room-grid" id="roomGrid"></div>
@@ -708,7 +708,7 @@ tbody tr:hover .row-actions{opacity:1;}
       <div class="view" id="view-import">
         <div class="steps" id="importSteps"></div>
 
-        <!-- step 1 -->
+        <!-- step 1: upload -->
         <div class="import-step" id="importStep1">
           <div class="toolbar" style="margin-bottom:16px;">
             <div class="step-toggle" style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -722,28 +722,35 @@ tbody tr:hover .row-actions{opacity:1;}
 
           <div class="panel"><div class="panel-body">
             <div class="upload-box" id="uploadBox" onclick="triggerFilePicker()">
-              <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none;" onchange="handleFileSelected(this.files)">
+              <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleFileSelected(this.files)">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              <div style="font-size:13.5px;font-weight:600;" id="uploadHint">Kéo thả file NAV đã tổng hợp vào đây, hoặc bấm để chọn file</div>
-              <div style="font-size:12px;color:var(--text-muted);margin-top:4px;" id="uploadSubHint">File đầu ra từ bước "Tổng hợp NAV" — sheet "Tong hop NAV"</div>
+              <div style="font-size:13.5px;font-weight:600;" id="uploadHint">Kéo thả file Excel/CSV vào đây, hoặc bấm để chọn file</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:4px;" id="uploadSubHint">Hệ thống sẽ tự đọc tên các cột có trong file để bạn chọn ở bước tiếp theo</div>
               <div class="upload-filename" id="uploadFilename" style="display:none;"></div>
             </div>
-
-            <div class="so-section-title" style="margin-top:24px;">Cột dữ liệu sẽ được đọc (cố định, không cần gán tay)</div>
-            <table class="mini-table" id="fixedMappingTable">
-              <thead><tr><th>Cột trong file</th><th>Ánh xạ vào hệ thống</th></tr></thead>
-              <tbody id="fixedMappingBody"></tbody>
-            </table>
-            <div class="field-hint" style="margin-top:10px;">Vì đây là file đã được chuẩn hoá sẵn (đầu ra của skill tổng hợp), hệ thống đọc đúng cấu trúc cột cố định — không cần bước gán cột thủ công.</div>
-            <div class="field-hint" id="importTypeNote" style="margin-top:8px;color:var(--amber);display:none;"></div>
+            <div class="field-hint" id="importTypeNote" style="margin-top:10px;color:var(--amber);display:none;"></div>
           </div></div>
           <div style="display:flex;justify-content:flex-end;margin-top:16px;">
-            <button class="btn btn-primary" onclick="proceedFromUpload()">Tiếp tục — Kiểm tra dữ liệu →</button>
+            <button class="btn btn-primary" onclick="proceedFromUpload()">Tiếp tục — Chọn cột dữ liệu →</button>
           </div>
         </div>
 
-        <!-- step 2 -->
+        <!-- step 2: chọn cột dữ liệu (đọc thật từ file) -->
         <div class="import-step" id="importStep2" style="display:none;">
+          <div class="panel"><div class="panel-body">
+            <div class="so-section-title" style="margin-top:0;">Chọn cột dữ liệu</div>
+            <div class="field-hint" style="margin-bottom:14px;">Cho hệ thống biết cột nào trong file tương ứng với trường nào. Hệ thống đã tự đoán sẵn theo tên cột — bạn kiểm tra và đổi lại nếu chưa đúng.</div>
+            <div id="columnMappingGrid" class="form-grid"></div>
+            <div class="field-hint" style="margin-top:12px;" id="mappingFileInfo"></div>
+          </div></div>
+          <div style="display:flex;justify-content:space-between;margin-top:16px;">
+            <button class="btn btn-secondary" onclick="goImportStep(1)">← Quay lại</button>
+            <button class="btn btn-primary" onclick="proceedFromMapping()">Tiếp tục — Kiểm tra dữ liệu →</button>
+          </div>
+        </div>
+
+        <!-- step 3: kiểm tra dữ liệu -->
+        <div class="import-step" id="importStep3" style="display:none;">
           <div class="summary-grid">
             <div class="summary-card"><div class="n" id="sumValid">0</div><div class="l">Dòng hợp lệ</div></div>
             <div class="summary-card"><div class="n" style="color:var(--accent);" id="sumNew">0</div><div class="l">Mới</div></div>
@@ -758,13 +765,13 @@ tbody tr:hover .row-actions{opacity:1;}
             </div>
           </div>
           <div style="display:flex;justify-content:space-between;margin-top:16px;">
-            <button class="btn btn-secondary" onclick="goImportStep(1)">← Quay lại</button>
-            <button class="btn btn-primary" onclick="goToImportStep3()" id="btnToStep3">Tiếp tục — Xem trước thay đổi →</button>
+            <button class="btn btn-secondary" onclick="goImportStep(2)">← Quay lại</button>
+            <button class="btn btn-primary" onclick="goToImportStep4()" id="btnToStep4">Tiếp tục — Xem trước thay đổi →</button>
           </div>
         </div>
 
-        <!-- step 3 -->
-        <div class="import-step" id="importStep3" style="display:none;">
+        <!-- step 4: xem trước -->
+        <div class="import-step" id="importStep4" style="display:none;">
           <div class="panel"><div class="panel-header"><div class="panel-title" id="previewTitle">Xem trước thay đổi</div></div>
             <div class="panel-body" style="padding:0;">
               <table id="previewTable">
@@ -774,13 +781,13 @@ tbody tr:hover .row-actions{opacity:1;}
             </div>
           </div>
           <div style="display:flex;justify-content:space-between;margin-top:16px;">
-            <button class="btn btn-secondary" onclick="goImportStep(2)">← Quay lại</button>
+            <button class="btn btn-secondary" onclick="goImportStep(3)">← Quay lại</button>
             <button class="btn btn-primary" onclick="confirmImportToDatabase()" id="btnConfirmImport">Xác nhận cập nhật ✓</button>
           </div>
         </div>
 
-        <!-- step 4 -->
-        <div class="import-step" id="importStep4" style="display:none;">
+        <!-- step 5: hoàn tất -->
+        <div class="import-step" id="importStep5" style="display:none;">
           <div class="panel"><div class="panel-body" style="text-align:center;padding:50px 20px;" id="importResultBody">
             <div style="font-size:38px;">✅</div>
             <div style="font-size:16px;font-weight:700;margin-top:10px;" id="importResultTitle">Đã cập nhật thành công</div>
@@ -2151,6 +2158,22 @@ document.getElementById('periodToggle')?.addEventListener('click', function(e){
 });
 
 // ---------------- ROOMS ----------------
+async function refreshRoomStats(){
+  const btn = document.getElementById('btnRefreshRooms');
+  btn.disabled = true;
+  btn.textContent = '🔄 Đang cập nhật…';
+  try {
+    await loadAllData();
+    renderRooms(true);
+    renderDashboard();
+  } catch(err){
+    alert('Lỗi khi tải lại dữ liệu: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔄 Cập nhật lại thông số';
+  }
+}
+
 function renderRooms(showRefreshFeedback){
   document.getElementById('roomGrid').innerHTML = rooms.map(r=>{
     const members = customers.filter(c=>c.room===r.id && c.status==="Đang quản lý");
@@ -3194,87 +3217,87 @@ function renderRights(){
 }
 
 // ---------------- IMPORT WIZARD ----------------
-const importTypes = {
-  customerlist: {
-    filename: "📄 Danh_sach_KH_hien_co.xlsx (410KB)",
-    hint: "Kéo thả file danh sách khách hàng hiện có vào đây, hoặc bấm để chọn file",
-    subhint: 'Dùng 1 lần khi mới bắt đầu, để nạp toàn bộ KH đang quản lý (từ Zoom/Excel) vào hệ thống',
-    mapping: [
-      ["STK", "Số tài khoản (định danh, 6 ký tự) — bắt buộc"],
-      ["Tên KH", "Tên khách hàng — bắt buộc"],
-      ["Giới tính", "Nam / Nữ / Khác — để trống mặc định 'Khác'"],
-      ["Năm sinh", "Dùng để tự đề xuất xưng hô — có thể để trống"],
-      ["ID QL", "ID người quản lý — bắt buộc"],
-      ["NAV", "NAV hiện tại — bắt buộc"],
-      ["Phí", "Phí tháng hiện tại — để trống = 0"],
-      ["Room", "Để trống → hệ thống tự gán theo ngưỡng NAV, có thể sửa tay sau"],
-      ["Trạng thái", "Để trống → mặc định 'Đang quản lý'"],
-      ["Ngày bắt đầu QL", "Để trống → mặc định = ngày chạy import này"],
-      ["Ghi chú", "Tuỳ chọn"],
-    ],
-    note: 'Chưa có skill tổng hợp riêng cho danh sách KH ban đầu — đây là cấu trúc cột mình đề xuất dựa trên các trường hệ thống đang dùng. Bạn xem lại có khớp với file bạn đang có trong Zoom không, cần thêm/bớt cột gì thì báo mình chỉnh lại trước khi build thật.'
-  },
-  nav: {
-    filename: "📄 Tong_hop_NAV_thang08.xlsx (198KB)",
-    hint: "Kéo thả file NAV đã tổng hợp vào đây, hoặc bấm để chọn file",
-    subhint: 'File đầu ra từ bước "Tổng hợp NAV" — sheet "Tong hop NAV"',
-    mapping: [
-      ["STK", "Số tài khoản (định danh khách hàng)"],
-      ["Tên KH", "Tên khách hàng"],
-      ["Tổng", "NAV hiện tại"],
-      ["MKT ID", "ID người quản lý"],
-    ]
-  },
-  bc12: {
-    filename: "📄 Tong_hop_BC12_thang08.xlsx (256KB)",
-    hint: "Kéo thả file BC12 đã tổng hợp vào đây, hoặc bấm để chọn file",
-    subhint: 'File đầu ra từ bước "Tổng hợp BC12" — sheet "Tong hop"',
-    mapping: [
-      ["Số tài khoản", "Số tài khoản (định danh khách hàng)"],
-      ["Tên chủ tài khoản", "Tên khách hàng"],
-      ["Phí giao dịch", "Phí tháng hiện tại"],
-      ["ID", "ID người quản lý"],
-    ]
-  },
-  loan: {
-    filename: "📄 Dao_han_17_08_2026.xlsx (94KB)",
-    hint: "Kéo thả file Khoản vay đến hạn đã tổng hợp vào đây, hoặc bấm để chọn file",
-    subhint: 'File đầu ra từ skill "Chuyển đổi đáo hạn" — mỗi sheet là 1 ngày chốt số liệu',
-    mapping: [
-      ["Số tài khoản", "7 ký tự: 6 số đầu khớp STK khách hàng, số cuối là tiểu khoản (3=Margin đặc biệt, 6=Margin)"],
-      ["Ngày đáo hạn", "Ngày đến hạn"],
-      ["MKT ID", "ID người quản lý"],
-    ],
-    note: 'File nguồn này không có "Số tiền vay" — sau khi import, khoản vay được tạo với số tiền = 0. Bạn sẽ bổ sung số tiền vay bằng tay cho từng khoản sau khi import (đã xác nhận, không cần ghép thêm nguồn dữ liệu khác).'
-  },
-  right: {
-    filename: "📄 Quyen_mua_thang08.xlsx (72KB)",
-    hint: "Kéo thả file Quyền mua vào đây, hoặc bấm để chọn file",
-    subhint: 'Cấu trúc đề xuất — cần bạn xác nhận trước khi áp dụng chính thức',
-    mapping: [
-      ["Số tài khoản", "Số tài khoản (định danh khách hàng)"],
-      ["Mã CP", "Mã cổ phiếu"],
-      ["Tỷ lệ", "Tỷ lệ quyền mua (vd 1:5)"],
-      ["Giá", "Giá quyền mua"],
-      ["Số CP nắm giữ", "Dùng để tự tính Số lượng được mua"],
-      ["Ngày chốt quyền", "Ngày chốt quyền"],
-      ["Hạn đăng ký", "Hạn đăng ký / nộp tiền"],
-    ],
-    note: 'Chưa có skill tổng hợp riêng cho quyền mua như NAV/BC12/đáo hạn — đây là cấu trúc cột mình đề xuất, bạn xác nhận hoặc chỉnh lại trước khi build thật.'
-  }
+// ==================================================================
+// IMPORT EXCEL — đọc header thật từ file, tự đoán cột + cho chọn tay
+// (giống cách hệ thống margin.html đang làm)
+// ==================================================================
+
+const FIELD_SPECS = {
+  customerlist: [
+    {key:'stk', label:'STK', required:true, guesses:['stk','so tk','sotk','so tai khoan','sotaikhoan']},
+    {key:'name', label:'Tên KH', required:false, guesses:['ten kh','ten khach hang','ho ten','ten']},
+    {key:'telegram', label:'Tên Telegram', required:false, guesses:['telegram']},
+    {key:'room', label:'Room', required:false, guesses:['room hien tai','room','nhom']},
+    {key:'nav', label:'NAV', required:false, guesses:['nav','tong']},
+    {key:'fee', label:'Phí', required:false, guesses:['phi']},
+    {key:'managerId', label:'ID người quản lý', required:false, guesses:['mkt id','id ql','id quan ly','id']},
+    {key:'gender', label:'Giới tính', required:false, guesses:['gioi tinh']},
+    {key:'birthYear', label:'Năm sinh', required:false, guesses:['nam sinh']},
+    {key:'status', label:'Trạng thái', required:false, guesses:['trang thai']},
+    {key:'mgmtStart', label:'Ngày bắt đầu quản lý', required:false, guesses:['ngay bat dau quan ly','ngay bat dau']},
+    {key:'note', label:'Ghi chú', required:false, guesses:['ghi chu']},
+  ],
+  nav: [
+    {key:'stk', label:'STK', required:true, guesses:['stk','so tk','sotk','so tai khoan']},
+    {key:'name', label:'Tên KH', required:false, guesses:['ten kh','ten']},
+    {key:'nav', label:'NAV (Tổng)', required:true, guesses:['tong','nav']},
+    {key:'managerId', label:'ID người quản lý', required:false, guesses:['mkt id','id']},
+  ],
+  bc12: [
+    {key:'stk', label:'Số tài khoản', required:true, guesses:['so tai khoan','stk','so tk','sotk']},
+    {key:'name', label:'Tên chủ tài khoản', required:false, guesses:['ten chu tai khoan','ten']},
+    {key:'fee', label:'Phí giao dịch', required:true, guesses:['phi giao dich','phi']},
+    {key:'managerId', label:'ID', required:false, guesses:['id']},
+  ],
+  loan: [
+    {key:'account', label:'Số tài khoản (7 ký tự)', required:true, guesses:['so tai khoan','stk','so tk','sotk']},
+    {key:'dueDate', label:'Ngày đáo hạn', required:true, guesses:['ngay dao han','ngay den han']},
+    {key:'managerId', label:'MKT ID', required:false, guesses:['mkt id','id']},
+  ],
+  right: [
+    {key:'stk', label:'Số tài khoản', required:true, guesses:['so tai khoan','stk','so tk','sotk']},
+    {key:'symbol', label:'Mã CP', required:true, guesses:['ma cp']},
+    {key:'ratio', label:'Tỷ lệ', required:false, guesses:['ty le']},
+    {key:'price', label:'Giá', required:false, guesses:['gia']},
+    {key:'holdings', label:'Số CP nắm giữ', required:false, guesses:['so cp nam giu']},
+    {key:'recordDate', label:'Ngày chốt quyền', required:true, guesses:['ngay chot quyen']},
+    {key:'deadline', label:'Hạn đăng ký', required:true, guesses:['han dang ky']},
+  ],
 };
+
+const IMPORT_TYPE_META = {
+  customerlist: {hint:'Kéo thả file danh sách khách hàng hiện có vào đây, hoặc bấm để chọn file', note:'Dùng 1 lần khi mới bắt đầu, để nạp toàn bộ KH đang quản lý vào hệ thống. Cột "Room" nếu có sẽ tự khớp theo TÊN Room đã cấu hình sẵn (VD: Elite/Advance/Basic) — nếu không khớp tên nào, hệ thống tự gán theo ngưỡng NAV.'},
+  nav: {hint:'Kéo thả file NAV vào đây, hoặc bấm để chọn file'},
+  bc12: {hint:'Kéo thả file BC12 (phí) vào đây, hoặc bấm để chọn file'},
+  loan: {hint:'Kéo thả file khoản vay đến hạn vào đây, hoặc bấm để chọn file', note:'Nếu file không có cột số tiền vay, khoản vay sẽ được tạo với số tiền = 0 — bổ sung tay sau.'},
+  right: {hint:'Kéo thả file quyền mua vào đây, hoặc bấm để chọn file'},
+};
+
+let currentImportType = 'nav';
+const importStepLabels = ["Upload file","Chọn cột dữ liệu","Kiểm tra dữ liệu","Xem trước thay đổi","Hoàn tất"];
+function renderImportSteps(current){
+  document.getElementById('importSteps').innerHTML = importStepLabels.map((label,i)=>{
+    const n = i+1;
+    const cls = n<current ? 'done' : (n===current ? 'active' : '');
+    const line = n<importStepLabels.length ? '<div class="step-line"></div>' : '';
+    return `<div class="step ${cls}"><div class="step-num">${n<current?'✓':n}</div><div class="step-label">${label}</div></div>${line}`;
+  }).join('');
+}
+function goImportStep(step){
+  for(let i=1;i<=5;i++){ document.getElementById('importStep'+i).style.display = (i===step) ? 'block' : 'none'; }
+  renderImportSteps(step);
+}
+
 function setImportType(type){
   currentImportType = type;
   const map = {customerlist:'btnTypeCustomerList', nav:'btnTypeNav', bc12:'btnTypeBc12', loan:'btnTypeLoan', right:'btnTypeRight'};
   Object.entries(map).forEach(([t,id])=>{
     document.getElementById(id).className = 'btn btn-sm ' + (t===type ? 'btn-primary' : 'btn-secondary');
   });
-  const cfg = importTypes[type];
-  document.getElementById('uploadHint').textContent = cfg.hint;
-  document.getElementById('uploadSubHint').textContent = cfg.subhint;
-  document.getElementById('fixedMappingBody').innerHTML = cfg.mapping.map(([a,b])=>`<tr><td><b>${a}</b></td><td>${b}</td></tr>`).join('');
+  document.getElementById('uploadHint').textContent = IMPORT_TYPE_META[type].hint;
+  document.getElementById('uploadSubHint').textContent = 'Hệ thống sẽ tự đọc tên các cột có trong file để bạn chọn ở bước tiếp theo';
   const noteEl = document.getElementById('importTypeNote');
-  if(cfg.note){ noteEl.style.display='block'; noteEl.textContent = '⚠️ ' + cfg.note; }
+  if(IMPORT_TYPE_META[type].note){ noteEl.style.display='block'; noteEl.textContent = 'ℹ️ ' + IMPORT_TYPE_META[type].note; }
   else { noteEl.style.display='none'; }
   resetFileSelection();
 }
@@ -3297,7 +3320,7 @@ function formatFileSize(bytes){
 function handleFileSelected(fileList){
   if(!fileList || !fileList.length) return;
   const file = fileList[0];
-  const valid = /\.(xlsx|xls)$/i.test(file.name);
+  const valid = /\.(xlsx|xls|csv)$/i.test(file.name);
   const box = document.getElementById('uploadFilename');
   box.style.display = 'inline-flex';
   document.getElementById('uploadHint').style.display = 'none';
@@ -3309,7 +3332,7 @@ function handleFileSelected(fileList){
   } else {
     box.style.background = 'var(--red-soft)';
     box.style.color = 'var(--red)';
-    box.textContent = `⚠️ ${file.name} — chỉ hỗ trợ .xlsx hoặc .xls`;
+    box.textContent = `⚠️ ${file.name} — chỉ hỗ trợ .xlsx, .xls hoặc .csv`;
   }
 }
 
@@ -3327,31 +3350,11 @@ function handleFileSelected(fileList){
   });
 })();
 
-let currentImportType = 'nav';
-const importStepLabels = ["Upload file","Kiểm tra dữ liệu","Xem trước thay đổi","Hoàn tất"];
-function renderImportSteps(current){
-  document.getElementById('importSteps').innerHTML = importStepLabels.map((label,i)=>{
-    const n = i+1;
-    const cls = n<current ? 'done' : (n===current ? 'active' : '');
-    const line = n<importStepLabels.length ? '<div class="step-line"></div>' : '';
-    return `<div class="step ${cls}"><div class="step-num">${n<current?'✓':n}</div><div class="step-label">${label}</div></div>${line}`;
-  }).join('');
-}
-function goImportStep(step){
-  for(let i=1;i<=4;i++){ document.getElementById('importStep'+i).style.display = (i===step) ? 'block' : 'none'; }
-  renderImportSteps(step);
-}
-
 let pendingImportPlan = null;
+let pendingImportRows = [];
+let pendingImportHeaders = [];
+let currentColumnMapping = {};
 
-function getCol(row, ...names){
-  const keys = Object.keys(row);
-  for(const name of names){
-    const found = keys.find(k=>k.trim().toLowerCase()===name.trim().toLowerCase());
-    if(found !== undefined && row[found] !== undefined) return row[found];
-  }
-  return '';
-}
 function parseNum(v){
   if(typeof v === 'number') return v;
   const s = String(v||'').replace(/[^\d.-]/g,'');
@@ -3369,6 +3372,38 @@ function autoAssignRoom(nav){
   const r = rooms.find(r => nav >= r.min && (r.max===Infinity || nav <= r.max));
   return r ? r.id : (rooms[0] ? rooms[0].id : null);
 }
+function normalizeVN(s){
+  return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/[^a-z0-9]/g,'').trim();
+}
+function resolveRoomByName(roomText){
+  if(!roomText) return null;
+  const norm = normalizeVN(roomText);
+  if(!norm) return null;
+  const match = rooms.find(r=>normalizeVN(r.name)===norm);
+  return match ? match.id : null;
+}
+function guessColumnFor(spec, headers){
+  const normHeaders = headers.map(h=>({raw:h, norm:normalizeVN(h)}));
+  for(const guess of spec.guesses){
+    const ng = normalizeVN(guess);
+    const exact = normHeaders.find(h=>h.norm===ng);
+    if(exact) return exact.raw;
+  }
+  // So khớp gần đúng — chỉ áp dụng khi cả 2 chuỗi đủ dài (>=4 ký tự) để tránh
+  // nhận nhầm do từ ngắn phổ biến (VD: "ten" trùng vào giữa 1 cụm dài không liên quan).
+  for(const guess of spec.guesses){
+    const ng = normalizeVN(guess);
+    if(ng.length < 4) continue;
+    const partial = normHeaders.find(h=> h.norm.length>=4 && (h.norm.includes(ng) || ng.includes(h.norm)));
+    if(partial) return partial.raw;
+  }
+  return '';
+}
+function getMapped(row, mapping, key){
+  const col = mapping[key];
+  if(!col) return '';
+  return row[col];
+}
 
 async function proceedFromUpload(){
   const input = document.getElementById('fileInput');
@@ -3385,49 +3420,79 @@ async function proceedFromUpload(){
       rows = rows.concat(sheetRows);
     });
     if(rows.length === 0){ alert('File không có dữ liệu hoặc sai định dạng.'); return; }
-    pendingImportPlan = analyzeImportRows(currentImportType, rows);
-    renderImportStep2(pendingImportPlan);
+    pendingImportRows = rows;
+    pendingImportHeaders = Object.keys(rows[0]);
+    renderColumnMappingStep();
     goImportStep(2);
   } catch(err){
     alert('Không đọc được file: ' + err.message);
   } finally {
-    btn.disabled = false; btn.textContent = 'Tiếp tục — Kiểm tra dữ liệu →';
+    btn.disabled = false; btn.textContent = 'Tiếp tục — Chọn cột dữ liệu →';
   }
 }
 
-function analyzeImportRows(type, rows){
+function renderColumnMappingStep(){
+  const specs = FIELD_SPECS[currentImportType];
+  const grid = document.getElementById('columnMappingGrid');
+  currentColumnMapping = {};
+  grid.innerHTML = specs.map(spec=>{
+    const guessed = guessColumnFor(spec, pendingImportHeaders);
+    currentColumnMapping[spec.key] = guessed;
+    const options = ['<option value="">— Không có —</option>']
+      .concat(pendingImportHeaders.map(h=>`<option value="${h}" ${h===guessed?'selected':''}>${h}</option>`))
+      .join('');
+    return `<div class="form-field">
+      <label>Cột chứa ${spec.label} ${spec.required?'<span style="color:var(--red);">*</span>':'<span style="font-weight:500;color:var(--text-muted);">(nếu có)</span>'}</label>
+      <select onchange="currentColumnMapping['${spec.key}']=this.value">${options}</select>
+    </div>`;
+  }).join('');
+  document.getElementById('mappingFileInfo').innerHTML = `File có <b>${pendingImportHeaders.length} cột</b>: ${pendingImportHeaders.join(', ')} — tổng <b>${pendingImportRows.length} dòng</b> dữ liệu.`;
+}
+
+function proceedFromMapping(){
+  const specs = FIELD_SPECS[currentImportType];
+  const missing = specs.filter(s=>s.required && !currentColumnMapping[s.key]);
+  if(missing.length){
+    alert('Vui lòng chọn cột cho: ' + missing.map(s=>s.label).join(', '));
+    return;
+  }
+  pendingImportPlan = analyzeImportRows(currentImportType, pendingImportRows, currentColumnMapping);
+  renderImportStep3Summary(pendingImportPlan);
+  goImportStep(3);
+}
+
+function analyzeImportRows(type, rows, mapping){
   const plan = { type, valid:[], errors:[], newCount:0, changedCount:0, unchangedCount:0 };
   rows.forEach((row, idx)=>{
     const lineNo = idx+2;
     if(type==='nav' || type==='customerlist' || type==='bc12'){
-      let stk,name,nav,fee,managerId,gender,birthYear,roomRaw,status,mgmtStart,note;
+      const stk = String(getMapped(row,mapping,'stk')).trim();
+      let name = String(getMapped(row,mapping,'name')).trim();
+      const telegram = String(getMapped(row,mapping,'telegram')).trim();
+      const managerId = String(getMapped(row,mapping,'managerId')).trim();
+      let nav, fee, gender, birthYear, roomRaw, status, mgmtStart, note;
       if(type==='nav'){
-        stk = String(getCol(row,'STK')).trim();
-        name = String(getCol(row,'Tên KH')).trim();
-        nav = parseNum(getCol(row,'Tổng'));
-        managerId = String(getCol(row,'MKT ID')).trim();
+        nav = parseNum(getMapped(row,mapping,'nav'));
       } else if(type==='bc12'){
-        stk = String(getCol(row,'Số tài khoản')).trim();
-        name = String(getCol(row,'Tên chủ tài khoản')).trim();
-        fee = parseNum(getCol(row,'Phí giao dịch'));
-        managerId = String(getCol(row,'ID')).trim();
+        fee = parseNum(getMapped(row,mapping,'fee'));
       } else {
-        stk = String(getCol(row,'STK')).trim();
-        name = String(getCol(row,'Tên KH')).trim();
-        gender = String(getCol(row,'Giới tính')).trim() || 'Khác';
-        birthYear = parseInt(getCol(row,'Năm sinh')) || null;
-        managerId = String(getCol(row,'ID QL')).trim();
-        nav = parseNum(getCol(row,'NAV'));
-        fee = parseNum(getCol(row,'Phí'));
-        roomRaw = String(getCol(row,'Room')).trim();
-        status = String(getCol(row,'Trạng thái')).trim() || 'Đang quản lý';
-        mgmtStart = String(getCol(row,'Ngày bắt đầu QL')).trim();
-        note = String(getCol(row,'Ghi chú')).trim();
+        gender = String(getMapped(row,mapping,'gender')).trim() || 'Khác';
+        birthYear = parseInt(getMapped(row,mapping,'birthYear')) || null;
+        nav = parseNum(getMapped(row,mapping,'nav'));
+        fee = parseNum(getMapped(row,mapping,'fee'));
+        roomRaw = String(getMapped(row,mapping,'room')).trim();
+        status = String(getMapped(row,mapping,'status')).trim() || 'Đang quản lý';
+        mgmtStart = String(getMapped(row,mapping,'mgmtStart')).trim();
+        note = String(getMapped(row,mapping,'note')).trim();
       }
+      // Nếu không có cột Tên KH riêng nhưng có Tên Telegram, tạm dùng làm tên hiển thị
+      if(!name && telegram) name = telegram;
+
       if(!stk || stk.length!==6){ plan.errors.push({line:lineNo, content:`STK: ${stk||'(trống)'}`, error:'Thiếu hoặc sai định dạng STK (cần đúng 6 ký tự)'}); return; }
-      if(!name){ plan.errors.push({line:lineNo, content:`STK ${stk}`, error:'Thiếu Tên khách hàng'}); return; }
+      if(!name){ plan.errors.push({line:lineNo, content:`STK ${stk}`, error:'Thiếu Tên khách hàng (và không có Tên Telegram để thay thế)'}); return; }
+
       const existing = customers.find(c=>c.stk===stk);
-      const item = {stk,name,nav,fee,managerId,gender,birthYear,roomRaw,status,mgmtStart,note,existing};
+      const item = {stk,name,telegram,nav,fee,managerId,gender,birthYear,roomRaw,status,mgmtStart,note,existing};
       if(!existing){ item.isNew = true; plan.newCount++; }
       else {
         const navChanged = nav!==undefined && type!=='bc12' && nav !== existing.nav;
@@ -3438,9 +3503,9 @@ function analyzeImportRows(type, rows){
       plan.valid.push(item);
     }
     else if(type==='loan'){
-      const accRaw = String(getCol(row,'Số tài khoản')).trim();
-      const due = parseDateCell(getCol(row,'Ngày đáo hạn'));
-      const managerId = String(getCol(row,'MKT ID')).trim();
+      const accRaw = String(getMapped(row,mapping,'account')).trim();
+      const due = parseDateCell(getMapped(row,mapping,'dueDate'));
+      const managerId = String(getMapped(row,mapping,'managerId')).trim();
       if(!accRaw || accRaw.length!==7){ plan.errors.push({line:lineNo, content:`STK: ${accRaw||'(trống)'}`, error:'Số tài khoản phải đúng 7 ký tự'}); return; }
       if(!due){ plan.errors.push({line:lineNo, content:`TK ${accRaw}`, error:'Thiếu ngày đáo hạn'}); return; }
       const dup = loans.find(l=>l.account===accRaw && l.dueDate===due);
@@ -3449,13 +3514,13 @@ function analyzeImportRows(type, rows){
       plan.valid.push(item);
     }
     else if(type==='right'){
-      const stk = String(getCol(row,'Số tài khoản')).trim();
-      const symbol = String(getCol(row,'Mã CP')).trim().toUpperCase();
-      const ratioRaw = String(getCol(row,'Tỷ lệ')).trim();
-      const price = parseNum(getCol(row,'Giá'));
-      const holdings = parseNum(getCol(row,'Số CP nắm giữ'));
-      const recordDate = parseDateCell(getCol(row,'Ngày chốt quyền'));
-      const deadline = parseDateCell(getCol(row,'Hạn đăng ký'));
+      const stk = String(getMapped(row,mapping,'stk')).trim();
+      const symbol = String(getMapped(row,mapping,'symbol')).trim().toUpperCase();
+      const ratioRaw = String(getMapped(row,mapping,'ratio')).trim();
+      const price = parseNum(getMapped(row,mapping,'price'));
+      const holdings = parseNum(getMapped(row,mapping,'holdings'));
+      const recordDate = parseDateCell(getMapped(row,mapping,'recordDate'));
+      const deadline = parseDateCell(getMapped(row,mapping,'deadline'));
       if(!stk || stk.length!==6){ plan.errors.push({line:lineNo, content:`STK: ${stk||'(trống)'}`, error:'Thiếu hoặc sai định dạng STK'}); return; }
       if(!symbol){ plan.errors.push({line:lineNo, content:`STK ${stk}`, error:'Thiếu Mã CP'}); return; }
       if(!deadline || !recordDate){ plan.errors.push({line:lineNo, content:`STK ${stk} - ${symbol}`, error:'Thiếu ngày chốt quyền / hạn đăng ký'}); return; }
@@ -3471,7 +3536,7 @@ function analyzeImportRows(type, rows){
   return plan;
 }
 
-function renderImportStep2(plan){
+function renderImportStep3Summary(plan){
   document.getElementById('sumValid').textContent = plan.valid.length;
   document.getElementById('sumNew').textContent = plan.newCount;
   document.getElementById('sumChanged').textContent = plan.changedCount;
@@ -3482,11 +3547,11 @@ function renderImportStep2(plan){
     errPanel.style.display = 'block';
     document.getElementById('importErrorBody').innerHTML = plan.errors.slice(0,200).map(e=>`<tr><td>${e.line}</td><td>${e.content}</td><td><span class="badge badge-red">${e.error}</span></td></tr>`).join('');
   } else { errPanel.style.display = 'none'; }
-  document.getElementById('btnToStep3').style.opacity = plan.valid.length===0 ? '.5' : '1';
-  document.getElementById('btnToStep3').disabled = plan.valid.length===0;
+  document.getElementById('btnToStep4').style.opacity = plan.valid.length===0 ? '.5' : '1';
+  document.getElementById('btnToStep4').disabled = plan.valid.length===0;
 }
 
-function goToImportStep3(){
+function goToImportStep4(){
   const plan = pendingImportPlan;
   if(!plan) return;
   const head = document.getElementById('previewTableHead');
@@ -3509,7 +3574,7 @@ function goToImportStep3(){
     head.innerHTML = `<tr><th>STK</th><th>Mã CP</th><th>Tỷ lệ</th><th class="num-col">Giá</th><th class="num-col">SL được mua</th><th>Ngày chốt</th><th>Hạn ĐK</th><th>Trạng thái</th></tr>`;
     body.innerHTML = plan.valid.slice(0,300).map(it=>`<tr><td>${it.stk}</td><td>${it.symbol}</td><td>${it.ratioNum}:${it.ratioDenom}</td><td class="num-col num">${fmt(it.price)}</td><td class="num-col num">${fmt(it.qty)}</td><td>${it.recordDate}</td><td>${it.deadline}</td><td>${it.isDup?'<span class="badge badge-gray">Đã tồn tại, bỏ qua</span>':'<span class="badge badge-blue">Mới</span>'}</td></tr>`).join('');
   }
-  goImportStep(3);
+  goImportStep(4);
 }
 
 async function confirmImportToDatabase(){
@@ -3518,19 +3583,28 @@ async function confirmImportToDatabase(){
   const btn = document.getElementById('btnConfirmImport');
   btn.disabled = true; btn.textContent = 'Đang cập nhật…';
   const today = todayDdMmYyyy();
-  let newCount=0, updatedCount=0, errCount=0;
+  let newCount=0, updatedCount=0, errCount=0, roomUnmatchedCount=0;
   try {
     if(plan.type==='nav' || plan.type==='bc12' || plan.type==='customerlist'){
       for(const it of plan.valid){
         try {
           if(it.isNew){
             let roomId=null, specialRoom=null;
-            if(plan.type==='customerlist' && it.roomRaw && SPECIAL_ROOMS.includes(it.roomRaw)) specialRoom = it.roomRaw;
-            else roomId = autoAssignRoom(it.nav||0);
+            if(plan.type==='customerlist' && it.roomRaw){
+              if(SPECIAL_ROOMS.includes(it.roomRaw)) specialRoom = it.roomRaw;
+              else {
+                const matched = resolveRoomByName(it.roomRaw);
+                if(matched) roomId = matched;
+                else { roomId = autoAssignRoom(it.nav||0); roomUnmatchedCount++; }
+              }
+            } else {
+              roomId = autoAssignRoom(it.nav||0);
+            }
             const { data: ins, error } = await sb.from('customers').insert({
               account_number: it.stk, customer_name: it.name,
               gender: it.gender||null, birth_year: it.birthYear||null,
               manager_id: it.managerId||null,
+              telegram_name: it.telegram||null,
               current_room_id: roomId, special_room: specialRoom,
               status: it.status || 'Đang quản lý',
               current_nav: it.nav||0, current_fee: it.fee||0,
@@ -3556,7 +3630,7 @@ async function confirmImportToDatabase(){
       }
       await sb.from('import_batches').insert({ import_type: plan.type==='bc12'?'bc12':'nav', file_name: document.getElementById('fileInput').files[0]?.name, imported_by: currentUserEmail, total_rows: plan.valid.length+plan.errors.length, new_customers:newCount, updated_rows:updatedCount, error_rows: plan.errors.length+errCount });
       document.getElementById('importResultTitle').textContent = 'Đã cập nhật thành công';
-      document.getElementById('importResultSub').textContent = `${newCount} khách mới được thêm · ${updatedCount} khách được cập nhật NAV/phí${errCount?` · ${errCount} dòng lỗi khi ghi`:''} · Dữ liệu cũ vẫn được lưu giữ nguyên vẹn.`;
+      document.getElementById('importResultSub').textContent = `${newCount} khách mới được thêm · ${updatedCount} khách được cập nhật NAV/phí${errCount?` · ${errCount} dòng lỗi khi ghi`:''}${roomUnmatchedCount?` · ${roomUnmatchedCount} dòng có tên Room không khớp, đã tự gán theo ngưỡng NAV`:''} · Dữ liệu cũ vẫn được lưu giữ nguyên vẹn.`;
     }
     else if(plan.type==='loan'){
       const toInsert = plan.valid.filter(it=>it.isNew).map(it=>({ account_number: it.account, due_date: toDbDate(it.dueDate), status:'Chưa xử lý' }));
@@ -3573,14 +3647,13 @@ async function confirmImportToDatabase(){
 
     await loadAllData();
     renderCustomers(); renderDashboard(); renderRooms(); renderLoans(); renderRights();
-    goImportStep(4);
+    goImportStep(5);
   } catch(err){
     alert('Lỗi khi cập nhật dữ liệu: ' + err.message);
   } finally {
     btn.disabled = false; btn.textContent = 'Xác nhận cập nhật ✓';
   }
 }
-
 // ---------------- SOẠN TIN NHẮN (DÙNG CHUNG: Room / Khoản vay / Quyền mua) ----------------
 const MESSAGE_TEMPLATES = {
   room: {
