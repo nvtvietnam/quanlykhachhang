@@ -75,7 +75,7 @@ button{font-family:inherit;cursor:pointer;}
 .btn svg{width:14px;height:14px;}
 
 /* ---- cards / stat ---- */
-.stat-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:18px;}
+.stat-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:18px;}
 .stat-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:12px 13px;min-width:0;}
 .stat-label{font-size:11px;color:var(--text-muted);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .stat-value{font-size:17px;font-weight:700;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -109,7 +109,7 @@ select.filter-select{padding:8px 10px;border:1px solid var(--border);border-radi
 
 /* ---- table ---- */
 table{width:100%;border-collapse:collapse;}
-thead th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--text-muted);font-weight:600;padding:11px 14px;border-bottom:1px solid var(--border);background:#FAFBFC;white-space:nowrap;}
+thead th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--text-muted);font-weight:600;padding:11px 14px;border-bottom:1px solid var(--border);background:#FAFBFC;white-space:nowrap;position:sticky;top:60px;z-index:10;}
 thead th.num-col{text-align:right;}
 tbody td{padding:12px 14px;border-bottom:1px solid #F0F2F5;font-size:14px;vertical-align:middle;}
 tbody td.num-col{text-align:right;}
@@ -473,7 +473,6 @@ tbody tr:hover .row-actions{opacity:1;}
           <div class="stat-card"><div class="stat-icon-badge amber">💲</div><div class="stat-label">Tổng phí tháng 08/2026</div><div class="stat-value num" id="statTotalFee">–</div><div class="stat-delta up">▲ 5,1% so với tháng trước</div></div>
           <div class="stat-card" id="statLoansDueCard"><div class="stat-icon-badge red">📅</div><div class="stat-label">Khoản vay đến hạn hôm nay</div><div class="stat-value" id="statLoansDueToday">–</div><div class="stat-delta" id="statLoansDueDelta"></div></div>
           <div class="stat-card" id="statRightsDueCard"><div class="stat-icon-badge red">📈</div><div class="stat-label">Quyền mua hết hạn hôm nay</div><div class="stat-value" id="statRightsDueToday">–</div><div class="stat-delta" id="statRightsDueDelta"></div></div>
-          <div class="stat-card"><div class="stat-icon-badge purple">🔁</div><div class="stat-label">Khách quay lại (tháng này)</div><div class="stat-value" id="statReturning">–</div><div class="stat-delta" id="statReturningDelta"></div></div>
         </div>
 
         <div class="panel" style="margin-bottom:18px;">
@@ -574,6 +573,7 @@ tbody tr:hover .row-actions{opacity:1;}
             <option value="Đang quản lý">Đang quản lý</option>
             <option value="Chờ xác nhận">Chờ xác nhận</option>
             <option value="Đã chuyển đi">Đã chuyển đi</option>
+            <option value="KH ưu tiên">KH ưu tiên</option>
           </select>
           <div class="spacer"></div>
 
@@ -742,6 +742,13 @@ tbody tr:hover .row-actions{opacity:1;}
             <div class="field-hint" style="margin-bottom:14px;">Cho hệ thống biết cột nào trong file tương ứng với trường nào. Hệ thống đã tự đoán sẵn theo tên cột — bạn kiểm tra và đổi lại nếu chưa đúng.</div>
             <div id="columnMappingGrid" class="form-grid"></div>
             <div class="field-hint" style="margin-top:12px;" id="mappingFileInfo"></div>
+            <div id="syncRoomOption" style="display:none;margin-top:14px;padding:12px;background:var(--accent-soft);border-radius:8px;">
+              <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-weight:600;font-size:13px;">
+                <input type="checkbox" id="syncRoomOnUpdate" checked style="margin-top:2px;">
+                <span>Đồng bộ lại Room cho khách hàng <b>đã có sẵn</b> trong hệ thống (nếu Room trong file khác Room hiện tại)</span>
+              </label>
+              <div class="field-hint" style="margin-top:4px;margin-left:24px;">Bật để dùng file này sửa hàng loạt Room sai — tắt nếu chỉ muốn cập nhật NAV/phí, giữ nguyên Room hiện tại.</div>
+            </div>
           </div></div>
           <div style="display:flex;justify-content:space-between;margin-top:16px;">
             <button class="btn btn-secondary" onclick="goImportStep(1)">← Quay lại</button>
@@ -752,16 +759,23 @@ tbody tr:hover .row-actions{opacity:1;}
         <!-- step 3: kiểm tra dữ liệu -->
         <div class="import-step" id="importStep3" style="display:none;">
           <div class="summary-grid">
-            <div class="summary-card"><div class="n" id="sumValid">0</div><div class="l">Dòng hợp lệ</div></div>
-            <div class="summary-card"><div class="n" style="color:var(--accent);" id="sumNew">0</div><div class="l">Mới</div></div>
-            <div class="summary-card"><div class="n" style="color:var(--green);" id="sumChanged">0</div><div class="l">Có thay đổi</div></div>
-            <div class="summary-card"><div class="n" style="color:var(--amber);" id="sumUnchanged">0</div><div class="l">Không đổi</div></div>
-            <div class="summary-card"><div class="n" style="color:var(--red);" id="sumError">0</div><div class="l">Dòng lỗi</div></div>
+            <div class="summary-card"><div class="n" id="sumValid">0</div><div class="l" id="lblValid">Dòng hợp lệ</div></div>
+            <div class="summary-card"><div class="n" style="color:var(--accent);" id="sumNew">0</div><div class="l" id="lblNew">Mới</div></div>
+            <div class="summary-card"><div class="n" style="color:var(--green);" id="sumChanged">0</div><div class="l" id="lblChanged">Có thay đổi</div></div>
+            <div class="summary-card"><div class="n" style="color:var(--amber);" id="sumUnchanged">0</div><div class="l" id="lblUnchanged">Không đổi</div></div>
+            <div class="summary-card"><div class="n" style="color:var(--red);" id="sumError">0</div><div class="l" id="lblError">Dòng lỗi</div></div>
           </div>
           <div class="panel" id="errorPanel" style="display:none;"><div class="panel-header"><div class="panel-title">Chi tiết lỗi cần xử lý</div></div>
             <div class="panel-body" style="padding:0;">
               <table><thead><tr><th>Dòng</th><th>Nội dung</th><th>Lỗi</th></tr></thead>
               <tbody id="importErrorBody"></tbody></table>
+            </div>
+          </div>
+          <div class="panel" id="unmatchedPanel" style="display:none;margin-top:16px;"><div class="panel-header"><div class="panel-title">STK trong file không tìm thấy trong hệ thống</div></div>
+            <div class="panel-body" style="padding:0;">
+              <div class="field-hint" style="padding:12px 16px 0;">Các STK này có trong file nhưng chưa tồn tại trong danh sách khách hàng — không cập nhật được. Kiểm tra lại STK, hoặc thêm khách hàng này qua "Import Danh sách KH" trước.</div>
+              <table><thead><tr><th>Dòng</th><th>STK</th><th>Tên (trong file)</th><th>ID QL</th></tr></thead>
+              <tbody id="unmatchedBody"></tbody></table>
             </div>
           </div>
           <div style="display:flex;justify-content:space-between;margin-top:16px;">
@@ -1362,7 +1376,7 @@ function applyRoleVisibility(){
 async function loadAllData(){
   // --- Rooms ---
   const { data: roomRows } = await sb.from('rooms').select('*').order('room_id');
-  rooms = (roomRows||[]).map(r=>({ id:r.room_id, name:r.room_name, min:r.nav_min, max:r.nav_max===null?Infinity:r.nav_max, desc:r.description }));
+  rooms = (roomRows||[]).map(r=>({ id:r.room_id, name:r.room_name, min:r.nav_min, max:r.nav_max===null?Infinity:r.nav_max, desc:r.description, adminCount:r.admin_count||0 }));
 
   // --- Customers (phân trang tránh giới hạn 1000 dòng mặc định của PostgREST) ---
   let allCust = [];
@@ -1450,10 +1464,6 @@ async function loadAllData(){
   }
   const stkToName = {}; customers.forEach(c=>{ stkToName[c.stk] = c.name; });
   rights = rightRows.map(r=>({ id:r.right_id, stk:r.account_number, name: stkToName[r.account_number]||'', symbol:r.symbol, ratio:`${r.ratio_num}:${r.ratio_denom}`, price:r.price, qty:r.qty, recordDate:fromDbDate(r.record_date), deadline:fromDbDate(r.deadline), status:r.status }));
-
-  // --- Sự kiện "khách quay lại" (từ room_history) ---
-  const { data: returnEvents } = await sb.from('room_history').select('customer_id, entered_at, reason').ilike('reason', '%quay lại%');
-  window.returningEvents = returnEvents || [];
 
   // --- Accounts (user_roles) ---
   const { data: accRows } = await sb.from('user_roles').select('*').order('created_at');
@@ -1896,20 +1906,6 @@ function renderDashboard(){
     : `<span style="color:var(--text-muted);">Không có</span>`;
   rightsDueCard.style.borderColor = rightsDueToday.length ? 'var(--red)' : 'var(--border)';
 
-  // Khách quay lại (từ room_history — có sự kiện "quay lại" trong tháng này)
-  const now = new Date();
-  const monthPrefix = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  const returningEventsThisMonth = (window.returningEvents||[]).filter(e=>e.entered_at && e.entered_at.startsWith(monthPrefix));
-  const returningStkSet = new Set();
-  returningEventsThisMonth.forEach(e=>{
-    const c = customers.find(x=>x.id===e.customer_id);
-    if(c) returningStkSet.add(c.stk);
-  });
-  document.getElementById('statReturning').textContent = returningStkSet.size;
-  document.getElementById('statReturningDelta').innerHTML = returningStkSet.size
-    ? [...returningStkSet].join(', ')
-    : '<span style="color:var(--text-muted);">Không có</span>';
-
   renderRoomComposition();
   renderTransferPanel();
   renderNotifications();
@@ -1920,17 +1916,11 @@ function computeAlerts(){
   const rows = [];
   const dueTodayLoans = loans.filter(l=>daysUntil(l.dueDate)===0);
 
-  customers.filter(c=>c.mismatch).forEach(c=>{
-    rows.push({icon:'purple', emoji:'🏠', title:'Khách ở Room chưa phù hợp', sub:`${c.stk} – ${c.name}: NAV ${navToTyUoc(c.nav)} nhưng đang ở ${roomLabel(c.room)}.`, view:'customers'});
-  });
-  const stale = customers.find(c=>c.stk==='067890');
-  if(stale) rows.push({icon:'amber', emoji:'⏱️', title:'Khách chưa cập nhật NAV quá 7 ngày', sub:`${stale.stk} – ${stale.name}.`, view:'customers'});
   if(dueTodayLoans.length) rows.push({icon:'red', emoji:'📅', title:'Khoản vay đến hạn hôm nay', sub:`${dueTodayLoans.length} khoản vay`, view:'loans'});
   const soonLoans = loans.filter(l=>{ const d=daysUntil(l.dueDate); return d>0 && d<=3 && l.status!=='KH xử lý xong' && l.status!=='Công ty đã xử lý'; });
   if(soonLoans.length) rows.push({icon:'amber', emoji:'📅', title:'Khoản vay sắp đến hạn (3 ngày)', sub:`${soonLoans.length} khoản vay chưa xử lý xong`, view:'loans'});
   const soonRights = rights.filter(r=>{ const d=daysUntil(r.deadline); return d>=0 && d<=7 && (r.status==='Chưa đăng ký'||r.status==='Đã đăng ký'); });
   if(soonRights.length) rows.push({icon:'purple', emoji:'📈', title:'Quyền mua sắp hết hạn đăng ký', sub:`${soonRights.length} quyền mua trong 7 ngày tới`, view:'rights'});
-  rows.push({icon:'blue', emoji:'📄', title:'Dữ liệu lỗi trong lần import gần nhất (25/08/2026)', sub:'3 dòng dữ liệu — thiếu STK hoặc NAV không hợp lệ.', view:'import'});
 
   // Gợi ý trùng người: tên giống nhau, STK khác nhau, chưa liên kết
   const nameMap = {};
@@ -1948,11 +1938,21 @@ function computeAlerts(){
   return rows;
 }
 
+let dismissedAlertsSignature = null; // chữ ký cảnh báo tại lần bấm xem gần nhất — badge ẩn khi khớp đúng chữ ký này
+
+function alertsSignature(alerts){
+  return alerts.map(a=>a.title+'|'+a.sub).join('||');
+}
+
 function renderNotifications(){
   const alerts = computeAlerts();
   const badge = document.getElementById('notifBadge');
-  if(alerts.length){ badge.style.display='flex'; badge.textContent = alerts.length; }
-  else badge.style.display='none';
+  const signature = alertsSignature(alerts);
+  if(alerts.length && signature !== dismissedAlertsSignature){
+    badge.style.display='flex'; badge.textContent = alerts.length;
+  } else {
+    badge.style.display='none';
+  }
   document.getElementById('notifList').innerHTML = alerts.length ? alerts.map(r=>`
     <div class="alert-row2" style="cursor:pointer;" onclick="switchView('${r.view}');toggleNotifPanel(true);">
       <div class="alert-icon-badge ${r.icon}">${r.emoji}</div>
@@ -1965,7 +1965,13 @@ function renderNotifications(){
 function toggleNotifPanel(forceClose){
   const panel = document.getElementById('notifPanel');
   if(forceClose){ panel.classList.remove('open'); return; }
+  const opening = !panel.classList.contains('open');
   panel.classList.toggle('open');
+  if(opening){
+    // Đánh dấu đã xem — số ở chuông tự về 0, chỉ hiện lại khi có cảnh báo mới/khác
+    dismissedAlertsSignature = alertsSignature(computeAlerts());
+    document.getElementById('notifBadge').style.display = 'none';
+  }
 }
 document.addEventListener('click', function(e){
   const panel = document.getElementById('notifPanel');
@@ -2180,6 +2186,8 @@ function renderRooms(showRefreshFeedback){
     const totalNav = members.reduce((s,c)=>s+c.nav,0);
     const totalFee = members.reduce((s,c)=>s+c.fee,0);
     const rangeLabel = r.max===Infinity ? `Trên ${fmt(r.min)}` : `${fmt(r.min)} – ${fmt(r.max)}`;
+    const adminCount = r.adminCount||0;
+    const totalCount = members.length + adminCount;
     return `
     <div class="room-card" id="room-card-${r.id}">
       <div class="room-card-top">
@@ -2194,6 +2202,15 @@ function renderRooms(showRefreshFeedback){
         <div class="room-stat"><div class="l">Tổng NAV</div><div class="v num" style="font-size:13px;">${fmt(totalNav)}</div></div>
         <div class="room-stat"><div class="l">Tổng phí</div><div class="v num" style="font-size:13px;">${fmt(totalFee)}</div></div>
         <div class="room-stat"><div class="l">Ngưỡng</div><div class="v" style="font-size:12px;font-weight:600;">${rangeLabel}</div></div>
+        <div class="room-stat">
+          <div class="l">Số Admin trong nhóm</div>
+          <input type="number" min="0" value="${adminCount}" class="v" style="width:64px;padding:3px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;font-weight:700;font-family:inherit;"
+            onchange="updateRoomAdminCount(${r.id}, this.value)">
+        </div>
+        <div class="room-stat" style="grid-column:1/-1;background:var(--accent-soft);border-radius:6px;padding:8px 10px;">
+          <div class="l" style="color:var(--accent-dark);">Tổng số lượng (đối chiếu Telegram)</div>
+          <div class="v" style="color:var(--accent-dark);font-size:15px;">${totalCount} <span style="font-weight:400;font-size:11px;color:var(--text-muted);">(${members.length} KH + ${adminCount} Admin)</span></div>
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -2203,6 +2220,21 @@ function renderRooms(showRefreshFeedback){
       el.style.borderColor = 'var(--accent)';
       setTimeout(()=>{ el.style.borderColor = 'var(--border)'; }, 600);
     });
+  }
+}
+
+async function updateRoomAdminCount(roomId, value){
+  const count = Math.max(0, parseInt(value)||0);
+  const r = rooms.find(x=>x.id===roomId);
+  if(r) r.adminCount = count; // cập nhật lạc quan để tổng số lượng hiện đúng ngay
+  renderRooms();
+  try {
+    const { error } = await sb.from('rooms').update({ admin_count: count }).eq('room_id', roomId);
+    if(error) throw error;
+  } catch(err){
+    alert('Lỗi khi lưu số Admin: ' + err.message);
+    await loadAllData();
+    renderRooms();
   }
 }
 
@@ -3447,6 +3479,7 @@ function renderColumnMappingStep(){
     </div>`;
   }).join('');
   document.getElementById('mappingFileInfo').innerHTML = `File có <b>${pendingImportHeaders.length} cột</b>: ${pendingImportHeaders.join(', ')} — tổng <b>${pendingImportRows.length} dòng</b> dữ liệu.`;
+  document.getElementById('syncRoomOption').style.display = (currentImportType==='customerlist') ? 'block' : 'none';
 }
 
 function proceedFromMapping(){
@@ -3462,48 +3495,97 @@ function proceedFromMapping(){
 }
 
 function analyzeImportRows(type, rows, mapping){
-  const plan = { type, valid:[], errors:[], newCount:0, changedCount:0, unchangedCount:0 };
-  const seenStks = new Set(); // chặn trùng STK trong cùng 1 file — chỉ dòng đầu tiên được xử lý
+  const plan = { type, valid:[], errors:[], unmatched:[], newCount:0, changedCount:0, unchangedCount:0, unmatchedCount:0 };
+  const seenStks = new Set(); // chặn trùng STK trong cùng 1 file — CHỈ áp dụng cho Danh sách KH (tạo mới)
   const seenLoanKeys = new Set(); // chặn trùng (account+ngày đến hạn) trong cùng 1 file
   const seenRightKeys = new Set(); // chặn trùng (stk+mã CP+ngày chốt) trong cùng 1 file
   rows.forEach((row, idx)=>{
     const lineNo = idx+2;
-    if(type==='nav' || type==='customerlist' || type==='bc12'){
+
+    // NAV / BC12: CHỈ cập nhật cho tài khoản đã có sẵn, KHÔNG tạo mới, KHÔNG lọc trùng trong file
+    // (file NAV/phí nạp định kỳ, mục đích duy nhất là đối soát khớp/không khớp với hệ thống).
+    if(type==='nav' || type==='bc12'){
+      const stk = String(getMapped(row,mapping,'stk')).trim();
+      const name = String(getMapped(row,mapping,'name')).trim();
+      const managerId = String(getMapped(row,mapping,'managerId')).trim();
+      let nav, fee;
+      if(type==='nav') nav = parseNum(getMapped(row,mapping,'nav'));
+      else fee = parseNum(getMapped(row,mapping,'fee'));
+
+      if(!stk || stk.length!==6){ plan.errors.push({line:lineNo, content:`STK: ${stk||'(trống)'}${name?' — '+name:''}`, error:'Thiếu hoặc sai định dạng STK (cần đúng 6 ký tự)'}); return; }
+
+      const existing = customers.find(c=>c.stk===stk);
+      if(!existing){
+        plan.unmatched.push({line:lineNo, stk, name: name||'(không có tên trong file)', managerId});
+        plan.unmatchedCount++;
+        return;
+      }
+      const navChanged = nav!==undefined && nav !== existing.nav;
+      const feeChanged = fee!==undefined && fee !== existing.fee;
+      const item = {stk, name: name||existing.name, nav, fee, managerId, existing, navChanged, feeChanged};
+      if(navChanged || feeChanged) plan.changedCount++; else plan.unchangedCount++;
+      plan.valid.push(item);
+      return;
+    }
+
+    if(type==='customerlist'){
       const stk = String(getMapped(row,mapping,'stk')).trim();
       let name = String(getMapped(row,mapping,'name')).trim();
       const telegram = String(getMapped(row,mapping,'telegram')).trim();
       const managerId = String(getMapped(row,mapping,'managerId')).trim();
-      let nav, fee, gender, birthYear, roomRaw, status, mgmtStart, note;
-      if(type==='nav'){
-        nav = parseNum(getMapped(row,mapping,'nav'));
-      } else if(type==='bc12'){
-        fee = parseNum(getMapped(row,mapping,'fee'));
-      } else {
-        gender = String(getMapped(row,mapping,'gender')).trim() || 'Khác';
-        birthYear = parseInt(getMapped(row,mapping,'birthYear')) || null;
-        nav = parseNum(getMapped(row,mapping,'nav'));
-        fee = parseNum(getMapped(row,mapping,'fee'));
-        roomRaw = String(getMapped(row,mapping,'room')).trim();
-        status = String(getMapped(row,mapping,'status')).trim() || 'Đang quản lý';
-        mgmtStart = String(getMapped(row,mapping,'mgmtStart')).trim();
-        note = String(getMapped(row,mapping,'note')).trim();
-      }
+      const gender = String(getMapped(row,mapping,'gender')).trim() || 'Khác';
+      const birthYear = parseInt(getMapped(row,mapping,'birthYear')) || null;
+      const nav = parseNum(getMapped(row,mapping,'nav'));
+      const fee = parseNum(getMapped(row,mapping,'fee'));
+      const roomRaw = String(getMapped(row,mapping,'room')).trim();
+      const status = String(getMapped(row,mapping,'status')).trim() || 'Đang quản lý';
+      const mgmtStart = String(getMapped(row,mapping,'mgmtStart')).trim();
+      const note = String(getMapped(row,mapping,'note')).trim();
       // Nếu không có cột Tên KH riêng nhưng có Tên Telegram, tạm dùng làm tên hiển thị
       if(!name && telegram) name = telegram;
 
-      if(!stk || stk.length!==6){ plan.errors.push({line:lineNo, content:`STK: ${stk||'(trống)'}`, error:'Thiếu hoặc sai định dạng STK (cần đúng 6 ký tự)'}); return; }
-      if(!name){ plan.errors.push({line:lineNo, content:`STK ${stk}`, error:'Thiếu Tên khách hàng (và không có Tên Telegram để thay thế)'}); return; }
-      if(seenStks.has(stk)){ plan.errors.push({line:lineNo, content:`STK ${stk} — ${name}`, error:'Trùng STK trong file (đã có ở dòng trước) — chỉ dòng đầu tiên được xử lý'}); return; }
+      const stkInvalid = !stk || stk.length!==6;
+      if(!name){ plan.errors.push({line:lineNo, content:`STK ${stk||'(trống)'}`, error:'Thiếu Tên khách hàng (và không có Tên Telegram để thay thế)'}); return; }
+
+      // Dòng không có STK hợp lệ (VD: "Admin", ô trống, lỗi gõ) —
+      // vẫn lưu lại theo tên, đánh dấu "KH ưu tiên" để bạn tự rà soát/xóa sau nếu không đúng.
+      if(stkInvalid){
+        const item = {
+          stk: '', name, telegram, nav, fee, managerId, gender, birthYear, roomRaw,
+          status: 'KH ưu tiên',
+          mgmtStart, note: note ? `${note} | KH ưu tiên (import — thiếu STK)` : 'KH ưu tiên (import — thiếu STK)',
+          existing: null, isNew: true, isPriorityFallback: true, rawStk: stk || '(trống)',
+        };
+        plan.valid.push(item);
+        plan.newCount++;
+        return;
+      }
+
+      const stkDupInFile = seenStks.has(stk);
       seenStks.add(stk);
 
       const existing = customers.find(c=>c.stk===stk);
       const item = {stk,name,telegram,nav,fee,managerId,gender,birthYear,roomRaw,status,mgmtStart,note,existing};
-      if(!existing){ item.isNew = true; plan.newCount++; }
+      if(stkDupInFile){
+        item.isDupInFile = true; item.isNew = false;
+        plan.unchangedCount++;
+      } else if(!existing){ item.isNew = true; plan.newCount++; }
       else {
-        const navChanged = nav!==undefined && type!=='bc12' && nav !== existing.nav;
-        const feeChanged = fee!==undefined && (type==='bc12'||type==='customerlist') && fee !== existing.fee;
+        const navChanged = nav!==undefined && nav !== existing.nav;
+        const feeChanged = fee!==undefined && fee !== existing.fee;
         item.navChanged = navChanged; item.feeChanged = feeChanged;
-        if(navChanged || feeChanged) plan.changedCount++; else plan.unchangedCount++;
+
+        // Xác định Room mục tiêu từ file (nếu có) để so sánh với Room hiện tại của KH
+        if(roomRaw){
+          let targetRoomKey = null;
+          if(SPECIAL_ROOMS.includes(roomRaw)) targetRoomKey = roomRaw;
+          else { const matched = resolveRoomByName(roomRaw); if(matched) targetRoomKey = matched; }
+          if(targetRoomKey !== null && targetRoomKey !== existing.room){
+            item.roomChanged = true;
+            item.targetRoomKey = targetRoomKey;
+          }
+        }
+        if(navChanged || feeChanged || item.roomChanged) plan.changedCount++; else plan.unchangedCount++;
       }
       plan.valid.push(item);
     }
@@ -3514,10 +3596,10 @@ function analyzeImportRows(type, rows, mapping){
       if(!accRaw || accRaw.length!==7){ plan.errors.push({line:lineNo, content:`STK: ${accRaw||'(trống)'}`, error:'Số tài khoản phải đúng 7 ký tự'}); return; }
       if(!due){ plan.errors.push({line:lineNo, content:`TK ${accRaw}`, error:'Thiếu ngày đáo hạn'}); return; }
       const loanKey = accRaw + '|' + due;
-      if(seenLoanKeys.has(loanKey)){ plan.errors.push({line:lineNo, content:`TK ${accRaw} — ${due}`, error:'Trùng số TK + ngày đáo hạn trong file — chỉ dòng đầu tiên được xử lý'}); return; }
+      const dupInFile = seenLoanKeys.has(loanKey);
       seenLoanKeys.add(loanKey);
-      const dup = loans.find(l=>l.account===accRaw && l.dueDate===due);
-      const item = {account:accRaw, dueDate:due, managerId, isNew: !dup, isDup: !!dup};
+      const dup = dupInFile || loans.find(l=>l.account===accRaw && l.dueDate===due);
+      const item = {account:accRaw, dueDate:due, managerId, isNew: !dup, isDup: !!dup, isDupInFile: dupInFile};
       if(dup) plan.unchangedCount++; else plan.newCount++;
       plan.valid.push(item);
     }
@@ -3536,10 +3618,10 @@ function analyzeImportRows(type, rows, mapping){
       const ratioNum = parseInt(rp[0])||1, ratioDenom = parseInt(rp[1])||1;
       const qty = Math.floor(holdings/ratioDenom)*ratioNum;
       const rightKey = stk + '|' + symbol + '|' + recordDate;
-      if(seenRightKeys.has(rightKey)){ plan.errors.push({line:lineNo, content:`STK ${stk} — ${symbol}`, error:'Trùng STK + Mã CP + Ngày chốt quyền trong file — chỉ dòng đầu tiên được xử lý'}); return; }
+      const dupInFile = seenRightKeys.has(rightKey);
       seenRightKeys.add(rightKey);
-      const dup = rights.find(r=>r.stk===stk && r.symbol===symbol && r.recordDate===recordDate);
-      const item = {stk,symbol,ratioNum,ratioDenom,price,holdings,qty,recordDate,deadline,isNew: !dup, isDup: !!dup};
+      const dup = dupInFile || rights.find(r=>r.stk===stk && r.symbol===symbol && r.recordDate===recordDate);
+      const item = {stk,symbol,ratioNum,ratioDenom,price,holdings,qty,recordDate,deadline,isNew: !dup, isDup: !!dup, isDupInFile: dupInFile};
       if(dup) plan.unchangedCount++; else plan.newCount++;
       plan.valid.push(item);
     }
@@ -3548,16 +3630,40 @@ function analyzeImportRows(type, rows, mapping){
 }
 
 function renderImportStep3Summary(plan){
-  document.getElementById('sumValid').textContent = plan.valid.length;
-  document.getElementById('sumNew').textContent = plan.newCount;
+  const isReconcileType = (plan.type==='nav' || plan.type==='bc12');
+  if(isReconcileType){
+    document.getElementById('lblValid').textContent = 'Khớp được (sẽ cập nhật)';
+    document.getElementById('lblNew').textContent = 'Không tìm thấy trong hệ thống';
+    document.getElementById('lblChanged').textContent = 'Có thay đổi';
+    document.getElementById('lblUnchanged').textContent = 'Không đổi';
+    document.getElementById('lblError').textContent = 'Dòng lỗi (thiếu STK)';
+    document.getElementById('sumValid').textContent = plan.valid.length;
+    document.getElementById('sumNew').textContent = plan.unmatchedCount;
+  } else {
+    document.getElementById('lblValid').textContent = 'Dòng hợp lệ';
+    document.getElementById('lblNew').textContent = 'Mới';
+    document.getElementById('lblChanged').textContent = 'Có thay đổi';
+    document.getElementById('lblUnchanged').textContent = 'Không đổi';
+    document.getElementById('lblError').textContent = 'Dòng lỗi';
+    document.getElementById('sumValid').textContent = plan.valid.length;
+    document.getElementById('sumNew').textContent = plan.newCount;
+  }
   document.getElementById('sumChanged').textContent = plan.changedCount;
   document.getElementById('sumUnchanged').textContent = plan.unchangedCount;
   document.getElementById('sumError').textContent = plan.errors.length;
+
   const errPanel = document.getElementById('errorPanel');
   if(plan.errors.length){
     errPanel.style.display = 'block';
     document.getElementById('importErrorBody').innerHTML = plan.errors.slice(0,200).map(e=>`<tr><td>${e.line}</td><td>${e.content}</td><td><span class="badge badge-red">${e.error}</span></td></tr>`).join('');
   } else { errPanel.style.display = 'none'; }
+
+  const unmatchedPanel = document.getElementById('unmatchedPanel');
+  if(isReconcileType && plan.unmatched.length){
+    unmatchedPanel.style.display = 'block';
+    document.getElementById('unmatchedBody').innerHTML = plan.unmatched.slice(0,500).map(u=>`<tr><td>${u.line}</td><td>${u.stk}</td><td>${u.name}</td><td>${u.managerId||'—'}</td></tr>`).join('') + (plan.unmatched.length>500 ? `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:14px;">… và ${plan.unmatched.length-500} dòng khác</td></tr>` : '');
+  } else { unmatchedPanel.style.display = 'none'; }
+
   document.getElementById('btnToStep4').style.opacity = plan.valid.length===0 ? '.5' : '1';
   document.getElementById('btnToStep4').disabled = plan.valid.length===0;
 }
@@ -3571,15 +3677,36 @@ function goToImportStep4(){
   if(plan.type==='customerlist'){
     head.innerHTML = `<tr><th>STK</th><th>Tên KH</th><th>Room</th><th class="num-col">NAV cũ</th><th class="num-col">NAV mới</th><th class="num-col">Phí cũ</th><th class="num-col">Phí mới</th><th>Trạng thái</th></tr>`;
     body.innerHTML = plan.valid.slice(0,300).map(it=>{
+      if(it.isPriorityFallback){
+        return `<tr style="background:#FEF3E2;">
+          <td><span style="color:var(--amber);" title="STK gốc trong file: ${it.rawStk}">⚠️ (chưa có TK)</span></td>
+          <td>${it.name}</td>
+          <td colspan="4" style="color:var(--text-muted);">Thiếu STK hợp lệ trong file (giá trị gốc: "${it.rawStk}")</td>
+          <td class="num-col num">${fmt(it.nav||0)}</td>
+          <td><span class="badge badge-amber">KH ưu tiên — cần rà soát</span></td>
+        </tr>`;
+      }
+      if(it.isDupInFile){
+        return `<tr style="background:#FDE8E8;">
+          <td>${it.stk}</td><td>${it.name}</td>
+          <td colspan="4" style="color:var(--text-muted);">Trùng STK với 1 dòng khác trong cùng file này</td>
+          <td class="num-col num">${fmt(it.nav||0)}</td>
+          <td><span class="badge badge-red">🔴 Trùng trong file — bị bỏ qua</span></td>
+        </tr>`;
+      }
       const navOld = it.existing ? fmt(it.existing.nav) : '—';
       const navNew = it.nav!==undefined ? fmt(it.nav) : '—';
       const feeOld = it.existing ? fmt(it.existing.fee) : '—';
       const feeNew = it.fee!==undefined ? fmt(it.fee) : '—';
-      const tag = it.isNew ? '<span class="badge badge-blue">Mới</span>' : ((it.navChanged||it.feeChanged) ? '<span class="badge badge-green">Thay đổi</span>' : '<span class="badge badge-gray">Không đổi</span>');
+      const tag = it.isNew ? '<span class="badge badge-blue">Mới</span>' : ((it.navChanged||it.feeChanged||it.roomChanged) ? '<span class="badge badge-green">Thay đổi</span>' : '<span class="badge badge-gray">Không đổi</span>');
       let roomCell;
-      if(!it.roomRaw) roomCell = `<span style="color:var(--text-muted);">— (tự gán theo NAV)</span>`;
-      else if(SPECIAL_ROOMS.includes(it.roomRaw)) roomCell = it.roomRaw;
-      else {
+      if(it.existing && it.roomChanged){
+        roomCell = `<span style="color:var(--text-muted);text-decoration:line-through;">${roomLabel(it.existing.room)}</span> → <b style="color:var(--green);">${roomLabel(it.targetRoomKey)}</b>`;
+      } else if(!it.roomRaw){
+        roomCell = it.existing ? roomLabel(it.existing.room) : `<span style="color:var(--text-muted);">— (tự gán theo NAV)</span>`;
+      } else if(SPECIAL_ROOMS.includes(it.roomRaw)){
+        roomCell = it.roomRaw;
+      } else {
         const matched = resolveRoomByName(it.roomRaw);
         roomCell = matched ? roomLabel(matched) : `<span style="color:var(--amber);" title="Không khớp tên Room nào đang có — sẽ tự gán theo ngưỡng NAV">⚠️ ${it.roomRaw}</span>`;
       }
@@ -3597,10 +3724,22 @@ function goToImportStep4(){
     }).join('') + (plan.valid.length>300 ? `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:14px;">… và ${plan.valid.length-300} dòng khác</td></tr>` : '');
   } else if(plan.type==='loan'){
     head.innerHTML = `<tr><th>Số tài khoản</th><th>Ngày đến hạn</th><th>ID QL</th><th>Trạng thái</th></tr>`;
-    body.innerHTML = plan.valid.slice(0,300).map(it=>`<tr><td>${it.account}</td><td>${it.dueDate}</td><td>${it.managerId||'—'}</td><td>${it.isDup?'<span class="badge badge-gray">Đã tồn tại, bỏ qua</span>':'<span class="badge badge-blue">Mới</span>'}</td></tr>`).join('');
+    body.innerHTML = plan.valid.slice(0,300).map(it=>{
+      const rowStyle = it.isDupInFile ? ' style="background:#FDE8E8;"' : '';
+      const tag = it.isDupInFile ? '<span class="badge badge-red">🔴 Trùng trong file — bị bỏ qua</span>'
+        : it.isDup ? '<span class="badge badge-gray">Đã tồn tại, bỏ qua</span>'
+        : '<span class="badge badge-blue">Mới</span>';
+      return `<tr${rowStyle}><td>${it.account}</td><td>${it.dueDate}</td><td>${it.managerId||'—'}</td><td>${tag}</td></tr>`;
+    }).join('');
   } else if(plan.type==='right'){
     head.innerHTML = `<tr><th>STK</th><th>Mã CP</th><th>Tỷ lệ</th><th class="num-col">Giá</th><th class="num-col">SL được mua</th><th>Ngày chốt</th><th>Hạn ĐK</th><th>Trạng thái</th></tr>`;
-    body.innerHTML = plan.valid.slice(0,300).map(it=>`<tr><td>${it.stk}</td><td>${it.symbol}</td><td>${it.ratioNum}:${it.ratioDenom}</td><td class="num-col num">${fmt(it.price)}</td><td class="num-col num">${fmt(it.qty)}</td><td>${it.recordDate}</td><td>${it.deadline}</td><td>${it.isDup?'<span class="badge badge-gray">Đã tồn tại, bỏ qua</span>':'<span class="badge badge-blue">Mới</span>'}</td></tr>`).join('');
+    body.innerHTML = plan.valid.slice(0,300).map(it=>{
+      const rowStyle = it.isDupInFile ? ' style="background:#FDE8E8;"' : '';
+      const tag = it.isDupInFile ? '<span class="badge badge-red">🔴 Trùng trong file — bị bỏ qua</span>'
+        : it.isDup ? '<span class="badge badge-gray">Đã tồn tại, bỏ qua</span>'
+        : '<span class="badge badge-blue">Mới</span>';
+      return `<tr${rowStyle}><td>${it.stk}</td><td>${it.symbol}</td><td>${it.ratioNum}:${it.ratioDenom}</td><td class="num-col num">${fmt(it.price)}</td><td class="num-col num">${fmt(it.qty)}</td><td>${it.recordDate}</td><td>${it.deadline}</td><td>${tag}</td></tr>`;
+    }).join('');
   }
   goImportStep(4);
 }
@@ -3611,10 +3750,14 @@ async function confirmImportToDatabase(){
   const btn = document.getElementById('btnConfirmImport');
   btn.disabled = true; btn.textContent = 'Đang cập nhật…';
   const today = todayDdMmYyyy();
-  let newCount=0, updatedCount=0, errCount=0, roomUnmatchedCount=0;
+  let newCount=0, updatedCount=0, errCount=0, roomUnmatchedCount=0, priorityFallbackCount=0;
   try {
     if(plan.type==='nav' || plan.type==='bc12' || plan.type==='customerlist'){
+      const syncRoomEl = document.getElementById('syncRoomOnUpdate');
+      const syncRoom = plan.type==='customerlist' && syncRoomEl && syncRoomEl.checked;
+      let roomSyncedCount = 0;
       for(const it of plan.valid){
+        if(it.isDupInFile) continue; // trùng STK trong file — không ghi gì cả, chỉ hiện đỏ để rà soát
         try {
           if(it.isNew){
             let roomId=null, specialRoom=null;
@@ -3629,7 +3772,7 @@ async function confirmImportToDatabase(){
               roomId = autoAssignRoom(it.nav||0);
             }
             const { data: ins, error } = await sb.from('customers').insert({
-              account_number: it.stk, customer_name: it.name,
+              account_number: it.isPriorityFallback ? generateTempStk() : it.stk, customer_name: it.name,
               gender: it.gender||null, birth_year: it.birthYear||null,
               manager_id: it.managerId||null,
               telegram_name: it.telegram||null,
@@ -3644,21 +3787,38 @@ async function confirmImportToDatabase(){
             if(it.nav) await sb.from('nav_history').insert({customer_id:ins.customer_id, update_date:toDbDate(today), nav:it.nav, source: plan.type==='bc12'?'import_bc12':'import_nav'});
             if(it.fee) await sb.from('fee_history').insert({customer_id:ins.customer_id, update_date:toDbDate(today), fee:it.fee, source: plan.type==='bc12'?'import_bc12':'import_nav'});
             newCount++;
-          } else if(it.navChanged || it.feeChanged){
+            if(it.isPriorityFallback) priorityFallbackCount++;
+          } else if(it.navChanged || it.feeChanged || (syncRoom && it.roomChanged)){
             const payload = { updated_at: new Date().toISOString() };
             if(it.navChanged){ payload.current_nav = it.nav; payload.nav_updated_at = toDbDate(today); }
             if(it.feeChanged){ payload.current_fee = it.fee; payload.fee_updated_at = toDbDate(today); }
+            let didSyncRoom = false;
+            if(syncRoom && it.roomChanged){
+              if(SPECIAL_ROOMS.includes(it.targetRoomKey)){ payload.current_room_id = null; payload.special_room = it.targetRoomKey; }
+              else { payload.current_room_id = it.targetRoomKey; payload.special_room = null; }
+              didSyncRoom = true;
+            }
             const { error } = await sb.from('customers').update(payload).eq('customer_id', it.existing.id);
             if(error) throw error;
             if(it.navChanged) await sb.from('nav_history').insert({customer_id:it.existing.id, update_date:toDbDate(today), nav:it.nav, source: plan.type==='bc12'?'import_bc12':'import_nav'});
             if(it.feeChanged) await sb.from('fee_history').insert({customer_id:it.existing.id, update_date:toDbDate(today), fee:it.fee, source: plan.type==='bc12'?'import_bc12':'import_nav'});
+            if(didSyncRoom){
+              await sb.from('room_history').insert({
+                customer_id: it.existing.id,
+                room_id: SPECIAL_ROOMS.includes(it.targetRoomKey) ? null : it.targetRoomKey,
+                special_room: SPECIAL_ROOMS.includes(it.targetRoomKey) ? it.targetRoomKey : null,
+                entered_at: toDbDate(today),
+                reason: 'Đồng bộ Room từ import Danh sách KH',
+              });
+              roomSyncedCount++;
+            }
             updatedCount++;
           }
         } catch(e){ errCount++; }
       }
       await sb.from('import_batches').insert({ import_type: plan.type==='bc12'?'bc12':'nav', file_name: document.getElementById('fileInput').files[0]?.name, imported_by: currentUserEmail, total_rows: plan.valid.length+plan.errors.length, new_customers:newCount, updated_rows:updatedCount, error_rows: plan.errors.length+errCount });
       document.getElementById('importResultTitle').textContent = 'Đã cập nhật thành công';
-      document.getElementById('importResultSub').textContent = `${newCount} khách mới được thêm · ${updatedCount} khách được cập nhật NAV/phí${errCount?` · ${errCount} dòng lỗi khi ghi`:''}${roomUnmatchedCount?` · ${roomUnmatchedCount} dòng có tên Room không khớp, đã tự gán theo ngưỡng NAV`:''} · Dữ liệu cũ vẫn được lưu giữ nguyên vẹn.`;
+      document.getElementById('importResultSub').textContent = `${newCount} khách mới được thêm · ${updatedCount} khách được cập nhật NAV/phí${roomSyncedCount?` (trong đó ${roomSyncedCount} khách được đồng bộ lại Room)`:''}${plan.unmatchedCount?` · ${plan.unmatchedCount} STK trong file không tìm thấy trong hệ thống (xem lại ở bước Kiểm tra dữ liệu)`:''}${errCount?` · ${errCount} dòng lỗi khi ghi`:''}${roomUnmatchedCount?` · ${roomUnmatchedCount} dòng có tên Room không khớp, đã tự gán theo ngưỡng NAV`:''}${priorityFallbackCount?` · ${priorityFallbackCount} dòng thiếu STK đã lưu tạm dạng "KH ưu tiên" — vào Danh sách khách hàng lọc trạng thái này để rà soát và xóa dòng không đúng`:''} · Dữ liệu cũ vẫn được lưu giữ nguyên vẹn.`;
     }
     else if(plan.type==='loan'){
       const toInsert = plan.valid.filter(it=>it.isNew).map(it=>({ account_number: it.account, due_date: toDbDate(it.dueDate), status:'Chưa xử lý' }));
