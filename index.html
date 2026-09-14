@@ -120,10 +120,10 @@ tbody td{padding:12px 14px;border-bottom:1px solid #F0F2F5;font-size:14px;vertic
 tbody td.num-col{text-align:right;}
 tbody tr:hover{background:#FAFBFF;}
 tbody tr{cursor:pointer;}
-.cust-name{font-weight:600;}
+.cust-name{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;}
 .cust-code{color:var(--text-muted);font-size:12px;}
 
-.badge{display:inline-flex;align-items:center;padding:2.5px 9px;border-radius:20px;font-size:11.5px;font-weight:600;}
+.badge{display:inline-flex;align-items:center;padding:2.5px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
 .badge-blue{background:var(--accent-soft);color:var(--accent-dark);}
 .badge-green{background:var(--green-soft);color:var(--green);}
 .badge-amber{background:var(--amber-soft);color:var(--amber);}
@@ -1715,7 +1715,7 @@ const CORE_COLUMNS = [
 const NAV_DATES = ["27/08/2026","31/07/2026","30/06/2026"];
 const FEE_DATES = ["27/08/2026","31/07/2026"];
 
-let visibleCols = new Set(CORE_COLUMNS.filter(c=>c.key!=='gender').map(c=>c.key));   // mặc định ẩn Giới tính, hiện các cột còn lại
+let visibleCols = new Set(CORE_COLUMNS.filter(c=>c.key!=='gender' && c.key!=='updated').map(c=>c.key));   // mặc định ẩn Giới tính + Ngày cập nhật, hiện các cột còn lại
 let visibleNavDates = new Set();                          // mặc định chưa hiện cột NAV theo ngày
 let visibleFeeDates = new Set();                          // mặc định chưa hiện cột Phí theo ngày
 
@@ -1780,7 +1780,7 @@ function cellValue(c, cust, idx){
   if(c.type==='fee') return cust.feeHistory[c.date] ? fmt(cust.feeHistory[c.date]) : '<span style="color:var(--text-muted);">—</span>';
   switch(c.key){
     case 'stt': return idx+1;
-    case 'name': return `<div class="cust-name">${cust.name}</div>`;
+    case 'name': return `<div class="cust-name" title="${cust.name}">${cust.name}</div>`;
     case 'stk': return cust.stk.startsWith('TMP')
       ? `${cust.stk} <span class="tag-chip" title="Chưa có STK thật">chưa mở TK</span>`
       : `${cust.stk}${cust.linkedTo?` <span class="tag-chip" title="Tài khoản Phụ của STK ${cust.linkedTo}">🔗 Phụ</span>`:''}`;
@@ -3392,10 +3392,7 @@ function renderLoans(){
     byCustomer[stk].push(l);
   });
 
-  if(!loansGroupsInitialized){
-    Object.keys(byCustomer).forEach(stk=>expandedLoanGroups.add(stk));
-    loansGroupsInitialized = true;
-  }
+  loansGroupsInitialized = true; // mặc định thu gọn tất cả — không tự mở rộng khi tải trang
 
   const STATUS_OPTIONS = ["Chưa xử lý","Đã check","Đã liên hệ","KH xử lý xong","Công ty đã xử lý"];
 
