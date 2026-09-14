@@ -31,13 +31,17 @@
 }
 *{box-sizing:border-box;}
 body{margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;}
-.num{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;font-weight:500;}
+.num{font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-weight:600;}
 a{color:inherit;text-decoration:none;}
 button{font-family:inherit;cursor:pointer;}
 
 /* ---- layout ---- */
 .app{display:flex;min-height:100vh;}
-.sidebar{width:230px;background:var(--sidebar);flex-shrink:0;display:flex;flex-direction:column;padding:18px 12px;position:sticky;top:0;height:100vh;}
+.sidebar{width:230px;background:var(--sidebar);flex-shrink:0;display:flex;flex-direction:column;padding:18px 12px;position:sticky;top:0;height:100vh;transition:width .18s ease,padding .18s ease;overflow:hidden;}
+.sidebar.collapsed{width:0;padding-left:0;padding-right:0;}
+.sidebar.collapsed *{opacity:0;pointer-events:none;}
+#sidebarEdgeToggle{position:absolute;top:24px;left:230px;transform:translateX(-50%);width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid var(--border);box-shadow:0 2px 6px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:30;font-size:12px;color:var(--text-muted);transition:left .18s ease;padding:0;}
+.sidebar.collapsed #sidebarEdgeToggle{opacity:1;pointer-events:auto;left:0;}
 .brand{display:flex;align-items:center;gap:10px;padding:6px 10px 22px;color:#fff;}
 .brand-mark{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,var(--accent),#5B8DEF);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;}
 .brand-name{font-weight:600;font-size:14.5px;line-height:1.25;}
@@ -110,6 +114,7 @@ select.filter-select{padding:8px 10px;border:1px solid var(--border);border-radi
 /* ---- table ---- */
 table{width:100%;border-collapse:collapse;}
 thead th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--text-muted);font-weight:600;padding:11px 14px;border-bottom:1px solid var(--border);background:#FAFBFC;white-space:nowrap;position:sticky;top:60px;z-index:10;}
+.loan-detail-table thead th{position:static;top:auto;z-index:auto;}
 thead th.num-col{text-align:right;}
 tbody td{padding:12px 14px;border-bottom:1px solid #F0F2F5;font-size:14px;vertical-align:middle;}
 tbody td.num-col{text-align:right;}
@@ -209,7 +214,7 @@ tbody tr:hover .row-actions{opacity:1;}
 .diff-new{color:var(--green);font-weight:600;}
 
 /* ---- rooms ---- */
-.room-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.room-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
 .room-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:border-color .3s;}
 .room-card-top{display:flex;justify-content:space-between;align-items:flex-start;}
 .room-name{font-size:14.5px;font-weight:700;}
@@ -243,16 +248,16 @@ tbody tr:hover .row-actions{opacity:1;}
 .tsi-sub{font-size:11.5px;color:var(--text-muted);margin-top:1px;}
 
 .nav-rong-box{margin-bottom:12px;}
-.nav-rong-value{font-size:22px;font-weight:700;color:var(--green);font-family:'IBM Plex Mono',monospace;}
+.nav-rong-value{font-size:22px;font-weight:700;color:var(--green);font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;}
 .transfer-date-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
 .transfer-table{width:100%;border-collapse:collapse;}
 .transfer-table th{font-size:11px;text-transform:uppercase;color:var(--text-muted);text-align:left;padding:7px 8px;border-bottom:1px solid var(--border);font-weight:600;}
 .transfer-table th.num-col{text-align:right;}
-.transfer-table td{font-size:12px;padding:7px 8px;border-bottom:1px solid #F3F4F6;font-family:'IBM Plex Mono',monospace;}
+.transfer-table td{font-size:12px;padding:7px 8px;border-bottom:1px solid #F3F4F6;font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;}
 .transfer-table td:first-child{font-family:'Inter',sans-serif;}
 .transfer-table td.num-col{text-align:right;}
 .transfer-table tr.total-row td{font-weight:700;font-family:'Inter',sans-serif;border-top:1.5px solid var(--border);border-bottom:none;}
-.transfer-table tr.total-row td.num-col{font-family:'IBM Plex Mono',monospace;font-weight:700;}
+.transfer-table tr.total-row td.num-col{font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-weight:700;}
 .tcell-pos{color:var(--green);}
 .tcell-neg{color:var(--red);}
 
@@ -275,7 +280,7 @@ tbody tr:hover .row-actions{opacity:1;}
 .room-comp-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
 .room-comp-bar-wrap{background:#F0F2F5;border-radius:6px;height:10px;overflow:hidden;}
 .room-comp-bar{height:100%;border-radius:6px;transition:width .3s;}
-.room-comp-count{font-size:12px;color:var(--text-muted);text-align:right;font-family:'IBM Plex Mono',monospace;}
+.room-comp-count{font-size:12px;color:var(--text-muted);text-align:right;font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;}
 .room-comp-nav{font-size:11px;color:var(--text-muted);margin-top:1px;}
 
 .donut-layout{display:flex;align-items:center;gap:22px;}
@@ -287,7 +292,7 @@ tbody tr:hover .row-actions{opacity:1;}
 .donut-legend-row{display:flex;align-items:center;gap:9px;}
 .donut-legend-row .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
 .donut-legend-row .name{font-size:13px;font-weight:600;flex:1;}
-.donut-legend-row .val{font-size:12.5px;font-weight:600;font-family:'IBM Plex Mono',monospace;}
+.donut-legend-row .val{font-size:12.5px;font-weight:600;font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;}
 .donut-legend-row .pct{font-size:11.5px;color:var(--text-muted);width:36px;text-align:right;}
 
 .tag-chip{font-size:11px;background:#F0F2F5;color:var(--text-muted);padding:3px 8px;border-radius:5px;}
@@ -315,10 +320,21 @@ tbody tr:hover .row-actions{opacity:1;}
 .chevron.open{transform:rotate(90deg);}
 .loan-detail-row td{background:#fff;}
 
-.loan-card{border:1px solid var(--border);border-radius:10px;margin-bottom:12px;overflow:hidden;background:#fff;}
-.loan-card-header{display:grid;grid-template-columns:20px 1fr 90px 76px 150px 130px 120px auto;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;background:#FAFBFD;}
-.loan-card-header:hover{background:#F3F5F9;}
-.loan-stk-pill{display:inline-flex;align-items:center;gap:6px;background:#EEF1F5;padding:4px 10px;border-radius:20px;font-weight:700;font-size:12.5px;}
+
+.loan-summary-table{border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff;table-layout:fixed;width:100%;min-width:640px;}
+.loan-table-scroll{overflow-x:auto;}
+.loan-summary-table col.col-kh{width:16%;}
+.loan-summary-table col.col-id{width:8%;}
+.loan-summary-table col.col-sokhoan{width:6%;}
+.loan-summary-table col.col-hanmoi{width:22%;}
+.loan-summary-table col.col-nav{width:18%;}
+.loan-summary-table col.col-status{width:18%;}
+.loan-summary-table col.col-actions{width:12%;}
+.loan-summary-table thead th{white-space:normal;font-size:11px;font-weight:700;position:static !important;top:auto !important;line-height:1.3;}
+.loan-summary-row td{padding:12px 10px;overflow:hidden;text-overflow:ellipsis;}
+.loan-summary-row:hover{background:#F3F5F9;}
+.loan-detail-row > td{border-top:none;}
+.loan-stk-pill{display:inline-flex;align-items:center;gap:6px;background:#EEF1F5;padding:3px 8px;border-radius:16px;font-weight:700;font-size:12px;}
 .loan-col-label{font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;letter-spacing:.02em;}
 .loan-col-value{font-size:13px;font-weight:600;margin-top:1px;}
 .loan-detail-table{width:100%;border-collapse:collapse;}
@@ -331,14 +347,17 @@ tbody tr:hover .row-actions{opacity:1;}
 .overall-badge-ok{background:var(--green-soft);color:var(--green);}
 
 .loan-page-layout{display:grid;grid-template-columns:260px 1fr;gap:18px;align-items:start;}
-.loan-sidebar{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:sticky;top:76px;}
+@media (max-width:900px){
+  .loan-page-layout{grid-template-columns:1fr;}
+}
+.loan-sidebar{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
 .loan-sidebar-title{font-size:15px;font-weight:700;margin-bottom:4px;}
 .loan-sidebar-sub{font-size:11.5px;color:var(--text-muted);margin-bottom:14px;line-height:1.4;}
 .loan-filter-group-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--text-muted);margin:14px 0 8px;}
 .loan-pill{display:flex;align-items:center;justify-content:space-between;width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:7px;background:#fff;font-size:12.5px;font-weight:600;margin-bottom:6px;cursor:pointer;color:var(--text);}
 .loan-pill:hover{background:#F5F7FA;}
 .loan-pill.active{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-dark);}
-.loan-pill .cnt{font-family:'IBM Plex Mono',monospace;font-weight:700;}
+.loan-pill .cnt{font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-weight:700;}
 .loan-sidebar-total{font-size:12.5px;color:var(--text-muted);margin-top:14px;padding-top:12px;border-top:1px solid var(--border);}
 .loan-main{min-width:0;}
 .bulk-checkbox{margin-right:8px;}
@@ -388,7 +407,8 @@ tbody tr:hover .row-actions{opacity:1;}
 <div class="app" id="appRoot" style="display:none;">
 
   <!-- SIDEBAR -->
-  <div class="sidebar">
+  <div class="sidebar" id="mainSidebar">
+    <button id="sidebarEdgeToggle" title="Ẩn/hiện thanh menu" onclick="toggleSidebar()">‹</button>
     <div class="brand">
       <div class="brand-mark">QL</div>
       <div>
@@ -444,9 +464,12 @@ tbody tr:hover .row-actions{opacity:1;}
   <!-- MAIN -->
   <div class="main">
     <div class="topbar">
-      <div>
-        <div class="page-title" id="pageTitle">Dashboard</div>
-        <div class="page-subtitle" id="pageSubtitle">Tổng quan hoạt động quản lý khách hàng</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="icon-btn" id="sidebarToggleBtn" title="Ẩn/hiện thanh menu" onclick="toggleSidebar()" style="width:34px;height:34px;">☰</button>
+        <div>
+          <div class="page-title" id="pageTitle">Dashboard</div>
+          <div class="page-subtitle" id="pageSubtitle">Tổng quan hoạt động quản lý khách hàng</div>
+        </div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;">
         <div style="position:relative;">
@@ -654,6 +677,7 @@ tbody tr:hover .row-actions{opacity:1;}
 
             <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:14px;" id="btnBulkSelect" onclick="toggleBulkSelectMode()">🗑 Chọn để xoá</button>
             <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;" onclick="refreshLoans()">🔄 Làm mới danh sách</button>
+            <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;" onclick="toggleLoanTemplateEditor()">📝 Mẫu tin nhắn</button>
           </div>
 
           <div class="loan-main">
@@ -732,6 +756,45 @@ tbody tr:hover .row-actions{opacity:1;}
           </div></div>
           <div style="display:flex;justify-content:flex-end;margin-top:16px;">
             <button class="btn btn-primary" onclick="proceedFromUpload()">Tiếp tục — Chọn cột dữ liệu →</button>
+          </div>
+
+          <div class="panel" style="margin-top:24px;">
+            <div class="panel-header"><div class="panel-title">Lịch sử import</div></div>
+            <div class="panel-body" style="padding:0;">
+              <table>
+                <thead><tr><th>Thời gian</th><th>Loại</th><th>Tên file</th><th>Người import</th><th class="num-col">Tổng dòng</th><th class="num-col">Mới</th><th class="num-col">Cập nhật</th><th class="num-col">Lỗi</th></tr></thead>
+                <tbody id="importHistoryBody"><tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:14px;">Đang tải…</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel" style="margin-top:20px;" id="cleanupPanel">
+            <div class="panel-header"><div class="panel-title">🧹 Dọn dữ liệu cũ <span style="font-weight:500;color:var(--text-muted);font-size:12px;">(chỉ Owner)</span></div></div>
+            <div class="panel-body" style="display:flex;flex-direction:column;gap:18px;">
+              <div>
+                <div class="loan-col-value">Xoá khoản vay đã xử lý xong quá lâu</div>
+                <div class="field-hint" style="margin-bottom:8px;">Chỉ xoá khoản có trạng thái "KH xử lý xong" / "Công ty đã xử lý", cập nhật lần cuối cách đây hơn số tháng chọn.</div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <input type="number" id="cleanupLoanMonths" value="3" min="1" style="width:70px;padding:8px 10px;border:1px solid var(--border);border-radius:7px;">
+                  <span style="font-size:13px;color:var(--text-muted);">tháng</span>
+                  <button class="btn btn-secondary btn-sm" onclick="previewCleanupLoans()">Xem trước số lượng</button>
+                  <button class="btn btn-secondary btn-sm" style="display:none;color:var(--red);border-color:#F3C6C6;" id="btnConfirmCleanupLoans" onclick="confirmCleanupLoans()">Xoá ngay</button>
+                </div>
+                <div class="field-hint" id="cleanupLoanResult" style="margin-top:6px;"></div>
+              </div>
+              <div style="border-top:1px solid var(--border);"></div>
+              <div>
+                <div class="loan-col-value">Xoá lịch sử import cũ</div>
+                <div class="field-hint" style="margin-bottom:8px;">Xoá các bản ghi lịch sử import (tab "Lịch sử import" ở trên) cũ hơn số tháng chọn — không ảnh hưởng tới dữ liệu khách hàng/khoản vay/quyền mua đã import.</div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <input type="number" id="cleanupHistoryMonths" value="6" min="1" style="width:70px;padding:8px 10px;border:1px solid var(--border);border-radius:7px;">
+                  <span style="font-size:13px;color:var(--text-muted);">tháng</span>
+                  <button class="btn btn-secondary btn-sm" onclick="previewCleanupHistory()">Xem trước số lượng</button>
+                  <button class="btn btn-secondary btn-sm" style="display:none;color:var(--red);border-color:#F3C6C6;" id="btnConfirmCleanupHistory" onclick="confirmCleanupHistory()">Xoá ngay</button>
+                </div>
+                <div class="field-hint" id="cleanupHistoryResult" style="margin-top:6px;"></div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -943,6 +1006,57 @@ tbody tr:hover .row-actions{opacity:1;}
   </div>
 </div>
 
+<!-- MENU NỔI CHỌN XƯNG HÔ (⋮ ở đầu thẻ khách hàng, Quản lý khoản vay) -->
+<div id="loanPronounMenu" style="display:none;position:fixed;z-index:500;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 10px 30px rgba(15,23,42,.15);min-width:200px;overflow:hidden;">
+  <div style="padding:9px 14px;font-size:11.5px;font-weight:700;color:var(--text-muted);background:#FAFBFC;border-bottom:1px solid var(--border);">💬 Soạn tin nhắn — xưng hô</div>
+  <div id="loanPronounMenuList"></div>
+</div>
+
+<!-- LỊCH SỬ SỬA ĐỔI 1 KHOẢN VAY -->
+<div class="overlay" id="loanHistoryOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🕒 Lịch sử khoản vay</div>
+      <button class="close-x" onclick="closeLoanHistoryModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-hint" style="margin-bottom:10px;">STK: <b id="loanHistoryAccountLabel">—</b></div>
+      <div id="loanHistoryList" style="max-height:360px;overflow-y:auto;">Đang tải…</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeLoanHistoryModal()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<!-- MẪU TIN NHẮN DÙNG CHUNG QUẢN LÝ KHOẢN VAY -->
+<div class="overlay" id="loanTemplateOverlay">
+  <div class="modal" style="width:760px;">
+    <div class="modal-header">
+      <div class="modal-title">📝 Mẫu tin nhắn — Quản lý khoản vay</div>
+      <button class="close-x" onclick="toggleLoanTemplateEditor()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--accent-soft);border:1px solid #C9D9FB;border-radius:8px;padding:11px 14px;font-size:12.5px;color:var(--accent-dark);margin-bottom:12px;line-height:1.7;">
+        <code>{xung_ho}</code> — cách gọi KH (Anh/Chị/Ông/Bà..., chọn lúc soạn tin) &nbsp;·&nbsp;
+        <code>{tu_xung}</code> — cách tự xưng (Em/Cháu..., chọn lúc soạn tin) &nbsp;·&nbsp;
+        <code>{ngay_gop_gon}</code> — ngày đến hạn của tối đa 3 khoản gần nhất, tự gộp gọn (vd 10-11/8) &nbsp;·&nbsp;
+        <code>{ten_kh}</code> — tên khách hàng &nbsp;·&nbsp;
+        <code>{so_khoan}</code> — số khoản vay &nbsp;·&nbsp;
+        <code>{tong_du_no}</code> — tổng dư nợ &nbsp;·&nbsp;
+        <code>{id_ql}</code> — ID quản lý
+      </div>
+      <div class="form-field full">
+        <textarea id="loanTemplateInput" style="min-height:280px;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="restoreDefaultLoanTemplate()">Khôi phục mẫu mặc định</button>
+      <button class="btn btn-primary" onclick="saveLoanTemplate()">Lưu mẫu tin nhắn</button>
+    </div>
+  </div>
+</div>
+
 <!-- ADD LOAN MODAL -->
 <div class="overlay" id="loanModalOverlay">
   <div class="modal">
@@ -967,6 +1081,10 @@ tbody tr:hover .row-actions{opacity:1;}
         </div>
         <div class="form-field"><label>Số tiền vay (VNĐ) *</label><input type="text" id="loan_amount" placeholder="200.000.000"></div>
         <div class="form-field"><label>Ngày đến hạn *</label><input type="text" id="loan_due" placeholder="dd/mm/yyyy"></div>
+        <div class="form-field">
+          <label>ID quản lý <span style="font-weight:500;color:var(--text-muted);">(nếu chưa tìm thấy KH trong hệ thống)</span></label>
+          <input type="text" id="loan_manager_id" placeholder="VD: MG01">
+        </div>
         <div class="form-field">
           <label>Trạng thái *</label>
           <select id="loan_status">
@@ -1070,8 +1188,8 @@ tbody tr:hover .row-actions{opacity:1;}
     <div class="modal-body">
       <div class="form-grid">
         <div class="form-field">
-          <label>Xưng hô</label>
-          <select id="msg_pronoun" onchange="renderMessagePreview()"></select>
+          <label>Xưng hô <span style="font-weight:500;color:var(--text-muted);">(chọn xong tự copy luôn tin nhắn)</span></label>
+          <select id="msg_pronoun" onchange="renderMessagePreview(); copyMessagePreview(true);"></select>
         </div>
         <div class="form-field">
           <label>Khách hàng</label>
@@ -1083,7 +1201,7 @@ tbody tr:hover .row-actions{opacity:1;}
           <div class="field-hint" id="msg_token_hint"></div>
         </div>
         <div class="form-field full">
-          <label>Xem trước tin nhắn</label>
+          <label>Xem trước tin nhắn <span id="msg_copy_status" style="font-weight:600;color:var(--green);display:none;">✓ Đã copy vào clipboard</span></label>
           <textarea id="msg_preview" readonly style="min-height:90px;background:#F5F7FA;color:var(--text);font-weight:500;"></textarea>
         </div>
       </div>
@@ -1321,6 +1439,7 @@ async function checkAuthAndInit(){
   goImportStep(1);
 
   subscribeRealtime();
+  loadLoanTemplate();
 }
 
 // ---------------- CẬP NHẬT THỜI GIAN THỰC (Supabase Realtime) ----------------
@@ -1368,6 +1487,8 @@ function applyRoleVisibility(){
   const ownerLabel = document.getElementById('ownerGroupLabel');
   if(navAcc) navAcc.style.display = isOwner ? 'flex' : 'none';
   if(ownerLabel) ownerLabel.style.display = isOwner ? 'block' : 'none';
+  const cleanupPanel = document.getElementById('cleanupPanel');
+  if(cleanupPanel) cleanupPanel.style.display = isOwner ? 'block' : 'none';
 }
 
 // ================================================================
@@ -1451,7 +1572,7 @@ async function loadAllData(){
     if(!page || page.length < pageSize) break;
     from += pageSize;
   }
-  loans = loanRows.map(l=>({ id:l.loan_id, account:l.account_number, amount:l.amount, dueDate:fromDbDate(l.due_date), status:l.status, note:l.note||'' }));
+  loans = loanRows.map(l=>({ id:l.loan_id, account:l.account_number, amount:l.amount, dueDate:fromDbDate(l.due_date), status:l.status, note:l.note||'', managerId:l.manager_id||'' }));
 
   // --- Rights ---
   let rightRows = [];
@@ -1484,6 +1605,32 @@ let rooms = []; // nạp từ Supabase lúc khởi động
 let customers = []; // nạp từ Supabase lúc khởi động
 
 function fmt(n){ return n.toLocaleString('vi-VN'); }
+
+// ---------------- ẨN/HIỆN THANH MENU (SIDEBAR) ----------------
+function toggleSidebar(){
+  const sidebar = document.getElementById('mainSidebar');
+  const collapsed = sidebar.classList.toggle('collapsed');
+  document.getElementById('sidebarEdgeToggle').textContent = collapsed ? '›' : '‹';
+  try { localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0'); } catch(e){}
+}
+(function initSidebarState(){
+  try {
+    if(localStorage.getItem('sidebarCollapsed') === '1'){
+      document.getElementById('mainSidebar').classList.add('collapsed');
+      document.getElementById('sidebarEdgeToggle').textContent = '›';
+    }
+  } catch(e){}
+})();
+function copyToClipboard(text, el){
+  navigator.clipboard.writeText(text).then(()=>{
+    if(!el) return;
+    const original = el.innerHTML;
+    el.innerHTML = `${text} <span style="color:var(--green);">✓ Đã copy</span>`;
+    setTimeout(()=>{ el.innerHTML = original; }, 1200);
+  }).catch(()=>{
+    alert('Không thể tự động copy trên trình duyệt này — vui lòng bôi đen và copy thủ công.');
+  });
+}
 const SPECIAL_ROOMS = ['Tự out','Chưa đủ điều kiện','Remove'];
 let tempStkCounter = 1; // đã dùng TMP001 trong dữ liệu mẫu
 function generateTempStk(){
@@ -1542,6 +1689,7 @@ function switchView(name){
   document.getElementById('pageTitle').textContent = titles[name][0];
   document.getElementById('pageSubtitle').textContent = titles[name][1];
   if(name === 'accounts') renderAccounts();
+  if(name === 'import') resetImportWizard();
 }
 document.querySelectorAll('.nav-item').forEach(el=>{
   el.addEventListener('click', ()=>switchView(el.dataset.view));
@@ -2874,6 +3022,7 @@ function openLoanModal(preselectStk){
   document.getElementById('loan_due').value = '';
   document.getElementById('loan_status').value = 'Chưa xử lý';
   document.getElementById('loan_note').value = '';
+  document.getElementById('loan_manager_id').value = '';
   document.getElementById('loanModalOverlay').classList.add('active');
 }
 function closeLoanModal(){ document.getElementById('loanModalOverlay').classList.remove('active'); }
@@ -2885,12 +3034,14 @@ async function saveLoan(){
   const due = document.getElementById('loan_due').value.trim();
   if(!due){ alert('Vui lòng nhập ngày đến hạn (dd/mm/yyyy).'); return; }
   try {
-    const { error } = await sb.from('loans').insert({
+    const { data: ins, error } = await sb.from('loans').insert({
       account_number: account, amount, due_date: toDbDate(due),
       status: document.getElementById('loan_status').value,
-      note: document.getElementById('loan_note').value.trim()
-    });
+      note: document.getElementById('loan_note').value.trim(),
+      manager_id: document.getElementById('loan_manager_id').value.trim() || null,
+    }).select().single();
     if(error) throw error;
+    logLoanHistory(ins.loan_id, 'tao_moi', `Thêm tay — ${fmt(amount)}, đến hạn ${due}`);
     await loadAllData();
     expandedLoanGroups.add(stk);
     closeLoanModal();
@@ -2921,19 +3072,75 @@ function overallLoanStatus(custLoans){
   return {label:'BÌNH THƯỜNG', cls:'overall-badge-ok'};
 }
 
+// Ghi lịch sử sửa đổi khoản vay (âm thầm — lỗi ghi log không chặn thao tác chính)
+function logLoanHistory(loanId, action, note){
+  sb.from('loan_history').insert({ loan_id: loanId, changed_by: currentUserEmail, action, note }).then(()=>{});
+}
+
 async function updateLoanNote(id, newNote){
   const l = loans.find(x=>x.id===id);
+  const oldNote = l ? (l.note||'') : '';
   if(l) l.note = newNote;
   const { error } = await sb.from('loans').update({ note: newNote, updated_at: new Date().toISOString() }).eq('loan_id', id);
   if(error) alert('Lỗi khi lưu ghi chú: ' + error.message);
+  else if(oldNote !== newNote) logLoanHistory(id, 'sua_ghi_chu', `"${oldNote||'(trống)'}" → "${newNote||'(trống)'}"`);
+}
+async function updateLoanAmount(id, newValue){
+  const num = parseFloat(String(newValue).replace(/[^\d]/g,'')) || 0;
+  const l = loans.find(x=>x.id===id);
+  const oldAmount = l ? l.amount : 0;
+  if(l) l.amount = num;
+  renderLoans();
+  renderDashboard();
+  try {
+    const { error } = await sb.from('loans').update({ amount: num, updated_at: new Date().toISOString() }).eq('loan_id', id);
+    if(error) throw error;
+    if(oldAmount !== num) logLoanHistory(id, 'sua_so_tien', `${fmt(oldAmount||0)} → ${fmt(num)}`);
+  } catch(err){
+    alert('Lỗi khi lưu số tiền: ' + err.message);
+    if(l) l.amount = oldAmount;
+    renderLoans();
+    renderDashboard();
+  }
+}
+async function updateLoanDueDate(id, newValue, stk){
+  const newDate = newValue.trim();
+  if(!/^\d{2}\/\d{2}\/\d{4}$/.test(newDate)){
+    alert('Vui lòng nhập đúng định dạng dd/mm/yyyy.');
+    renderLoans();
+    return;
+  }
+  const LOAN_RESOLVED_STATUSES = ['KH xử lý xong','Công ty đã xử lý'];
+  const conflict = loans.find(l => l.id!==id && l.account.slice(0,6)===stk && l.dueDate===newDate && !LOAN_RESOLVED_STATUSES.includes(l.status));
+  if(conflict){
+    const ok = confirm(`Khách hàng này đã có 1 khoản vay khác đang mở cùng ngày ${newDate} (STK ${conflict.account}). Bạn vẫn muốn lưu?`);
+    if(!ok){ renderLoans(); return; }
+  }
+  const l = loans.find(x=>x.id===id);
+  const oldDate = l ? l.dueDate : null;
+  if(l) l.dueDate = newDate;
+  renderLoans();
+  renderDashboard();
+  try {
+    const { error } = await sb.from('loans').update({ due_date: toDbDate(newDate), updated_at: new Date().toISOString() }).eq('loan_id', id);
+    if(error) throw error;
+    if(oldDate !== newDate) logLoanHistory(id, 'sua_ngay_den_han', `${oldDate} → ${newDate}`);
+  } catch(err){
+    alert('Lỗi khi lưu ngày đến hạn: ' + err.message);
+    if(l) l.dueDate = oldDate;
+    renderLoans();
+    renderDashboard();
+  }
 }
 async function updateLoanStatus(id, newStatus){
   const l = loans.find(x=>x.id===id);
+  const oldStatus = l ? l.status : '';
   if(l) l.status = newStatus;
   renderLoans();
   renderDashboard();
   const { error } = await sb.from('loans').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('loan_id', id);
   if(error){ alert('Lỗi khi cập nhật trạng thái: ' + error.message); await loadAllData(); renderLoans(); renderDashboard(); }
+  else if(oldStatus !== newStatus) logLoanHistory(id, 'doi_trang_thai', `${oldStatus} → ${newStatus}`);
 }
 async function deleteLoanEntry(id){
   const idx = loans.findIndex(x=>x.id===id);
@@ -2947,6 +3154,46 @@ async function deleteLoanEntry(id){
     renderDashboard();
   } catch(err){ alert('Lỗi khi xóa (có thể do bạn không phải Owner): ' + err.message); }
 }
+async function deleteAllLoansForCustomer(stk){
+  const ids = loans.filter(l=>l.account.slice(0,6)===stk).map(l=>l.id);
+  if(!ids.length) return;
+  if(!confirm(`Xóa toàn bộ ${ids.length} khoản vay của STK ${stk}? Thao tác này không thể hoàn tác.`)) return;
+  try {
+    const { error } = await sb.from('loans').delete().in('loan_id', ids);
+    if(error) throw error;
+    loans = loans.filter(l=>!ids.includes(l.id));
+    renderLoans();
+    renderDashboard();
+  } catch(err){ alert('Lỗi khi xóa (có thể do bạn không phải Owner): ' + err.message); }
+}
+
+// ---------------- XEM LỊCH SỬ SỬA ĐỔI 1 KHOẢN VAY ----------------
+const LOAN_HISTORY_ACTION_LABELS = {
+  sua_ngay_den_han: '📅 Sửa ngày đến hạn', sua_so_tien: '💰 Sửa số tiền', sua_ghi_chu: '📝 Sửa ghi chú',
+  doi_trang_thai: '🔄 Đổi trạng thái', tao_moi: '➕ Tạo khoản vay',
+};
+async function openLoanHistoryModal(loanId, account){
+  document.getElementById('loanHistoryAccountLabel').textContent = account;
+  document.getElementById('loanHistoryList').innerHTML = 'Đang tải…';
+  document.getElementById('loanHistoryOverlay').classList.add('active');
+  try {
+    const { data, error } = await sb.from('loan_history').select('*').eq('loan_id', loanId).order('created_at', {ascending:false});
+    if(error) throw error;
+    if(!data || !data.length){
+      document.getElementById('loanHistoryList').innerHTML = '<div style="color:var(--text-muted);font-size:12.5px;padding:10px 0;">Chưa có lịch sử sửa đổi nào cho khoản vay này.</div>';
+      return;
+    }
+    document.getElementById('loanHistoryList').innerHTML = data.map(h=>{
+      const t = new Date(h.created_at);
+      const timeStr = `${String(t.getDate()).padStart(2,'0')}/${String(t.getMonth()+1).padStart(2,'0')}/${t.getFullYear()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+      return `<div class="tl-item"><div class="tl-date">${timeStr}</div><div class="tl-text"><b>${LOAN_HISTORY_ACTION_LABELS[h.action]||h.action}</b>${h.note?': '+h.note:''}<br><span style="color:var(--text-muted);font-size:11.5px;">bởi ${h.changed_by||'—'}</span></div></div>`;
+    }).join('');
+  } catch(err){
+    document.getElementById('loanHistoryList').innerHTML = `<div style="color:var(--red);font-size:12.5px;">Lỗi khi tải lịch sử: ${err.message}</div>`;
+  }
+}
+function closeLoanHistoryModal(){ document.getElementById('loanHistoryOverlay').classList.remove('active'); }
+
 function toggleBulkSelectMode(){
   bulkSelectMode = !bulkSelectMode;
   bulkSelectedLoanIds.clear();
@@ -2989,6 +3236,96 @@ function setLoanStatusFromDropdown(val){
   loanStatusPillFilter = val;
   renderLoans();
 }
+// 9 cặp xưng hô riêng cho Quản lý khoản vay (gọi KH + môi giới tự xưng) — không dùng chung
+// với pronounOptions (dùng cho tên Telegram + Soạn tin nhắn Room/Quyền mua).
+// Tiểu khoản = ký tự thứ 7 trong số tài khoản khoản vay
+const SUBACCOUNT_LABELS = {'1':'Thường', '3':'3', '6':'6', '8':'Phái sinh'};
+
+const LOAN_PRONOUN_PAIRS = [
+  {goi:'Anh', tu:'Em'}, {goi:'Chị', tu:'Em'}, {goi:'Em', tu:'Chị'},
+  {goi:'Ông', tu:'Cháu'}, {goi:'Bà', tu:'Cháu'}, {goi:'Chú', tu:'Cháu'},
+  {goi:'Cô', tu:'Cháu'}, {goi:'Bác', tu:'Cháu'}, {goi:'Bạn', tu:'Mình'},
+];
+function loanPronounOptionsHtml(){
+  return LOAN_PRONOUN_PAIRS.map(p=>`<option value="${p.goi}|${p.tu}">${p.goi} (xưng: ${p.tu})</option>`).join('');
+}
+
+// ---------------- MENU NỔI CHỌN XƯNG HÔ (icon ⋮ đầu thẻ KH) ----------------
+function openLoanPronounMenu(evt, stk){
+  evt.stopPropagation();
+  const menu = document.getElementById('loanPronounMenu');
+  const btn = evt.currentTarget;
+  const rect = btn.getBoundingClientRect();
+  menu.style.top = (rect.bottom + 4) + 'px';
+  menu.style.left = Math.max(8, rect.right - 200) + 'px';
+  document.getElementById('loanPronounMenuList').innerHTML = LOAN_PRONOUN_PAIRS.map(p=>`
+    <div class="loan-pronoun-row" style="padding:9px 14px;font-size:13px;cursor:pointer;" onmouseover="this.style.background='#F5F7FA'" onmouseout="this.style.background=''" onclick="quickComposeLoanMessage('${stk}','${p.goi}|${p.tu}',this); setTimeout(closeLoanPronounMenu, 500);">
+      ${p.goi} <span style="color:var(--text-muted);">(xưng: ${p.tu})</span>
+    </div>`).join('');
+  menu.style.display = 'block';
+  setTimeout(()=>{ document.addEventListener('click', closeLoanPronounMenuOnOutsideClick); }, 0);
+}
+function closeLoanPronounMenu(){
+  document.getElementById('loanPronounMenu').style.display = 'none';
+  document.removeEventListener('click', closeLoanPronounMenuOnOutsideClick);
+}
+function closeLoanPronounMenuOnOutsideClick(e){
+  const menu = document.getElementById('loanPronounMenu');
+  if(!menu.contains(e.target)) closeLoanPronounMenu();
+}
+
+// ---------------- MẪU TIN NHẮN CHUNG CHO QUẢN LÝ KHOẢN VAY ----------------
+const DEFAULT_LOAN_TEMPLATE = "Hi {xung_ho}, {tu_xung} thấy trên tài khoản của {xung_ho} có khoản vay sắp đến hạn vào {ngay_gop_gon}\n{xung_ho} có thể:\n• Bán chứng khoán hoặc nộp thêm tiền để tất toán khoản vay;\n• Hoặc gia hạn khoản vay nếu vẫn có nhu cầu sử dụng (có phát sinh phí gia hạn).\n\n{tu_xung} gửi {xung_ho} hướng dẫn gia hạn và tra cứu chi tiết ngày đến hạn của các khoản để {xung_ho} xem nhé ạ.\n\nLưu ý: Trường hợp khoản vay bị quá hạn, Công ty có quyền bán chứng khoán trên tài khoản để thu hồi nợ theo quy định. Đồng thời, kể từ ngày khoản vay chuyển quá hạn, dư nợ sẽ bị áp dụng lãi suất quá hạn bằng 150% lãi suất trong hạn. Khoản lãi quá hạn này sẽ tiếp tục phát sinh cho đến ngày khoản vay được Công ty bán chứng khoán để thu hồi nợ hoặc khách hàng hoàn tất việc xử lý khoản vay.\n\nVì vậy, {xung_ho} chủ động xử lý sớm nhé, cần hỗ trợ thêm thì {xung_ho} nhắn {tu_xung} ạ.";
+let loanMessageTemplate = DEFAULT_LOAN_TEMPLATE;
+
+async function loadLoanTemplate(){
+  try {
+    const { data } = await sb.from('app_settings').select('value').eq('key','loan_reminder_template').maybeSingle();
+    loanMessageTemplate = (data && data.value) ? data.value : DEFAULT_LOAN_TEMPLATE;
+  } catch(e){ loanMessageTemplate = DEFAULT_LOAN_TEMPLATE; }
+}
+function toggleLoanTemplateEditor(){
+  const overlay = document.getElementById('loanTemplateOverlay');
+  const opening = !overlay.classList.contains('active');
+  if(opening) document.getElementById('loanTemplateInput').value = loanMessageTemplate;
+  overlay.classList.toggle('active', opening);
+}
+async function saveLoanTemplate(){
+  const text = document.getElementById('loanTemplateInput').value.trim();
+  if(!text){ alert('Mẫu tin nhắn không được để trống.'); return; }
+  try {
+    const { error } = await sb.from('app_settings').upsert({ key:'loan_reminder_template', value:text, updated_at:new Date().toISOString() });
+    if(error) throw error;
+    loanMessageTemplate = text;
+    alert('Đã lưu mẫu tin nhắn — áp dụng ngay cho toàn bộ Quản lý khoản vay.');
+    toggleLoanTemplateEditor();
+  } catch(err){ alert('Lỗi khi lưu mẫu: ' + err.message); }
+}
+function restoreDefaultLoanTemplate(){
+  if(!confirm('Khôi phục về mẫu mặc định? Nội dung đang gõ trong ô sẽ bị thay thế (chưa lưu thì vẫn có thể Hủy).')) return;
+  document.getElementById('loanTemplateInput').value = DEFAULT_LOAN_TEMPLATE;
+}
+
+// Xưng hô chọn nhanh cho 1 khách hàng -> tự build theo mẫu chung + tự copy, không cần mở modal
+function quickComposeLoanMessage(stk, pairValue, selectEl){
+  if(!pairValue) return;
+  const [goi, tu] = pairValue.split('|');
+  const tokens = buildMsgTokens('loan_multi', stk);
+  tokens.xung_ho = goi;
+  tokens.tu_xung = tu;
+  let text = loanMessageTemplate.replace(/\{(\w+)\}/g, (m,key)=> tokens[key] !== undefined ? tokens[key] : m);
+  navigator.clipboard.writeText(text).then(()=>{
+    if(selectEl){
+      const original = selectEl.style.background;
+      selectEl.style.background = 'var(--green)';
+      selectEl.style.color = '#fff';
+      setTimeout(()=>{ selectEl.style.background = original; selectEl.style.color = ''; if(selectEl.tagName==='SELECT') selectEl.selectedIndex = 0; }, 900);
+    }
+  }).catch(()=>{
+    alert('Không thể tự động copy trên trình duyệt này.');
+  });
+}
+
 function refreshLoans(){
   document.getElementById('loanSearchInput').value = '';
   document.getElementById('loanShowAll').checked = true;
@@ -3074,8 +3411,13 @@ function renderLoans(){
   }
 
   let html = bulkBar;
+  html += `<div class="loan-table-scroll"><table class="loan-summary-table"><colgroup>${bulkSelectMode?'<col style="width:28px;">':''}<col class="col-kh"><col class="col-id"><col class="col-sokhoan"><col class="col-hanmoi"><col class="col-nav"><col class="col-status"><col class="col-actions"></colgroup>
+    <thead><tr>
+      ${bulkSelectMode?'<th></th>':''}
+      <th>Khách hàng</th><th>ID phụ trách</th><th>Số khoản</th><th>Khoản sắp đến hạn nhất</th><th class="num-col">Tổng dư nợ</th><th>Trạng thái chung</th><th></th>
+    </tr></thead>
+    <tbody>`;
   Object.entries(byCustomer).forEach(([stk, custLoans])=>{
-    const c = customers.find(x=>x.stk===stk);
     const isOpen = bulkSelectMode || expandedLoanGroups.has(stk);
     const nearest = Math.min(...custLoans.map(l=>daysUntil(l.dueDate)));
     const nearestLoan = custLoans.find(l=>daysUntil(l.dueDate)===nearest);
@@ -3084,44 +3426,55 @@ function renderLoans(){
     const groupIds = custLoans.map(l=>l.id);
     const allSelected = groupIds.every(id=>bulkSelectedLoanIds.has(id));
     const someSelected = groupIds.some(id=>bulkSelectedLoanIds.has(id));
+    const managerIdForGroup = custLoans.find(l=>l.managerId)?.managerId || '—';
+    const colspan = bulkSelectMode ? 8 : 7;
 
-    html += `<div class="loan-card">
-      <div class="loan-card-header" onclick="toggleLoanGroup('${stk}')">
-        ${bulkSelectMode
-          ? `<input type="checkbox" class="bulk-checkbox" ${allSelected?'checked':''} ${!allSelected&&someSelected?'data-indeterminate="1"':''} title="Chọn tất cả khoản của KH này" onclick="event.stopPropagation();toggleBulkSelectGroup('${stk}', this.checked)">`
-          : `<span class="chevron ${isOpen?'open':''}">▸</span>`}
-        <div>
-          <div class="loan-col-value">${c ? c.name : `<span style="color:var(--red);">Không tìm thấy KH</span> <button class="btn btn-secondary btn-sm" style="padding:2px 8px;font-size:11px;" onclick="event.stopPropagation();openAddModal('${stk}')">+ Tạo KH</button>`}</div>
-          <span class="loan-stk-pill">🆔 ${stk}</span>
+    html += `<tr class="loan-summary-row" onclick="toggleLoanGroup('${stk}')" style="cursor:pointer;">
+      ${bulkSelectMode ? `<td onclick="event.stopPropagation();"><input type="checkbox" class="bulk-checkbox" ${allSelected?'checked':''} ${!allSelected&&someSelected?'data-indeterminate="1"':''} title="Chọn tất cả khoản của KH này" onclick="toggleBulkSelectGroup('${stk}', this.checked)"></td>` : ''}
+      <td>
+        <div style="display:flex;align-items:center;gap:5px;">
+          <span class="chevron ${isOpen?'open':''}">▸</span>
+          ${bulkSelectMode ? '' : `<button class="icon-btn" title="Soạn tin nhắn — chọn xưng hô" onclick="openLoanPronounMenu(event, '${stk}')">⋮</button>`}
+          <span class="loan-stk-pill" style="cursor:pointer;white-space:nowrap;" title="Bấm để copy STK" onclick="event.stopPropagation();copyToClipboard('${stk}', this)">${stk}</span>
         </div>
-        <div><div class="loan-col-label">ID phụ trách</div><div class="loan-col-value">${c ? (c.managerId||'—') : '—'}</div></div>
-        <div><div class="loan-col-label">Số khoản</div><div class="loan-col-value">${custLoans.length}</div></div>
-        <div><div class="loan-col-label">Khoản sắp đến hạn nhất</div><div class="loan-col-value" style="color:${nearest<0?'var(--red)':nearest<=3?'var(--amber)':'var(--text)'};">${nearest<0?'⚠️ ':nearest<=3?'⚠️ ':''}${nearestLoan.dueDate}</div></div>
-        <div><div class="loan-col-label">Tổng dư nợ</div><div class="loan-col-value num">${fmt(totalAmount)}</div></div>
-        <div><span class="badge ${overall.cls}">${overall.label}</span></div>
-        <div onclick="event.stopPropagation();">
-          ${bulkSelectMode ? '' : `
-          <button class="icon-btn" title="Soạn tin nhắn nhắc tất cả khoản vay của KH này" onclick="openMessageModal('loan_multi', '${stk}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
-          <button class="icon-btn" title="Thêm khoản vay cho KH này" onclick="openLoanModal('${stk}')">＋</button>`}
-        </div>
-      </div>`;
+      </td>
+      <td>${managerIdForGroup}</td>
+      <td>${custLoans.length}</td>
+      <td style="color:${nearest<0?'var(--red)':nearest<=3?'var(--amber)':'var(--text)'};">${nearest<0?'⚠️ ':nearest<=3?'⚠️ ':''}${nearestLoan.dueDate}</td>
+      <td class="num-col num">${fmt(totalAmount)}</td>
+      <td><span class="badge ${overall.cls}">${overall.label}</span></td>
+      <td onclick="event.stopPropagation();" style="white-space:nowrap;">
+        ${bulkSelectMode ? '' : `
+        <div style="display:flex;gap:6px;">
+          <button class="icon-btn" title="Thêm khoản vay cho KH này" onclick="openLoanModal('${stk}')">＋</button>
+          <button class="icon-btn" title="Xóa toàn bộ khoản vay của KH này" onclick="deleteAllLoansForCustomer('${stk}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+        </div>`}
+      </td>
+    </tr>`;
 
     if(isOpen){
       const byAccount = {};
       custLoans.forEach(l=>{ (byAccount[l.account] = byAccount[l.account]||[]).push(l); });
       let rowsHtml = '';
+      let stt = 0;
       Object.entries(byAccount).forEach(([account, accLoans])=>{
-        accLoans.forEach((l, i)=>{
+        accLoans.forEach((l)=>{
+          stt++;
           const days = daysUntil(l.dueDate);
-          const dueLabel = days < 0 ? `<span style="color:var(--red);font-weight:700;">⚠️ ${l.dueDate}</span>` :
-                            days <= 3 ? `<span style="color:var(--amber);font-weight:700;">⚠️ ${l.dueDate}</span>` :
-                            l.dueDate;
+          const dueColor = days < 0 ? 'var(--red)' : days <= 3 ? 'var(--amber)' : 'var(--text)';
+          const dueIcon = days < 0 || days <= 3 ? '⚠️ ' : '';
           rowsHtml += `<tr>
             ${bulkSelectMode ? `<td><input type="checkbox" class="bulk-checkbox" ${bulkSelectedLoanIds.has(l.id)?'checked':''} onchange="toggleBulkSelectLoan(${l.id})"></td>` : ''}
-            <td>${i+1}</td>
-            <td>${account}</td>
-            <td>${dueLabel}</td>
-            <td class="num-col num">${l.amount ? fmt(l.amount) : '—'}</td>
+            <td>${stt}</td>
+            <td><span style="cursor:pointer;" title="Bấm để copy số tài khoản" onclick="copyToClipboard('${account}', this)">${account} <span style="opacity:.45;">📋</span></span></td>
+            <td>
+              <input type="text" class="loan-note-input" style="width:104px;font-weight:700;color:${dueColor};" value="${dueIcon}${l.dueDate}"
+                onfocus="this.value='${l.dueDate}'" onchange="updateLoanDueDate(${l.id}, this.value, '${account.slice(0,6)}')">
+            </td>
+            <td>
+              <input type="text" class="loan-note-input num" style="width:110px;text-align:right;" value="${l.amount ? fmt(l.amount) : ''}" placeholder="—"
+                onchange="updateLoanAmount(${l.id}, this.value)">
+            </td>
             <td>
               <select class="status-select" onchange="updateLoanStatus(${l.id}, this.value)">
                 ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${s===l.status?'selected':''}>${s}</option>`).join('')}
@@ -3130,24 +3483,30 @@ function renderLoans(){
             <td><input type="text" class="loan-note-input" value="${(l.note||'').replace(/"/g,'&quot;')}" placeholder="Thêm ghi chú…" onchange="updateLoanNote(${l.id}, this.value)"></td>
             <td>
               <div class="row-actions" style="opacity:1;">
-                <button class="icon-btn" title="Soạn tin nhắn" onclick="openMessageModal('loan', '${account}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+                <button class="icon-btn" title="Xem lịch sử sửa đổi" onclick="openLoanHistoryModal(${l.id}, '${account}')">🕒</button>
+                <button class="icon-btn" title="Soạn tin nhắn — chọn xưng hô" onclick="openLoanPronounMenu(event, '${account.slice(0,6)}')">⋮</button>
                 <button class="icon-btn" title="Xóa khoản vay" onclick="deleteLoanEntry(${l.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
               </div>
             </td>
           </tr>`;
         });
       });
-      html += `<table class="loan-detail-table">
-        <thead><tr>${bulkSelectMode?'<th></th>':''}<th>#</th><th>Số tài khoản</th><th>Ngày đến hạn</th><th class="num-col">Tiền</th><th>Trạng thái</th><th>Ghi chú</th><th></th></tr></thead>
-        <tbody>${rowsHtml}</tbody>
-      </table>
-      <div class="loan-card-footer"><span>Tổng số khoản: <b>${custLoans.length}</b></span><span>Tổng dư nợ: <b>${fmt(totalAmount)}</b></span></div>`;
+      html += `<tr class="loan-detail-row"><td colspan="${colspan}" style="padding:0;background:#FAFBFD;">
+        <table class="loan-detail-table">
+          <thead><tr>${bulkSelectMode?'<th></th>':''}<th>STT</th><th>Số tài khoản</th><th>Ngày đến hạn</th><th class="num-col">Tiền</th><th>Trạng thái</th><th>Ghi chú</th><th></th></tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+        <div class="loan-card-footer">
+          <span>Tổng số khoản: <b>${custLoans.length}</b></span>
+          <span>Tổng dư nợ: <b>${fmt(totalAmount)}</b></span>
+        </div>
+      </td></tr>`;
     }
-    html += `</div>`;
   });
+  html += `</tbody></table></div>`;
 
   document.getElementById('loansContainer').innerHTML = html || (bulkBar + '<div style="color:var(--text-muted);font-size:13px;padding:20px;text-align:center;">Không có khoản vay nào khớp bộ lọc.</div>');
-  document.querySelectorAll('.loan-card-header input[data-indeterminate="1"]').forEach(el=>{ el.indeterminate = true; });
+  document.querySelectorAll('.loan-summary-row input[data-indeterminate="1"]').forEach(el=>{ el.indeterminate = true; });
 }
 
 // ---------------- QUYỀN MUA CỔ PHIẾU ----------------
@@ -3301,7 +3660,7 @@ const IMPORT_TYPE_META = {
   customerlist: {hint:'Kéo thả file danh sách khách hàng hiện có vào đây, hoặc bấm để chọn file', note:'Dùng 1 lần khi mới bắt đầu, để nạp toàn bộ KH đang quản lý vào hệ thống. Cột "Room" nếu có sẽ tự khớp theo TÊN Room đã cấu hình sẵn (VD: Elite/Advance/Basic) — nếu không khớp tên nào, hệ thống tự gán theo ngưỡng NAV.'},
   nav: {hint:'Kéo thả file NAV vào đây, hoặc bấm để chọn file'},
   bc12: {hint:'Kéo thả file BC12 (phí) vào đây, hoặc bấm để chọn file'},
-  loan: {hint:'Kéo thả file khoản vay đến hạn vào đây, hoặc bấm để chọn file', note:'Nếu file không có cột số tiền vay, khoản vay sẽ được tạo với số tiền = 0 — bổ sung tay sau.'},
+  loan: {hint:'Kéo thả file khoản vay đến hạn vào đây, hoặc bấm để chọn file', note:'Nếu file không có cột số tiền vay, khoản vay sẽ được tạo với số tiền = 0 — bổ sung tay sau. Nếu 1 ô Số tài khoản có nhiều STK cách nhau bằng dấu phẩy, hệ thống tự tách thành từng khoản vay riêng.'},
   right: {hint:'Kéo thả file quyền mua vào đây, hoặc bấm để chọn file'},
 };
 
@@ -3332,6 +3691,125 @@ function setImportType(type){
   if(IMPORT_TYPE_META[type].note){ noteEl.style.display='block'; noteEl.textContent = 'ℹ️ ' + IMPORT_TYPE_META[type].note; }
   else { noteEl.style.display='none'; }
   resetFileSelection();
+}
+
+// Reset toàn bộ trạng thái wizard về bước 1 sạch sẽ — gọi mỗi khi vào lại màn Import Excel,
+// để không còn giữ lại tên file / dữ liệu của lần import trước.
+function resetImportWizard(){
+  pendingImportPlan = null;
+  pendingImportRows = [];
+  pendingImportHeaders = [];
+  currentColumnMapping = {};
+  resetFileSelection();
+  goImportStep(1);
+  loadImportHistory();
+}
+
+const IMPORT_TYPE_LABELS = {
+  customerlist: '👥 Danh sách KH', nav: '📊 NAV', bc12: '💰 BC12 (Phí)', loan: '📅 Khoản vay', right: '📈 Quyền mua',
+};
+// ---------------- DỌN DỮ LIỆU CŨ (chỉ Owner) ----------------
+let pendingCleanupLoanIds = null;
+function cutoffDaysAgo(months){
+  const d = new Date();
+  d.setMonth(d.getMonth() - months);
+  return d;
+}
+async function previewCleanupLoans(){
+  if(currentRole !== 'owner'){ alert('Chỉ Owner mới có quyền dọn dữ liệu.'); return; }
+  const months = parseInt(document.getElementById('cleanupLoanMonths').value) || 3;
+  const cutoff = cutoffDaysAgo(months);
+  const RESOLVED = ['KH xử lý xong','Công ty đã xử lý'];
+  try {
+    const { data, error } = await sb.from('loans').select('loan_id, updated_at').in('status', RESOLVED).lt('updated_at', cutoff.toISOString());
+    if(error) throw error;
+    pendingCleanupLoanIds = (data||[]).map(r=>r.loan_id);
+    const resultEl = document.getElementById('cleanupLoanResult');
+    const btn = document.getElementById('btnConfirmCleanupLoans');
+    if(pendingCleanupLoanIds.length === 0){
+      resultEl.textContent = 'Không có khoản vay nào phù hợp để xoá.';
+      btn.style.display = 'none';
+    } else {
+      resultEl.innerHTML = `Tìm thấy <b style="color:var(--red);">${pendingCleanupLoanIds.length}</b> khoản vay đã xử lý xong, cập nhật lần cuối trước ${cutoff.toLocaleDateString('vi-VN')}.`;
+      btn.style.display = 'inline-block';
+    }
+  } catch(err){ alert('Lỗi khi xem trước: ' + err.message); }
+}
+async function confirmCleanupLoans(){
+  if(!pendingCleanupLoanIds || !pendingCleanupLoanIds.length) return;
+  if(!confirm(`Xoá vĩnh viễn ${pendingCleanupLoanIds.length} khoản vay đã xử lý xong lâu ngày? Không thể hoàn tác.`)) return;
+  try {
+    const { error } = await sb.from('loans').delete().in('loan_id', pendingCleanupLoanIds);
+    if(error) throw error;
+    document.getElementById('cleanupLoanResult').innerHTML = `<span style="color:var(--green);">✓ Đã xoá ${pendingCleanupLoanIds.length} khoản vay.</span>`;
+    document.getElementById('btnConfirmCleanupLoans').style.display = 'none';
+    pendingCleanupLoanIds = null;
+    await loadAllData();
+    renderLoans(); renderDashboard();
+  } catch(err){ alert('Lỗi khi xoá: ' + err.message); }
+}
+
+let pendingCleanupHistoryIds = null;
+async function previewCleanupHistory(){
+  if(currentRole !== 'owner'){ alert('Chỉ Owner mới có quyền dọn dữ liệu.'); return; }
+  const months = parseInt(document.getElementById('cleanupHistoryMonths').value) || 6;
+  const cutoff = cutoffDaysAgo(months);
+  try {
+    const { data, error } = await sb.from('import_batches').select('batch_id, imported_at').lt('imported_at', cutoff.toISOString());
+    if(error) throw error;
+    pendingCleanupHistoryIds = (data||[]).map(r=>r.batch_id);
+    const resultEl = document.getElementById('cleanupHistoryResult');
+    const btn = document.getElementById('btnConfirmCleanupHistory');
+    if(pendingCleanupHistoryIds.length === 0){
+      resultEl.textContent = 'Không có bản ghi lịch sử import nào phù hợp để xoá.';
+      btn.style.display = 'none';
+    } else {
+      resultEl.innerHTML = `Tìm thấy <b style="color:var(--red);">${pendingCleanupHistoryIds.length}</b> bản ghi lịch sử import trước ${cutoff.toLocaleDateString('vi-VN')}.`;
+      btn.style.display = 'inline-block';
+    }
+  } catch(err){ alert('Lỗi khi xem trước: ' + err.message); }
+}
+async function confirmCleanupHistory(){
+  if(!pendingCleanupHistoryIds || !pendingCleanupHistoryIds.length) return;
+  if(!confirm(`Xoá vĩnh viễn ${pendingCleanupHistoryIds.length} bản ghi lịch sử import cũ? Không thể hoàn tác.`)) return;
+  try {
+    const { error } = await sb.from('import_batches').delete().in('batch_id', pendingCleanupHistoryIds);
+    if(error) throw error;
+    document.getElementById('cleanupHistoryResult').innerHTML = `<span style="color:var(--green);">✓ Đã xoá ${pendingCleanupHistoryIds.length} bản ghi.</span>`;
+    document.getElementById('btnConfirmCleanupHistory').style.display = 'none';
+    pendingCleanupHistoryIds = null;
+    await loadImportHistory();
+  } catch(err){ alert('Lỗi khi xoá: ' + err.message); }
+}
+
+async function loadImportHistory(){
+  const body = document.getElementById('importHistoryBody');
+  if(!body) return;
+  body.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:14px;">Đang tải…</td></tr>';
+  try {
+    const { data, error } = await sb.from('import_batches').select('*').order('imported_at', {ascending:false}).limit(50);
+    if(error) throw error;
+    if(!data || !data.length){
+      body.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:14px;">Chưa có lần import nào.</td></tr>';
+      return;
+    }
+    body.innerHTML = data.map(b=>{
+      const time = new Date(b.imported_at);
+      const timeStr = `${String(time.getDate()).padStart(2,'0')}/${String(time.getMonth()+1).padStart(2,'0')}/${time.getFullYear()} ${String(time.getHours()).padStart(2,'0')}:${String(time.getMinutes()).padStart(2,'0')}`;
+      return `<tr>
+        <td>${timeStr}</td>
+        <td>${IMPORT_TYPE_LABELS[b.import_type]||b.import_type}</td>
+        <td>${b.file_name||'—'}</td>
+        <td>${b.imported_by||'—'}</td>
+        <td class="num-col num">${b.total_rows??'—'}</td>
+        <td class="num-col num" style="color:var(--accent);">${b.new_customers??0}</td>
+        <td class="num-col num" style="color:var(--green);">${b.updated_rows??0}</td>
+        <td class="num-col num" style="color:${b.error_rows?'var(--red)':'var(--text-muted)'};">${b.error_rows??0}</td>
+      </tr>`;
+    }).join('');
+  } catch(err){
+    body.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--red);padding:14px;">Lỗi khi tải lịch sử: ${err.message}</td></tr>`;
+  }
 }
 
 function resetFileSelection(){
@@ -3590,18 +4068,25 @@ function analyzeImportRows(type, rows, mapping){
       plan.valid.push(item);
     }
     else if(type==='loan'){
-      const accRaw = String(getMapped(row,mapping,'account')).trim();
+      const accRawCell = String(getMapped(row,mapping,'account')).trim();
       const due = parseDateCell(getMapped(row,mapping,'dueDate'));
       const managerId = String(getMapped(row,mapping,'managerId')).trim();
-      if(!accRaw || accRaw.length!==7){ plan.errors.push({line:lineNo, content:`STK: ${accRaw||'(trống)'}`, error:'Số tài khoản phải đúng 7 ký tự'}); return; }
-      if(!due){ plan.errors.push({line:lineNo, content:`TK ${accRaw}`, error:'Thiếu ngày đáo hạn'}); return; }
-      const loanKey = accRaw + '|' + due;
-      const dupInFile = seenLoanKeys.has(loanKey);
-      seenLoanKeys.add(loanKey);
-      const dup = dupInFile || loans.find(l=>l.account===accRaw && l.dueDate===due);
-      const item = {account:accRaw, dueDate:due, managerId, isNew: !dup, isDup: !!dup, isDupInFile: dupInFile};
-      if(dup) plan.unchangedCount++; else plan.newCount++;
-      plan.valid.push(item);
+      // 1 ô có nhiều số tài khoản cách nhau bằng dấu phẩy -> tách thành nhiều khoản vay riêng
+      const accList = accRawCell.split(',').map(s=>s.trim()).filter(Boolean);
+      if(accList.length===0){ plan.errors.push({line:lineNo, content:'STK: (trống)', error:'Thiếu số tài khoản'}); return; }
+      accList.forEach(accRaw=>{
+        if(!accRaw || accRaw.length!==7){ plan.errors.push({line:lineNo, content:`STK: ${accRaw}`, error:'Số tài khoản phải đúng 7 ký tự'}); return; }
+        if(!due){ plan.errors.push({line:lineNo, content:`TK ${accRaw}`, error:'Thiếu ngày đáo hạn'}); return; }
+        const loanKey = accRaw + '|' + due;
+        const dupInFile = seenLoanKeys.has(loanKey);
+        seenLoanKeys.add(loanKey);
+        const LOAN_RESOLVED_STATUSES = ['KH xử lý xong','Công ty đã xử lý'];
+        const existingLoan = dupInFile ? null : loans.find(l=>l.account===accRaw && l.dueDate===due && !LOAN_RESOLVED_STATUSES.includes(l.status));
+        const dup = dupInFile || existingLoan;
+        const item = {account:accRaw, dueDate:due, managerId, isNew: !dup, isDup: !!dup, isDupInFile: dupInFile, existingLoan};
+        if(dup) plan.unchangedCount++; else plan.newCount++;
+        plan.valid.push(item);
+      });
     }
     else if(type==='right'){
       const stk = String(getMapped(row,mapping,'stk')).trim();
@@ -3816,19 +4301,30 @@ async function confirmImportToDatabase(){
           }
         } catch(e){ errCount++; }
       }
-      await sb.from('import_batches').insert({ import_type: plan.type==='bc12'?'bc12':'nav', file_name: document.getElementById('fileInput').files[0]?.name, imported_by: currentUserEmail, total_rows: plan.valid.length+plan.errors.length, new_customers:newCount, updated_rows:updatedCount, error_rows: plan.errors.length+errCount });
+      await sb.from('import_batches').insert({ import_type: plan.type, file_name: document.getElementById('fileInput').files[0]?.name, imported_by: currentUserEmail, total_rows: plan.valid.length+plan.errors.length+(plan.unmatchedCount||0), new_customers:newCount, updated_rows:updatedCount, error_rows: plan.errors.length+errCount });
       document.getElementById('importResultTitle').textContent = 'Đã cập nhật thành công';
       document.getElementById('importResultSub').textContent = `${newCount} khách mới được thêm · ${updatedCount} khách được cập nhật NAV/phí${roomSyncedCount?` (trong đó ${roomSyncedCount} khách được đồng bộ lại Room)`:''}${plan.unmatchedCount?` · ${plan.unmatchedCount} STK trong file không tìm thấy trong hệ thống (xem lại ở bước Kiểm tra dữ liệu)`:''}${errCount?` · ${errCount} dòng lỗi khi ghi`:''}${roomUnmatchedCount?` · ${roomUnmatchedCount} dòng có tên Room không khớp, đã tự gán theo ngưỡng NAV`:''}${priorityFallbackCount?` · ${priorityFallbackCount} dòng thiếu STK đã lưu tạm dạng "KH ưu tiên" — vào Danh sách khách hàng lọc trạng thái này để rà soát và xóa dòng không đúng`:''} · Dữ liệu cũ vẫn được lưu giữ nguyên vẹn.`;
     }
     else if(plan.type==='loan'){
-      const toInsert = plan.valid.filter(it=>it.isNew).map(it=>({ account_number: it.account, due_date: toDbDate(it.dueDate), status:'Chưa xử lý' }));
+      const toInsert = plan.valid.filter(it=>it.isNew).map(it=>({ account_number: it.account, due_date: toDbDate(it.dueDate), status:'Chưa xử lý', manager_id: it.managerId||null }));
       if(toInsert.length){ const { error } = await sb.from('loans').insert(toInsert); if(error) throw error; }
+      // Vá ID quản lý cho khoản vay ĐÃ CÓ SẴN nếu file lần này có ID mà bản ghi cũ đang thiếu/khác
+      const toBackfill = plan.valid.filter(it=>it.existingLoan && it.managerId && it.managerId !== (it.existingLoan.managerId||''));
+      let managerIdBackfilledCount = 0;
+      for(const it of toBackfill){
+        try {
+          const { error } = await sb.from('loans').update({ manager_id: it.managerId, updated_at: new Date().toISOString() }).eq('loan_id', it.existingLoan.id);
+          if(!error) managerIdBackfilledCount++;
+        } catch(e){ /* bỏ qua từng lỗi nhỏ, không chặn cả batch */ }
+      }
+      await sb.from('import_batches').insert({ import_type: 'loan', file_name: document.getElementById('fileInput').files[0]?.name, imported_by: currentUserEmail, total_rows: plan.valid.length+plan.errors.length, new_customers: toInsert.length, updated_rows: managerIdBackfilledCount, error_rows: plan.errors.length });
       document.getElementById('importResultTitle').textContent = `Đã import ${toInsert.length} khoản vay mới`;
-      document.getElementById('importResultSub').textContent = `${plan.valid.length-toInsert.length} dòng trùng với dữ liệu đã có, đã bỏ qua. Số tiền vay = 0, cần bổ sung tay cho từng khoản.`;
+      document.getElementById('importResultSub').textContent = `${plan.valid.length-toInsert.length} dòng trùng với dữ liệu đã có, đã bỏ qua${managerIdBackfilledCount?` (trong đó ${managerIdBackfilledCount} khoản được vá lại ID quản lý)`:''}. Số tiền vay = 0, cần bổ sung tay cho từng khoản.`;
     }
     else if(plan.type==='right'){
       const toInsert = plan.valid.filter(it=>it.isNew).map(it=>({ account_number: it.stk, symbol: it.symbol, ratio_num: it.ratioNum, ratio_denom: it.ratioDenom, price: it.price, holdings: it.holdings, qty: it.qty, record_date: toDbDate(it.recordDate), deadline: toDbDate(it.deadline), status:'Chưa đăng ký' }));
       if(toInsert.length){ const { error } = await sb.from('rights_offerings').insert(toInsert); if(error) throw error; }
+      await sb.from('import_batches').insert({ import_type: 'right', file_name: document.getElementById('fileInput').files[0]?.name, imported_by: currentUserEmail, total_rows: plan.valid.length+plan.errors.length, new_customers: toInsert.length, updated_rows: 0, error_rows: plan.errors.length });
       document.getElementById('importResultTitle').textContent = `Đã import ${toInsert.length} quyền mua mới`;
       document.getElementById('importResultSub').textContent = `${plan.valid.length-toInsert.length} dòng trùng với dữ liệu đã có, đã bỏ qua.`;
     }
@@ -3856,8 +4352,8 @@ const MESSAGE_TEMPLATES = {
   },
   loan_multi: {
     title: "Soạn tin nhắn — Nhắc nhiều khoản vay cùng lúc",
-    tokens: "{xung_ho}, {ten_kh}, {so_khoan}, {danh_sach_khoan}, {tong_du_no}, {id_ql}",
-    default: "{xung_ho} {ten_kh} ơi, bên em xin nhắc {xung_ho} hiện đang có {so_khoan} khoản vay margin:\n{danh_sach_khoan}\nTổng dư nợ: {tong_du_no}. Mong {xung_ho} sắp xếp thanh toán đúng hạn ạ."
+    tokens: "{xung_ho}, {ten_kh}, {so_khoan}, {ngay_gop_gon}, {danh_sach_khoan}, {tong_du_no}, {id_ql}",
+    default: "{xung_ho} {ten_kh} ơi, bên em xin nhắc {xung_ho} hiện đang có {so_khoan} khoản vay margin đến hạn ngày {ngay_gop_gon}.\nTổng dư nợ: {tong_du_no}. Mong {xung_ho} sắp xếp thanh toán đúng hạn ạ."
   },
   right: {
     title: "Soạn tin nhắn — Nhắc quyền mua cổ phiếu",
@@ -3909,6 +4405,7 @@ function buildMsgTokens(context, stk){
       ten_kh: c ? c.name : '',
       so_khoan: String(custLoans.length),
       danh_sach_khoan: danhSach,
+      ngay_gop_gon: formatCompactDueDates(custLoans),
       tong_du_no: fmt(custLoans.reduce((s,l)=>s+l.amount,0)),
       id_ql: 'MG01'
     };
@@ -3932,6 +4429,22 @@ function buildMsgTokens(context, stk){
 }
 
 // Tính xưng hô mặc định theo năm sinh (dùng lại đúng quy tắc ở form Thêm khách hàng)
+// Gộp gọn tối đa 3 khoản gần nhất theo tháng — VD 3 khoản 10/8, 11/8, 15/8 -> "10-11-15/8"
+// Nếu khác tháng thì tách nhóm, nối bằng dấu phẩy — VD "10-11/8, 02/9"
+function formatCompactDueDates(loanList){
+  const top3 = loanList.slice(0,3);
+  const groups = [];
+  const groupIndex = {};
+  top3.forEach(l=>{
+    const parts = l.dueDate.split('/');
+    if(parts.length!==3) return;
+    const [d,m,y] = parts;
+    const key = `${m}/${y}`;
+    if(groupIndex[key]===undefined){ groupIndex[key] = groups.length; groups.push({m, y, days:[]}); }
+    groups[groupIndex[key]].days.push(parseInt(d));
+  });
+  return groups.map(g=> g.days.sort((a,b)=>a-b).join('-') + '/' + g.m).join(', ');
+}
 function computePronounFor(gender, year){
   if(!year) return 'Bạn';
   if(year === 1984) return 'Bạn';
@@ -3965,12 +4478,19 @@ function renderMessagePreview(){
   text = text.replace(/\{(\w+)\}/g, (m,key)=> tokens[key] !== undefined ? tokens[key] : m);
   document.getElementById('msg_preview').value = text;
 }
-function copyMessagePreview(){
+function copyMessagePreview(silent){
   const text = document.getElementById('msg_preview').value;
   navigator.clipboard.writeText(text).then(()=>{
-    alert('Đã sao chép tin nhắn vào clipboard.');
+    if(silent){
+      const status = document.getElementById('msg_copy_status');
+      status.style.display = 'inline';
+      clearTimeout(window.__msgCopyStatusTimer);
+      window.__msgCopyStatusTimer = setTimeout(()=>{ status.style.display = 'none'; }, 1800);
+    } else {
+      alert('Đã sao chép tin nhắn vào clipboard.');
+    }
   }).catch(()=>{
-    alert('Không thể tự động sao chép trên trình duyệt này — vui lòng bôi đen và copy thủ công.');
+    if(!silent) alert('Không thể tự động sao chép trên trình duyệt này — vui lòng bôi đen và copy thủ công.');
   });
 }
 
