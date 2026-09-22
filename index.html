@@ -1067,7 +1067,8 @@ tbody tr:hover .row-actions{opacity:1;}
     <div class="modal-body">
       <div style="background:var(--accent-soft);border:1px solid #C9D9FB;border-radius:8px;padding:11px 14px;font-size:12.5px;color:var(--accent-dark);margin-bottom:12px;line-height:1.7;">
         <code>{xung_ho}</code> — xưng hô đã chọn ở trên &nbsp;·&nbsp;
-        <code>{ten_kh}</code> — tên khách hàng &nbsp;·&nbsp;
+        <code>{ten_goi}</code> — tên gọi, lấy từ cuối họ tên (VD "Nguyễn Văn An" → "An") &nbsp;·&nbsp;
+        <code>{ten_kh}</code> — họ và tên đầy đủ &nbsp;·&nbsp;
         <code>{nav}</code> — NAV quy ước (100.000.000 = 0.10T) &nbsp;·&nbsp;
         <code>{id_ql}</code> — ID người quản lý
       </div>
@@ -1302,7 +1303,7 @@ tbody tr:hover .row-actions{opacity:1;}
               </div>
             </div>
           </div>
-          <div class="field-hint">Cấu trúc mặc định: Xưng hô + Tên khách hàng - NAV quy ước (100.000.000 = 0.10T) - ID người quản lý. Xưng hô tự đề xuất theo năm sinh so với 1984 (sinh &lt;1984: Anh/Chị theo giới tính · sinh =1984: Bạn · sinh &gt;1984: Em) — bấm ⚙ để thêm/bớt lựa chọn xưng hô, bấm ✎ để tự chỉnh cấu trúc tên.</div>
+          <div class="field-hint">Cấu trúc mặc định: Xưng hô + Tên gọi (từ cuối trong họ tên, VD "Nguyễn Văn An" → "An") - NAV quy ước (100.000.000 = 0.10T) - ID người quản lý. Xưng hô tự đề xuất theo năm sinh so với 1984 (sinh &lt;1984: Anh/Chị theo giới tính · sinh =1984: Bạn · sinh &gt;1984: Em) — bấm ⚙ để thêm/bớt lựa chọn xưng hô, bấm ✎ để tự chỉnh cấu trúc tên.</div>
         </div>
         <div class="form-field full"><label>Ghi chú</label><textarea placeholder="VD: KH ưu tiên, KH NV…" id="f_note"></textarea></div>
         <div class="form-field full">
@@ -2929,8 +2930,14 @@ function navToTyUoc(rawNav){
 }
 
 // ---------------- CẤU TRÚC TÊN TELEGRAM (TÙY CHỈNH ĐƯỢC) ----------------
-const DEFAULT_TELEGRAM_TEMPLATE = "{xung_ho} {ten_kh} - {nav} - {id_ql}";
+const DEFAULT_TELEGRAM_TEMPLATE = "{xung_ho} {ten_goi} - {nav} - {id_ql}";
 let telegramNameTemplate = DEFAULT_TELEGRAM_TEMPLATE;
+
+// Họ tên đầy đủ -> Tên gọi (từ cuối cùng). VD: "Nguyễn Văn An" -> "An"
+function extractGivenName(fullName){
+  const parts = String(fullName || '').trim().split(/\s+/).filter(Boolean);
+  return parts.length ? parts[parts.length - 1] : '';
+}
 
 async function loadTelegramTemplate(){
   try {
@@ -2952,7 +2959,8 @@ function renderTelegramTemplateSample(){
   const tpl = document.getElementById('telegramTemplateInput').value || DEFAULT_TELEGRAM_TEMPLATE;
   const sample = tpl
     .replace(/\{xung_ho\}/g, 'Anh')
-    .replace(/\{ten_kh\}/g, 'Tuân')
+    .replace(/\{ten_kh\}/g, 'Nguyễn Văn Tuân')
+    .replace(/\{ten_goi\}/g, 'Tuân')
     .replace(/\{nav\}/g, '0.10T')
     .replace(/\{id_ql\}/g, 'BDFV');
   document.getElementById('telegramTemplatePreviewSample').textContent = sample;
@@ -2977,11 +2985,13 @@ function restoreDefaultTelegramTemplate(){
 function updateTelegramPreview(){
   const pronoun = document.getElementById('f_pronoun').value || 'Anh';
   const name = document.getElementById('f_name').value.trim() || 'Tên khách hàng';
+  const givenName = extractGivenName(name) || name;
   const nav = navToTyUoc(document.getElementById('f_nav').value);
   const managerId = document.getElementById('f_managerid').value.trim() || 'ID quản lý';
   const text = telegramNameTemplate
     .replace(/\{xung_ho\}/g, pronoun)
     .replace(/\{ten_kh\}/g, name)
+    .replace(/\{ten_goi\}/g, givenName)
     .replace(/\{nav\}/g, nav)
     .replace(/\{id_ql\}/g, managerId);
   document.getElementById('f_telegram_preview').value = text;
