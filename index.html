@@ -31,7 +31,7 @@
 }
 *{box-sizing:border-box;}
 body{margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;}
-.num{font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-weight:600;}
+.num{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;font-weight:500;}
 a{color:inherit;text-decoration:none;}
 button{font-family:inherit;cursor:pointer;}
 
@@ -120,10 +120,10 @@ tbody td{padding:12px 14px;border-bottom:1px solid #F0F2F5;font-size:14px;vertic
 tbody td.num-col{text-align:right;}
 tbody tr:hover{background:#FAFBFF;}
 tbody tr{cursor:pointer;}
-.cust-name{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;}
+.cust-name{font-weight:600;}
 .cust-code{color:var(--text-muted);font-size:12px;}
 
-.badge{display:inline-flex;align-items:center;padding:2.5px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
+.badge{display:inline-flex;align-items:center;padding:2.5px 9px;border-radius:20px;font-size:11.5px;font-weight:600;}
 .badge-blue{background:var(--accent-soft);color:var(--accent-dark);}
 .badge-green{background:var(--green-soft);color:var(--green);}
 .badge-amber{background:var(--amber-soft);color:var(--amber);}
@@ -214,7 +214,7 @@ tbody tr:hover .row-actions{opacity:1;}
 .diff-new{color:var(--green);font-weight:600;}
 
 /* ---- rooms ---- */
-.room-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.room-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
 .room-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:border-color .3s;}
 .room-card-top{display:flex;justify-content:space-between;align-items:flex-start;}
 .room-name{font-size:14.5px;font-weight:700;}
@@ -248,16 +248,16 @@ tbody tr:hover .row-actions{opacity:1;}
 .tsi-sub{font-size:11.5px;color:var(--text-muted);margin-top:1px;}
 
 .nav-rong-box{margin-bottom:12px;}
-.nav-rong-value{font-size:22px;font-weight:700;color:var(--green);font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;}
+.nav-rong-value{font-size:22px;font-weight:700;color:var(--green);font-family:'IBM Plex Mono',monospace;}
 .transfer-date-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
 .transfer-table{width:100%;border-collapse:collapse;}
 .transfer-table th{font-size:11px;text-transform:uppercase;color:var(--text-muted);text-align:left;padding:7px 8px;border-bottom:1px solid var(--border);font-weight:600;}
 .transfer-table th.num-col{text-align:right;}
-.transfer-table td{font-size:12px;padding:7px 8px;border-bottom:1px solid #F3F4F6;font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;}
+.transfer-table td{font-size:12px;padding:7px 8px;border-bottom:1px solid #F3F4F6;font-family:'IBM Plex Mono',monospace;}
 .transfer-table td:first-child{font-family:'Inter',sans-serif;}
 .transfer-table td.num-col{text-align:right;}
 .transfer-table tr.total-row td{font-weight:700;font-family:'Inter',sans-serif;border-top:1.5px solid var(--border);border-bottom:none;}
-.transfer-table tr.total-row td.num-col{font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-weight:700;}
+.transfer-table tr.total-row td.num-col{font-family:'IBM Plex Mono',monospace;font-weight:700;}
 .tcell-pos{color:var(--green);}
 .tcell-neg{color:var(--red);}
 
@@ -280,7 +280,7 @@ tbody tr:hover .row-actions{opacity:1;}
 .room-comp-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
 .room-comp-bar-wrap{background:#F0F2F5;border-radius:6px;height:10px;overflow:hidden;}
 .room-comp-bar{height:100%;border-radius:6px;transition:width .3s;}
-.room-comp-count{font-size:12px;color:var(--text-muted);text-align:right;font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;}
+.room-comp-count{font-size:12px;color:var(--text-muted);text-align:right;font-family:'IBM Plex Mono',monospace;}
 .room-comp-nav{font-size:11px;color:var(--text-muted);margin-top:1px;}
 
 .donut-layout{display:flex;align-items:center;gap:22px;}
@@ -292,7 +292,7 @@ tbody tr:hover .row-actions{opacity:1;}
 .donut-legend-row{display:flex;align-items:center;gap:9px;}
 .donut-legend-row .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
 .donut-legend-row .name{font-size:13px;font-weight:600;flex:1;}
-.donut-legend-row .val{font-size:12.5px;font-weight:600;font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;}
+.donut-legend-row .val{font-size:12.5px;font-weight:600;font-family:'IBM Plex Mono',monospace;}
 .donut-legend-row .pct{font-size:11.5px;color:var(--text-muted);width:36px;text-align:right;}
 
 .tag-chip{font-size:11px;background:#F0F2F5;color:var(--text-muted);padding:3px 8px;border-radius:5px;}
@@ -357,7 +357,7 @@ tbody tr:hover .row-actions{opacity:1;}
 .loan-pill{display:flex;align-items:center;justify-content:space-between;width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:7px;background:#fff;font-size:12.5px;font-weight:600;margin-bottom:6px;cursor:pointer;color:var(--text);}
 .loan-pill:hover{background:#F5F7FA;}
 .loan-pill.active{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-dark);}
-.loan-pill .cnt{font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-weight:700;}
+.loan-pill .cnt{font-family:'IBM Plex Mono',monospace;font-weight:700;}
 .loan-sidebar-total{font-size:12.5px;color:var(--text-muted);margin-top:14px;padding-top:12px;border-top:1px solid var(--border);}
 .loan-main{min-width:0;}
 .bulk-checkbox{margin-right:8px;}
@@ -1057,6 +1057,33 @@ tbody tr:hover .row-actions{opacity:1;}
   </div>
 </div>
 
+<!-- CẤU TRÚC TÊN TELEGRAM (TÙY CHỈNH) -->
+<div class="overlay" id="telegramTemplateOverlay">
+  <div class="modal" style="width:640px;">
+    <div class="modal-header">
+      <div class="modal-title">✎ Cấu trúc tên Telegram</div>
+      <button class="close-x" onclick="toggleTelegramTemplateEditor()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--accent-soft);border:1px solid #C9D9FB;border-radius:8px;padding:11px 14px;font-size:12.5px;color:var(--accent-dark);margin-bottom:12px;line-height:1.7;">
+        <code>{xung_ho}</code> — xưng hô đã chọn ở trên &nbsp;·&nbsp;
+        <code>{ten_kh}</code> — tên khách hàng &nbsp;·&nbsp;
+        <code>{nav}</code> — NAV quy ước (100.000.000 = 0.10T) &nbsp;·&nbsp;
+        <code>{id_ql}</code> — ID người quản lý
+      </div>
+      <div class="form-field full">
+        <label>Mẫu cấu trúc (dùng dấu cách, dấu gạch ngang... tùy ý giữa các token)</label>
+        <input type="text" id="telegramTemplateInput" placeholder="VD: {xung_ho} {ten_kh} - {nav} - {id_ql}">
+      </div>
+      <div class="field-hint" style="margin-top:8px;">Xem trước: <b id="telegramTemplatePreviewSample"></b></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="restoreDefaultTelegramTemplate()">Khôi phục mặc định</button>
+      <button class="btn btn-primary" onclick="saveTelegramTemplate()">Lưu cấu trúc</button>
+    </div>
+  </div>
+</div>
+
 <!-- ADD LOAN MODAL -->
 <div class="overlay" id="loanModalOverlay">
   <div class="modal">
@@ -1262,6 +1289,9 @@ tbody tr:hover .row-actions{opacity:1;}
             <button type="button" class="icon-btn" title="Sao chép" onclick="copyTelegramPreview()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
             </button>
+            <button type="button" class="icon-btn" title="Chỉnh cấu trúc tên Telegram" onclick="toggleTelegramTemplateEditor()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            </button>
 
             <div class="pronoun-manager" id="pronounManager">
               <div class="pronoun-manager-title">Danh sách xưng hô</div>
@@ -1272,7 +1302,7 @@ tbody tr:hover .row-actions{opacity:1;}
               </div>
             </div>
           </div>
-          <div class="field-hint">Cấu trúc: Xưng hô + Tên khách hàng + NAV quy ước (100.000.000 = 0.10T) + ID người quản lý. Xưng hô tự đề xuất theo năm sinh so với 1984 (sinh &lt;1984: Anh/Chị theo giới tính · sinh =1984: Bạn · sinh &gt;1984: Em) — bấm biểu tượng ⚙ để thêm/bớt lựa chọn xưng hô.</div>
+          <div class="field-hint">Cấu trúc mặc định: Xưng hô + Tên khách hàng - NAV quy ước (100.000.000 = 0.10T) - ID người quản lý. Xưng hô tự đề xuất theo năm sinh so với 1984 (sinh &lt;1984: Anh/Chị theo giới tính · sinh =1984: Bạn · sinh &gt;1984: Em) — bấm ⚙ để thêm/bớt lựa chọn xưng hô, bấm ✎ để tự chỉnh cấu trúc tên.</div>
         </div>
         <div class="form-field full"><label>Ghi chú</label><textarea placeholder="VD: KH ưu tiên, KH NV…" id="f_note"></textarea></div>
         <div class="form-field full">
@@ -1440,6 +1470,7 @@ async function checkAuthAndInit(){
 
   subscribeRealtime();
   loadLoanTemplate();
+  loadTelegramTemplate();
 }
 
 // ---------------- CẬP NHẬT THỜI GIAN THỰC (Supabase Realtime) ----------------
@@ -1715,7 +1746,7 @@ const CORE_COLUMNS = [
 const NAV_DATES = ["27/08/2026","31/07/2026","30/06/2026"];
 const FEE_DATES = ["27/08/2026","31/07/2026"];
 
-let visibleCols = new Set(CORE_COLUMNS.filter(c=>c.key!=='gender' && c.key!=='updated').map(c=>c.key));   // mặc định ẩn Giới tính + Ngày cập nhật, hiện các cột còn lại
+let visibleCols = new Set(CORE_COLUMNS.filter(c=>c.key!=='gender').map(c=>c.key));   // mặc định ẩn Giới tính, hiện các cột còn lại
 let visibleNavDates = new Set();                          // mặc định chưa hiện cột NAV theo ngày
 let visibleFeeDates = new Set();                          // mặc định chưa hiện cột Phí theo ngày
 
@@ -1780,7 +1811,7 @@ function cellValue(c, cust, idx){
   if(c.type==='fee') return cust.feeHistory[c.date] ? fmt(cust.feeHistory[c.date]) : '<span style="color:var(--text-muted);">—</span>';
   switch(c.key){
     case 'stt': return idx+1;
-    case 'name': return `<div class="cust-name" title="${cust.name}">${cust.name}</div>`;
+    case 'name': return `<div class="cust-name">${cust.name}</div>`;
     case 'stk': return cust.stk.startsWith('TMP')
       ? `${cust.stk} <span class="tag-chip" title="Chưa có STK thật">chưa mở TK</span>`
       : `${cust.stk}${cust.linkedTo?` <span class="tag-chip" title="Tài khoản Phụ của STK ${cust.linkedTo}">🔗 Phụ</span>`:''}`;
@@ -2897,12 +2928,63 @@ function navToTyUoc(rawNav){
   return ty.toFixed(2) + 'T';
 }
 
+// ---------------- CẤU TRÚC TÊN TELEGRAM (TÙY CHỈNH ĐƯỢC) ----------------
+const DEFAULT_TELEGRAM_TEMPLATE = "{xung_ho} {ten_kh} - {nav} - {id_ql}";
+let telegramNameTemplate = DEFAULT_TELEGRAM_TEMPLATE;
+
+async function loadTelegramTemplate(){
+  try {
+    const { data } = await sb.from('app_settings').select('value').eq('key','telegram_name_template').maybeSingle();
+    telegramNameTemplate = (data && data.value) ? data.value : DEFAULT_TELEGRAM_TEMPLATE;
+  } catch(e){ telegramNameTemplate = DEFAULT_TELEGRAM_TEMPLATE; }
+}
+function toggleTelegramTemplateEditor(){
+  const overlay = document.getElementById('telegramTemplateOverlay');
+  const opening = !overlay.classList.contains('active');
+  if(opening){
+    document.getElementById('telegramTemplateInput').value = telegramNameTemplate;
+    document.getElementById('telegramTemplateInput').oninput = renderTelegramTemplateSample;
+    renderTelegramTemplateSample();
+  }
+  overlay.classList.toggle('active', opening);
+}
+function renderTelegramTemplateSample(){
+  const tpl = document.getElementById('telegramTemplateInput').value || DEFAULT_TELEGRAM_TEMPLATE;
+  const sample = tpl
+    .replace(/\{xung_ho\}/g, 'Anh')
+    .replace(/\{ten_kh\}/g, 'Tuân')
+    .replace(/\{nav\}/g, '0.10T')
+    .replace(/\{id_ql\}/g, 'BDFV');
+  document.getElementById('telegramTemplatePreviewSample').textContent = sample;
+}
+async function saveTelegramTemplate(){
+  const text = document.getElementById('telegramTemplateInput').value.trim();
+  if(!text){ alert('Cấu trúc không được để trống.'); return; }
+  try {
+    const { error } = await sb.from('app_settings').upsert({ key:'telegram_name_template', value:text, updated_at:new Date().toISOString() });
+    if(error) throw error;
+    telegramNameTemplate = text;
+    updateTelegramPreview();
+    alert('Đã lưu cấu trúc tên Telegram — áp dụng ngay cho các khách hàng thêm/sửa sau này.');
+    toggleTelegramTemplateEditor();
+  } catch(err){ alert('Lỗi khi lưu cấu trúc: ' + err.message); }
+}
+function restoreDefaultTelegramTemplate(){
+  document.getElementById('telegramTemplateInput').value = DEFAULT_TELEGRAM_TEMPLATE;
+  renderTelegramTemplateSample();
+}
+
 function updateTelegramPreview(){
   const pronoun = document.getElementById('f_pronoun').value || 'Anh';
   const name = document.getElementById('f_name').value.trim() || 'Tên khách hàng';
   const nav = navToTyUoc(document.getElementById('f_nav').value);
   const managerId = document.getElementById('f_managerid').value.trim() || 'ID quản lý';
-  document.getElementById('f_telegram_preview').value = `${pronoun} ${name} ${nav} ${managerId}`;
+  const text = telegramNameTemplate
+    .replace(/\{xung_ho\}/g, pronoun)
+    .replace(/\{ten_kh\}/g, name)
+    .replace(/\{nav\}/g, nav)
+    .replace(/\{id_ql\}/g, managerId);
+  document.getElementById('f_telegram_preview').value = text;
 }
 function copyTelegramPreview(){
   const text = document.getElementById('f_telegram_preview').value;
@@ -3392,7 +3474,10 @@ function renderLoans(){
     byCustomer[stk].push(l);
   });
 
-  loansGroupsInitialized = true; // mặc định thu gọn tất cả — không tự mở rộng khi tải trang
+  if(!loansGroupsInitialized){
+    Object.keys(byCustomer).forEach(stk=>expandedLoanGroups.add(stk));
+    loansGroupsInitialized = true;
+  }
 
   const STATUS_OPTIONS = ["Chưa xử lý","Đã check","Đã liên hệ","KH xử lý xong","Công ty đã xử lý"];
 
