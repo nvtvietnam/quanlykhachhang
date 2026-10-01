@@ -31,7 +31,7 @@
 }
 *{box-sizing:border-box;}
 body{margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;}
-.num{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;font-weight:500;}
+.num{font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-weight:600;}
 a{color:inherit;text-decoration:none;}
 button{font-family:inherit;cursor:pointer;}
 
@@ -120,10 +120,10 @@ tbody td{padding:12px 14px;border-bottom:1px solid #F0F2F5;font-size:14px;vertic
 tbody td.num-col{text-align:right;}
 tbody tr:hover{background:#FAFBFF;}
 tbody tr{cursor:pointer;}
-.cust-name{font-weight:600;}
+.cust-name{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;}
 .cust-code{color:var(--text-muted);font-size:12px;}
 
-.badge{display:inline-flex;align-items:center;padding:2.5px 9px;border-radius:20px;font-size:11.5px;font-weight:600;}
+.badge{display:inline-flex;align-items:center;padding:2.5px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
 .badge-blue{background:var(--accent-soft);color:var(--accent-dark);}
 .badge-green{background:var(--green-soft);color:var(--green);}
 .badge-amber{background:var(--amber-soft);color:var(--amber);}
@@ -214,7 +214,7 @@ tbody tr:hover .row-actions{opacity:1;}
 .diff-new{color:var(--green);font-weight:600;}
 
 /* ---- rooms ---- */
-.room-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.room-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
 .room-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:border-color .3s;}
 .room-card-top{display:flex;justify-content:space-between;align-items:flex-start;}
 .room-name{font-size:14.5px;font-weight:700;}
@@ -248,16 +248,16 @@ tbody tr:hover .row-actions{opacity:1;}
 .tsi-sub{font-size:11.5px;color:var(--text-muted);margin-top:1px;}
 
 .nav-rong-box{margin-bottom:12px;}
-.nav-rong-value{font-size:22px;font-weight:700;color:var(--green);font-family:'IBM Plex Mono',monospace;}
+.nav-rong-value{font-size:22px;font-weight:700;color:var(--green);font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;}
 .transfer-date-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
 .transfer-table{width:100%;border-collapse:collapse;}
 .transfer-table th{font-size:11px;text-transform:uppercase;color:var(--text-muted);text-align:left;padding:7px 8px;border-bottom:1px solid var(--border);font-weight:600;}
 .transfer-table th.num-col{text-align:right;}
-.transfer-table td{font-size:12px;padding:7px 8px;border-bottom:1px solid #F3F4F6;font-family:'IBM Plex Mono',monospace;}
+.transfer-table td{font-size:12px;padding:7px 8px;border-bottom:1px solid #F3F4F6;font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;}
 .transfer-table td:first-child{font-family:'Inter',sans-serif;}
 .transfer-table td.num-col{text-align:right;}
 .transfer-table tr.total-row td{font-weight:700;font-family:'Inter',sans-serif;border-top:1.5px solid var(--border);border-bottom:none;}
-.transfer-table tr.total-row td.num-col{font-family:'IBM Plex Mono',monospace;font-weight:700;}
+.transfer-table tr.total-row td.num-col{font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-weight:700;}
 .tcell-pos{color:var(--green);}
 .tcell-neg{color:var(--red);}
 
@@ -280,7 +280,7 @@ tbody tr:hover .row-actions{opacity:1;}
 .room-comp-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
 .room-comp-bar-wrap{background:#F0F2F5;border-radius:6px;height:10px;overflow:hidden;}
 .room-comp-bar{height:100%;border-radius:6px;transition:width .3s;}
-.room-comp-count{font-size:12px;color:var(--text-muted);text-align:right;font-family:'IBM Plex Mono',monospace;}
+.room-comp-count{font-size:12px;color:var(--text-muted);text-align:right;font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;}
 .room-comp-nav{font-size:11px;color:var(--text-muted);margin-top:1px;}
 
 .donut-layout{display:flex;align-items:center;gap:22px;}
@@ -292,7 +292,7 @@ tbody tr:hover .row-actions{opacity:1;}
 .donut-legend-row{display:flex;align-items:center;gap:9px;}
 .donut-legend-row .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
 .donut-legend-row .name{font-size:13px;font-weight:600;flex:1;}
-.donut-legend-row .val{font-size:12.5px;font-weight:600;font-family:'IBM Plex Mono',monospace;}
+.donut-legend-row .val{font-size:12.5px;font-weight:600;font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;}
 .donut-legend-row .pct{font-size:11.5px;color:var(--text-muted);width:36px;text-align:right;}
 
 .tag-chip{font-size:11px;background:#F0F2F5;color:var(--text-muted);padding:3px 8px;border-radius:5px;}
@@ -357,7 +357,7 @@ tbody tr:hover .row-actions{opacity:1;}
 .loan-pill{display:flex;align-items:center;justify-content:space-between;width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:7px;background:#fff;font-size:12.5px;font-weight:600;margin-bottom:6px;cursor:pointer;color:var(--text);}
 .loan-pill:hover{background:#F5F7FA;}
 .loan-pill.active{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-dark);}
-.loan-pill .cnt{font-family:'IBM Plex Mono',monospace;font-weight:700;}
+.loan-pill .cnt{font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-weight:700;}
 .loan-sidebar-total{font-size:12.5px;color:var(--text-muted);margin-top:14px;padding-top:12px;border-top:1px solid var(--border);}
 .loan-main{min-width:0;}
 .bulk-checkbox{margin-right:8px;}
@@ -1069,6 +1069,7 @@ tbody tr:hover .row-actions{opacity:1;}
         <code>{xung_ho}</code> — xưng hô đã chọn ở trên &nbsp;·&nbsp;
         <code>{ten_goi}</code> — tên gọi, lấy từ cuối họ tên (VD "Nguyễn Văn An" → "An") &nbsp;·&nbsp;
         <code>{ten_kh}</code> — họ và tên đầy đủ &nbsp;·&nbsp;
+        <code>{stk}</code> — số tài khoản &nbsp;·&nbsp;
         <code>{nav}</code> — NAV quy ước (100.000.000 = 0.10T) &nbsp;·&nbsp;
         <code>{id_ql}</code> — ID người quản lý
       </div>
@@ -1251,8 +1252,8 @@ tbody tr:hover .row-actions{opacity:1;}
     <div class="modal-body">
       <div class="form-grid">
         <div class="form-field"><label>ID người quản lý *</label><input type="text" placeholder="VD: MG01" id="f_managerid" oninput="updateTelegramPreview()"></div>
-        <div class="form-field"><label>Số tài khoản <span style="font-weight:500;color:var(--text-muted);">(để trống nếu chưa mở TK)</span></label><input type="text" placeholder="VD: 091234" id="f_stk" maxlength="6"></div>
-        <div class="form-field"><label>Tên khách hàng *</label><input type="text" placeholder="Nguyễn Văn A" id="f_name" oninput="updateTelegramPreview()"></div>
+        <div class="form-field"><label>Số tài khoản <span style="font-weight:500;color:var(--text-muted);">(để trống nếu chưa mở TK)</span></label><input type="text" placeholder="VD: 091234" id="f_stk" maxlength="6" oninput="updateTelegramPreview()"></div>
+        <div class="form-field full"><label>Họ và tên KH <span style="font-weight:500;color:var(--text-muted);">(không bắt buộc — để trống nếu chưa biết họ tên đầy đủ, khi đó gõ thẳng Tên Telegram bên dưới)</span></label><input type="text" placeholder="Nguyễn Văn A — có thể để trống" id="f_name" oninput="onNameFieldChange()"></div>
         <div class="form-field">
           <label>Giới tính *</label>
           <select id="f_gender" onchange="onGenderChange()"><option value="Nam">Nam</option><option value="Nữ">Nữ</option><option value="Khác">Khác</option></select>
@@ -1303,7 +1304,7 @@ tbody tr:hover .row-actions{opacity:1;}
               </div>
             </div>
           </div>
-          <div class="field-hint">Cấu trúc mặc định: Xưng hô + Tên gọi (từ cuối trong họ tên, VD "Nguyễn Văn An" → "An") - NAV quy ước (100.000.000 = 0.10T) - ID người quản lý. Xưng hô tự đề xuất theo năm sinh so với 1984 (sinh &lt;1984: Anh/Chị theo giới tính · sinh =1984: Bạn · sinh &gt;1984: Em) — bấm ⚙ để thêm/bớt lựa chọn xưng hô, bấm ✎ để tự chỉnh cấu trúc tên.</div>
+          <div class="field-hint">Cấu trúc mặc định: Xưng hô + Tên gọi (từ cuối trong họ tên, VD "Nguyễn Văn An" → "An") - STK - NAV quy ước (100.000.000 = 0.10T) - ID người quản lý. Xưng hô tự đề xuất theo năm sinh so với 1984 (sinh &lt;1984: Anh/Chị theo giới tính · sinh =1984: Bạn · sinh &gt;1984: Em) — bấm ⚙ để thêm/bớt lựa chọn xưng hô, bấm ✎ để tự chỉnh cấu trúc tên.</div>
         </div>
         <div class="form-field full"><label>Ghi chú</label><textarea placeholder="VD: KH ưu tiên, KH NV…" id="f_note"></textarea></div>
         <div class="form-field full">
@@ -1747,7 +1748,7 @@ const CORE_COLUMNS = [
 const NAV_DATES = ["27/08/2026","31/07/2026","30/06/2026"];
 const FEE_DATES = ["27/08/2026","31/07/2026"];
 
-let visibleCols = new Set(CORE_COLUMNS.filter(c=>c.key!=='gender').map(c=>c.key));   // mặc định ẩn Giới tính, hiện các cột còn lại
+let visibleCols = new Set(CORE_COLUMNS.filter(c=>c.key!=='gender' && c.key!=='updated').map(c=>c.key));   // mặc định ẩn Giới tính + Ngày cập nhật, hiện các cột còn lại
 let visibleNavDates = new Set();                          // mặc định chưa hiện cột NAV theo ngày
 let visibleFeeDates = new Set();                          // mặc định chưa hiện cột Phí theo ngày
 
@@ -1812,7 +1813,7 @@ function cellValue(c, cust, idx){
   if(c.type==='fee') return cust.feeHistory[c.date] ? fmt(cust.feeHistory[c.date]) : '<span style="color:var(--text-muted);">—</span>';
   switch(c.key){
     case 'stt': return idx+1;
-    case 'name': return `<div class="cust-name">${cust.name}</div>`;
+    case 'name': return `<div class="cust-name" title="${cust.name}">${cust.name}</div>`;
     case 'stk': return cust.stk.startsWith('TMP')
       ? `${cust.stk} <span class="tag-chip" title="Chưa có STK thật">chưa mở TK</span>`
       : `${cust.stk}${cust.linkedTo?` <span class="tag-chip" title="Tài khoản Phụ của STK ${cust.linkedTo}">🔗 Phụ</span>`:''}`;
@@ -2503,7 +2504,7 @@ function openAddModal(prefillStk){
   telegramInput.style.background = '#F5F7FA';
   telegramInput.style.color = 'var(--text-muted)';
   telegramInput.placeholder = '';
-  updateTelegramPreview();
+  onNameFieldChange();
 }
 
 function renderRoomSelect(){
@@ -2687,7 +2688,7 @@ function openEditModal(stk){
   } else {
     dateWrap.style.display = 'none';
   }
-  if(c.status !== 'KH ưu tiên') updateTelegramPreview();
+  if(c.status !== 'KH ưu tiên') onNameFieldChange();
 }
 
 function editFromDetail(){
@@ -2702,11 +2703,11 @@ async function saveCustomer(){
   const status = document.getElementById('f_status').value;
   const telegramVal = document.getElementById('f_telegram_preview').value.trim();
 
-  if(status === 'KH ưu tiên'){
-    if(!telegramVal){ alert('Vui lòng nhập Tên Telegram cho KH ưu tiên.'); return; }
-    if(!name) name = telegramVal; // KH ưu tiên: Tên KH không bắt buộc, tự lấy theo Tên Telegram nếu để trống
-  } else {
-    if(!name){ alert('Vui lòng nhập Tên khách hàng.'); return; }
+  // Họ và tên KH không bắt buộc (mọi trạng thái) — khi để trống, bắt buộc phải có Tên Telegram
+  // (gõ tay) để thay thế, vì đó là tên hiển thị duy nhất còn lại cho KH này.
+  if(!name){
+    if(!telegramVal){ alert('Chưa nhập Họ và tên KH — vui lòng nhập Tên Telegram để thay thế.'); return; }
+    name = telegramVal;
   }
   if(stk && stk.length !== 6){ alert('Số tài khoản phải đúng 6 ký tự (hoặc để trống nếu KH chưa mở tài khoản).'); return; }
   if(!editingCustomerStk && !stk) stk = generateTempStk();
@@ -2825,10 +2826,7 @@ function onStatusChange(){
     telegramInput.style.color = 'var(--text)';
     telegramInput.placeholder = 'Nhập tên Telegram trực tiếp (VD: Anh Tuấn VIP)';
   } else {
-    telegramInput.readOnly = true;
-    telegramInput.style.background = '#F5F7FA';
-    telegramInput.style.color = 'var(--text-muted)';
-    updateTelegramPreview();
+    onNameFieldChange();
   }
 }
 function onRoomManualChange(){
@@ -2930,7 +2928,7 @@ function navToTyUoc(rawNav){
 }
 
 // ---------------- CẤU TRÚC TÊN TELEGRAM (TÙY CHỈNH ĐƯỢC) ----------------
-const DEFAULT_TELEGRAM_TEMPLATE = "{xung_ho} {ten_goi} - {nav} - {id_ql}";
+const DEFAULT_TELEGRAM_TEMPLATE = "{xung_ho} {ten_goi} - {stk} - {nav} - {id_ql}";
 let telegramNameTemplate = DEFAULT_TELEGRAM_TEMPLATE;
 
 // Họ tên đầy đủ -> Tên gọi (từ cuối cùng). VD: "Nguyễn Văn An" -> "An"
@@ -2961,7 +2959,8 @@ function renderTelegramTemplateSample(){
     .replace(/\{xung_ho\}/g, 'Anh')
     .replace(/\{ten_kh\}/g, 'Nguyễn Văn Tuân')
     .replace(/\{ten_goi\}/g, 'Tuân')
-    .replace(/\{nav\}/g, '0.10T')
+    .replace(/\{stk\}/g, '234817')
+    .replace(/\{nav\}/g, '4.20T')
     .replace(/\{id_ql\}/g, 'BDFV');
   document.getElementById('telegramTemplatePreviewSample').textContent = sample;
 }
@@ -2982,16 +2981,37 @@ function restoreDefaultTelegramTemplate(){
   renderTelegramTemplateSample();
 }
 
+function onNameFieldChange(){
+  // Họ và tên KH để trống (và không phải KH ưu tiên) → cho gõ thẳng Tên Telegram,
+  // vì không có tên để tự trích "tên gọi". Có tên trở lại → tự sinh lại như cũ.
+  const name = document.getElementById('f_name').value.trim();
+  const status = document.getElementById('f_status').value;
+  const telegramInput = document.getElementById('f_telegram_preview');
+  if(!name && status !== 'KH ưu tiên'){
+    telegramInput.readOnly = false;
+    telegramInput.style.background = '#fff';
+    telegramInput.style.color = 'var(--text)';
+    telegramInput.placeholder = 'Chưa có họ tên — nhập thẳng Tên Telegram (VD: Em Loan - 234817 - 1T - BDFV)';
+  } else if(status !== 'KH ưu tiên'){
+    telegramInput.readOnly = true;
+    telegramInput.style.background = '#F5F7FA';
+    telegramInput.style.color = 'var(--text-muted)';
+    telegramInput.placeholder = '';
+    updateTelegramPreview();
+  }
+}
 function updateTelegramPreview(){
   const pronoun = document.getElementById('f_pronoun').value || 'Anh';
   const name = document.getElementById('f_name').value.trim() || 'Tên khách hàng';
   const givenName = extractGivenName(name) || name;
+  const stk = document.getElementById('f_stk').value.trim() || 'STK';
   const nav = navToTyUoc(document.getElementById('f_nav').value);
   const managerId = document.getElementById('f_managerid').value.trim() || 'ID quản lý';
   const text = telegramNameTemplate
     .replace(/\{xung_ho\}/g, pronoun)
     .replace(/\{ten_kh\}/g, name)
     .replace(/\{ten_goi\}/g, givenName)
+    .replace(/\{stk\}/g, stk)
     .replace(/\{nav\}/g, nav)
     .replace(/\{id_ql\}/g, managerId);
   document.getElementById('f_telegram_preview').value = text;
@@ -3484,10 +3504,7 @@ function renderLoans(){
     byCustomer[stk].push(l);
   });
 
-  if(!loansGroupsInitialized){
-    Object.keys(byCustomer).forEach(stk=>expandedLoanGroups.add(stk));
-    loansGroupsInitialized = true;
-  }
+  loansGroupsInitialized = true; // mặc định thu gọn tất cả — không tự mở rộng khi tải trang
 
   const STATUS_OPTIONS = ["Chưa xử lý","Đã check","Đã liên hệ","KH xử lý xong","Công ty đã xử lý"];
 
@@ -4065,7 +4082,7 @@ function proceedFromMapping(){
 }
 
 function analyzeImportRows(type, rows, mapping){
-  const plan = { type, valid:[], errors:[], unmatched:[], newCount:0, changedCount:0, unchangedCount:0, unmatchedCount:0 };
+  const plan = { type, valid:[], errors:[], unmatched:[], newCount:0, changedCount:0, unchangedCount:0, unmatchedCount:0, skippedHasStkCount:0, assignedStkCount:0 };
   const seenStks = new Set(); // chặn trùng STK trong cùng 1 file — CHỈ áp dụng cho Danh sách KH (tạo mới)
   const seenLoanKeys = new Set(); // chặn trùng (account+ngày đến hạn) trong cùng 1 file
   const seenRightKeys = new Set(); // chặn trùng (stk+mã CP+ngày chốt) trong cùng 1 file
@@ -4134,8 +4151,28 @@ function analyzeImportRows(type, rows, mapping){
       const stkDupInFile = seenStks.has(stk);
       seenStks.add(stk);
 
-      const existing = customers.find(c=>c.stk===stk);
-      const item = {stk,name,telegram,nav,fee,managerId,gender,birthYear,roomRaw,status,mgmtStart,note,existing};
+      let existing = customers.find(c=>c.stk===stk);
+      let isAssignStk = false;
+
+      // Chưa khớp theo STK — thử khớp theo Tên Telegram (đợt import bổ sung STK+Tên sau,
+      // cho những KH trước đó mới chỉ có Room/Telegram, STK còn là tạm "TMP...").
+      if(!existing && telegram && !stkDupInFile){
+        const telegramMatches = customers.filter(c => c.telegram && c.telegram.trim() === telegram.trim());
+        if(telegramMatches.length === 1){
+          const match = telegramMatches[0];
+          if(match.stk && match.stk.startsWith('TMP')){
+            existing = match; isAssignStk = true;
+          } else {
+            // KH này khớp theo Tên Telegram nhưng ĐÃ có STK thật rồi — theo yêu cầu, bỏ qua hẳn, không sửa gì.
+            const item = {stk,name,telegram,nav,fee,managerId,roomRaw,status,mgmtStart,note,existing:match,isSkippedHasStk:true};
+            plan.valid.push(item);
+            plan.skippedHasStkCount++;
+            return;
+          }
+        }
+      }
+
+      const item = {stk,name,telegram,nav,fee,managerId,gender,birthYear,roomRaw,status,mgmtStart,note,existing,isAssignStk};
       if(stkDupInFile){
         item.isDupInFile = true; item.isNew = false;
         plan.unchangedCount++;
@@ -4155,7 +4192,7 @@ function analyzeImportRows(type, rows, mapping){
             item.targetRoomKey = targetRoomKey;
           }
         }
-        if(navChanged || feeChanged || item.roomChanged) plan.changedCount++; else plan.unchangedCount++;
+        if(isAssignStk || navChanged || feeChanged || item.roomChanged) plan.changedCount++; else plan.unchangedCount++;
       }
       plan.valid.push(item);
     }
@@ -4271,6 +4308,23 @@ function goToImportStep4(){
           <td><span class="badge badge-red">🔴 Trùng trong file — bị bỏ qua</span></td>
         </tr>`;
       }
+      if(it.isSkippedHasStk){
+        return `<tr style="background:#F3F4F6;">
+          <td>${it.stk}</td><td>${it.name}</td>
+          <td colspan="4" style="color:var(--text-muted);">Khớp Tên Telegram với <b>${it.existing.name}</b> (STK ${it.existing.stk}) — KH này đã có STK thật rồi</td>
+          <td class="num-col num">—</td>
+          <td><span class="badge badge-gray">Đã có STK — bỏ qua</span></td>
+        </tr>`;
+      }
+      if(it.isAssignStk){
+        return `<tr style="background:#E7F6EC;">
+          <td><span style="color:var(--text-muted);text-decoration:line-through;">${it.existing.stk}</span> → <b style="color:var(--green);">${it.stk}</b></td>
+          <td>${it.name}</td>
+          <td colspan="4" style="color:var(--text-muted);">Khớp theo Tên Telegram — gán STK thật, chuyển khỏi "KH ưu tiên"</td>
+          <td class="num-col num">${fmt(it.nav||0)}</td>
+          <td><span class="badge badge-green">Gán STK mới</span></td>
+        </tr>`;
+      }
       const navOld = it.existing ? fmt(it.existing.nav) : '—';
       const navNew = it.nav!==undefined ? fmt(it.nav) : '—';
       const feeOld = it.existing ? fmt(it.existing.fee) : '—';
@@ -4327,7 +4381,7 @@ async function confirmImportToDatabase(){
   const btn = document.getElementById('btnConfirmImport');
   btn.disabled = true; btn.textContent = 'Đang cập nhật…';
   const today = todayDdMmYyyy();
-  let newCount=0, updatedCount=0, errCount=0, roomUnmatchedCount=0, priorityFallbackCount=0;
+  let newCount=0, updatedCount=0, errCount=0, roomUnmatchedCount=0, priorityFallbackCount=0, assignedStkCount=0;
   try {
     if(plan.type==='nav' || plan.type==='bc12' || plan.type==='customerlist'){
       const syncRoomEl = document.getElementById('syncRoomOnUpdate');
@@ -4335,8 +4389,25 @@ async function confirmImportToDatabase(){
       let roomSyncedCount = 0;
       for(const it of plan.valid){
         if(it.isDupInFile) continue; // trùng STK trong file — không ghi gì cả, chỉ hiện đỏ để rà soát
+        if(it.isSkippedHasStk) continue; // KH khớp Tên Telegram nhưng đã có STK thật — không sửa gì theo yêu cầu
         try {
-          if(it.isNew){
+          if(it.isAssignStk){
+            const payload = {
+              account_number: it.stk,
+              updated_at: new Date().toISOString(),
+            };
+            if(it.name) payload.customer_name = it.name;
+            if(it.telegram) payload.telegram_name = it.telegram;
+            if(it.managerId) payload.manager_id = it.managerId;
+            if(it.existing.status === 'KH ưu tiên') payload.status = it.status || 'Đang quản lý';
+            if(it.navChanged){ payload.current_nav = it.nav; payload.nav_updated_at = toDbDate(today); }
+            if(it.feeChanged){ payload.current_fee = it.fee; payload.fee_updated_at = toDbDate(today); }
+            const { error } = await sb.from('customers').update(payload).eq('customer_id', it.existing.id);
+            if(error) throw error;
+            if(it.navChanged) await sb.from('nav_history').insert({customer_id:it.existing.id, update_date:toDbDate(today), nav:it.nav, source:'import_customerlist'});
+            if(it.feeChanged) await sb.from('fee_history').insert({customer_id:it.existing.id, update_date:toDbDate(today), fee:it.fee, source:'import_customerlist'});
+            updatedCount++; assignedStkCount++;
+          } else if(it.isNew){
             let roomId=null, specialRoom=null;
             if(plan.type==='customerlist' && it.roomRaw){
               if(SPECIAL_ROOMS.includes(it.roomRaw)) specialRoom = it.roomRaw;
@@ -4395,7 +4466,7 @@ async function confirmImportToDatabase(){
       }
       await sb.from('import_batches').insert({ import_type: plan.type, file_name: document.getElementById('fileInput').files[0]?.name, imported_by: currentUserEmail, total_rows: plan.valid.length+plan.errors.length+(plan.unmatchedCount||0), new_customers:newCount, updated_rows:updatedCount, error_rows: plan.errors.length+errCount });
       document.getElementById('importResultTitle').textContent = 'Đã cập nhật thành công';
-      document.getElementById('importResultSub').textContent = `${newCount} khách mới được thêm · ${updatedCount} khách được cập nhật NAV/phí${roomSyncedCount?` (trong đó ${roomSyncedCount} khách được đồng bộ lại Room)`:''}${plan.unmatchedCount?` · ${plan.unmatchedCount} STK trong file không tìm thấy trong hệ thống (xem lại ở bước Kiểm tra dữ liệu)`:''}${errCount?` · ${errCount} dòng lỗi khi ghi`:''}${roomUnmatchedCount?` · ${roomUnmatchedCount} dòng có tên Room không khớp, đã tự gán theo ngưỡng NAV`:''}${priorityFallbackCount?` · ${priorityFallbackCount} dòng thiếu STK đã lưu tạm dạng "KH ưu tiên" — vào Danh sách khách hàng lọc trạng thái này để rà soát và xóa dòng không đúng`:''} · Dữ liệu cũ vẫn được lưu giữ nguyên vẹn.`;
+      document.getElementById('importResultSub').textContent = `${newCount} khách mới được thêm · ${updatedCount} khách được cập nhật NAV/phí${assignedStkCount?` (trong đó ${assignedStkCount} khách được gán STK thật, chuyển khỏi "KH ưu tiên")`:''}${roomSyncedCount?` (trong đó ${roomSyncedCount} khách được đồng bộ lại Room)`:''}${plan.unmatchedCount?` · ${plan.unmatchedCount} STK trong file không tìm thấy trong hệ thống (xem lại ở bước Kiểm tra dữ liệu)`:''}${plan.skippedHasStkCount?` · ${plan.skippedHasStkCount} dòng khớp Tên Telegram nhưng KH đã có STK thật — đã bỏ qua, không sửa gì`:''}${errCount?` · ${errCount} dòng lỗi khi ghi`:''}${roomUnmatchedCount?` · ${roomUnmatchedCount} dòng có tên Room không khớp, đã tự gán theo ngưỡng NAV`:''}${priorityFallbackCount?` · ${priorityFallbackCount} dòng thiếu STK đã lưu tạm dạng "KH ưu tiên" — vào Danh sách khách hàng lọc trạng thái này để rà soát và xóa dòng không đúng`:''} · Dữ liệu cũ vẫn được lưu giữ nguyên vẹn.`;
     }
     else if(plan.type==='loan'){
       const toInsert = plan.valid.filter(it=>it.isNew).map(it=>({ account_number: it.account, due_date: toDbDate(it.dueDate), status:'Chưa xử lý', manager_id: it.managerId||null }));
