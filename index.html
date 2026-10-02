@@ -1438,14 +1438,22 @@ tbody tr:hover .row-actions{opacity:1;}
         <div class="form-field"><label>ID người quản lý *</label><input type="text" placeholder="VD: MG01" id="f_managerid" oninput="updateTelegramPreview()"></div>
         <div class="form-field"><label>Số tài khoản <span style="font-weight:500;color:var(--text-muted);">(để trống nếu chưa mở TK)</span></label><input type="text" placeholder="VD: 091234" id="f_stk" maxlength="6" oninput="updateTelegramPreview()"></div>
         <div class="form-field full"><label>Họ và tên KH <span style="font-weight:500;color:var(--text-muted);">(không bắt buộc — để trống nếu chưa biết họ tên đầy đủ, khi đó gõ thẳng Tên Telegram bên dưới)</span></label><input type="text" placeholder="Nguyễn Văn A — có thể để trống" id="f_name" oninput="onNameFieldChange()"></div>
-        <div class="form-field full">
-          <label>Tên Telegram <span style="font-weight:500;color:var(--text-muted);">(gõ tay — đây là trường dữ liệu riêng, không tự sinh; ô bên dưới chỉ hiện gợi ý mờ theo cấu trúc, bạn gõ hoặc sửa lại tuỳ ý)</span></label>
+        <div class="form-field">
+          <label>Giới tính *</label>
+          <select id="f_gender" onchange="onGenderChange()"><option value="Nam">Nam</option><option value="Nữ">Nữ</option><option value="Khác">Khác</option></select>
+        </div>
+        <div class="form-field"><label>Năm sinh</label><input type="number" placeholder="VD: 1985" id="f_birthyear" min="1930" max="2020" oninput="onBirthYearChange()"></div>
+        <div class="form-field"><label>NAV hiện tại (VNĐ) *</label><input type="text" placeholder="500.000.000" id="f_nav" oninput="updateTelegramPreview()"></div>
+        <div class="form-field"><label>Phí tháng hiện tại (VNĐ) *</label><input type="text" placeholder="2.000.000" id="f_fee"></div>
+        <div class="form-field"><label>Ngày bắt đầu quản lý</label><input type="text" placeholder="dd/mm/yyyy — để trống = hôm nay" id="f_mgmtstart"></div>
+        <div class="form-field full" style="background:var(--accent-soft);border:1.5px solid var(--accent);border-radius:10px;padding:12px 14px;margin:2px 0;">
+          <label style="color:var(--accent-dark);font-weight:700;">★ Tên Telegram <span style="font-weight:500;color:var(--text-muted);">(gõ tay — đây là trường dữ liệu riêng, không tự sinh; ô bên dưới chỉ hiện gợi ý mờ theo cấu trúc, bạn gõ hoặc sửa lại tuỳ ý)</span></label>
           <div style="display:flex;gap:8px;align-items:center;position:relative;">
             <select id="f_pronoun" style="width:110px;flex-shrink:0;" onchange="updateTelegramPreview()"></select>
             <button type="button" class="icon-btn" title="Thêm / bớt lựa chọn xưng hô" onclick="togglePronounManager()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             </button>
-            <input type="text" id="f_telegram_preview" placeholder="Gõ tên Telegram, hoặc để trống xem gợi ý mờ…" style="flex:1;">
+            <input type="text" id="f_telegram_preview" placeholder="Gõ tên Telegram, hoặc để trống xem gợi ý mờ…" style="flex:1;font-weight:600;">
             <button type="button" class="icon-btn" title="Dùng gợi ý hiện tại điền vào ô" onclick="applyTelegramSuggestion()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
             </button>
@@ -1467,14 +1475,6 @@ tbody tr:hover .row-actions{opacity:1;}
           </div>
           <div class="field-hint">Đây là trường dữ liệu lưu riêng, bạn gõ tay hoặc bấm ✓ để lấy gợi ý. Gợi ý (chữ mờ) ghép theo cấu trúc: Xưng hô + Tên gọi (từ cuối trong họ tên, VD "Nguyễn Văn An" → "An") - STK - NAV quy ước (100.000.000 = 0.10T) - ID người quản lý. Bấm ⚙ để thêm/bớt lựa chọn xưng hô, bấm ✎ để tự chỉnh cấu trúc gợi ý.</div>
         </div>
-        <div class="form-field">
-          <label>Giới tính *</label>
-          <select id="f_gender" onchange="onGenderChange()"><option value="Nam">Nam</option><option value="Nữ">Nữ</option><option value="Khác">Khác</option></select>
-        </div>
-        <div class="form-field"><label>Năm sinh</label><input type="number" placeholder="VD: 1985" id="f_birthyear" min="1930" max="2020" oninput="onBirthYearChange()"></div>
-        <div class="form-field"><label>NAV hiện tại (VNĐ) *</label><input type="text" placeholder="500.000.000" id="f_nav" oninput="updateTelegramPreview()"></div>
-        <div class="form-field"><label>Phí tháng hiện tại (VNĐ) *</label><input type="text" placeholder="2.000.000" id="f_fee"></div>
-        <div class="form-field"><label>Ngày bắt đầu quản lý</label><input type="text" placeholder="dd/mm/yyyy — để trống = hôm nay" id="f_mgmtstart"></div>
         <div class="form-field">
           <label>Nhóm / Room *</label>
           <select id="f_room" onchange="onRoomManualChange()"></select>
@@ -5693,7 +5693,7 @@ async function confirmDeleteFiltered(){
   if(currentRole !== 'owner'){ alert('Chỉ Owner mới có quyền xóa khách hàng.'); return; }
   const list = getFilteredSortedList();
   if(!list.length){ alert('Không có khách hàng nào khớp bộ lọc hiện tại.'); closeDeleteFilteredModal(); return; }
-  const ids = list.map(c=>c.customer_id);
+  const ids = list.map(c=>c.id);
   const btn = document.getElementById('btnConfirmDeleteFiltered');
   const resultEl = document.getElementById('deleteFilteredResult');
   btn.disabled = true;
