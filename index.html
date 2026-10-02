@@ -1828,6 +1828,21 @@ async function loadAllData(){
   expandedLoanGroups = new Set();
   marginCallsGroupsInitialized = false;
   expandedMarginCallGroups = new Set();
+
+  renderRoomFilterOptions();
+}
+
+// Dựng lại danh sách Room trong bộ lọc "Room" ở Danh sách khách hàng — gọi lại mỗi khi dữ liệu Room
+// được tải/đổi tên/thêm/xóa (loadAllData() gọi hàm này ở cuối) để tên Room luôn khớp dữ liệu mới nhất.
+function renderRoomFilterOptions(){
+  const sel = document.getElementById('filterRoom');
+  if(!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Tất cả Room</option>'
+    + rooms.map(r=>`<option value="${r.id}">${r.name}</option>`).join('')
+    + SPECIAL_ROOMS.map(s=>`<option value="${s}">${s}</option>`).join('');
+  // Giữ lại lựa chọn đang chọn nếu Room đó vẫn còn tồn tại; nếu đã bị xóa thì về "Tất cả Room"
+  if([...sel.options].some(o=>o.value===current)) sel.value = current;
 }
 
 sb.auth.onAuthStateChange((event, session)=>{
@@ -1936,10 +1951,10 @@ function openImport(){ switchView('import'); goImportStep(1); }
 // ---------------- CỘT HIỂN THỊ (tuỳ chỉnh được) ----------------
 const FIXED_COLUMNS = [
   {key:'stt',  label:'STT'},
-  {key:'name', label:'Tên khách hàng'},
   {key:'stk',  label:'STK'},
 ];
 const CORE_COLUMNS = [
+  {key:'name', label:'Họ và tên KH'},
   {key:'telegram', label:'Tên Telegram'},
   {key:'nav_latest', label:'NAV (mới nhất)', sortable:true, num:true},
   {key:'fee_latest', label:'Phí (mới nhất)', sortable:true, num:true},
@@ -2205,6 +2220,7 @@ function renderCustomers(){
           <button class="icon-btn" title="Soạn tin nhắn" onclick="event.stopPropagation();openMessageModal('room', '${c.stk}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
           <button class="icon-btn" title="Sửa" onclick="event.stopPropagation();openEditModal('${c.stk}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>
           <button class="icon-btn" title="Xem chi tiết" onclick="openDetail('${c.code}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          ${currentRole==='owner' ? `<button class="icon-btn" title="Xóa khách hàng này" style="color:var(--red);" onclick="event.stopPropagation();deleteSingleCustomer('${c.stk}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>` : ''}
         </div>
       </td>
     </tr>`;
@@ -2242,9 +2258,6 @@ function exportToExcel(){
   const dateStr = new Date().toISOString().slice(0,10);
   XLSX.writeFile(wb, `Danh_sach_KH_${dateStr}.xlsx`);
 }
-
-// populate room filter
-document.getElementById('filterRoom').innerHTML += rooms.map(r=>`<option value="${r.id}">${r.name}</option>`).join('') + SPECIAL_ROOMS.map(s=>`<option value="${s}">${s}</option>`).join('');
 
 // ---------------- DASHBOARD ----------------
 const AVATAR_COLORS = ['#2358E8','#0E9F6E','#D97706','#DC2626','#7C3AED','#0891B2','#DB2777'];
@@ -2330,19 +2343,6 @@ function computeAlerts(){
   const soonRights = rights.filter(r=>{ const d=daysUntil(r.deadline); return d>=0 && d<=7 && (r.status==='Chưa đăng ký'||r.status==='Đã đăng ký'); });
   if(soonRights.length) rows.push({icon:'purple', emoji:'📈', title:'Quyền mua sắp hết hạn đăng ký', sub:`${soonRights.length} quyền mua trong 7 ngày tới`, view:'rights'});
 
-  // Gợi ý trùng người: tên giống nhau, STK khác nhau, chưa liên kết
-  const nameMap = {};
-  customers.forEach(c=>{
-    if(!nameMap[c.name]) nameMap[c.name] = [];
-    nameMap[c.name].push(c);
-  });
-  Object.values(nameMap).forEach(group=>{
-    if(group.length < 2) return;
-    const unlinkedPairExists = group.some((c,i)=> group.some((c2,j)=> i!==j && c.linkedTo!==c2.stk && c2.linkedTo!==c.stk));
-    if(unlinkedPairExists){
-      rows.push({icon:'purple', emoji:'🔗', title:'Có thể trùng người — tên giống nhau, STK khác nhau', sub:`"${group[0].name}": ${group.map(c=>c.stk).join(', ')}. Kiểm tra và liên kết nếu đúng là 1 người.`, view:'customers'});
-    }
-  });
   return rows;
 }
 
@@ -5720,6 +5720,25 @@ async function confirmDeleteFiltered(){
     alert('Lỗi khi xóa khách hàng: ' + err.message);
   } finally {
     btn.disabled = false;
+  }
+}
+
+// ---------------- XÓA 1 KHÁCH HÀNG (từ nút ở mỗi dòng, Owner only) ----------------
+async function deleteSingleCustomer(stk){
+  if(currentRole !== 'owner'){ alert('Chỉ Owner mới có quyền xóa khách hàng.'); return; }
+  const c = customers.find(x=>x.stk===stk);
+  if(!c) return;
+  const label = c.name || c.telegram || c.stk;
+  if(!confirm(`Xóa vĩnh viễn khách hàng "${label}" (STK ${c.stk})? Dữ liệu liên quan (lịch sử NAV/phí/phòng, khoản vay, RRUB/Call Margin, quyền mua...) cũng sẽ bị xóa theo. Thao tác này không thể hoàn tác.`)) return;
+  try {
+    const { error } = await sb.from('customers').delete().eq('customer_id', c.id);
+    if(error) throw error;
+    await loadAllData();
+    renderCustomers();
+    renderDashboard();
+    renderRooms();
+  } catch(err){
+    alert('Lỗi khi xóa (có thể do bạn không phải Owner): ' + err.message);
   }
 }
 // (Khởi tạo thật sự diễn ra trong checkAuthAndInit() sau khi đăng nhập + tải dữ liệu xong)
