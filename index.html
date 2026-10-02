@@ -622,6 +622,10 @@ tbody tr:hover .row-actions{opacity:1;}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Xuất Excel
           </button>
+          <button class="btn btn-secondary btn-sm" id="btnDeleteFiltered" style="color:var(--red);border-color:#F3C6C6;" onclick="openDeleteFilteredModal()" title="Xóa toàn bộ khách hàng đang khớp bộ lọc hiện tại (Room/Trạng thái/Tìm kiếm/Bộ lọc nâng cao)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+            Xóa theo bộ lọc
+          </button>
 
           <span class="tag-chip" id="resultCount">8 khách hàng</span>
         </div>
@@ -995,6 +999,28 @@ tbody tr:hover .row-actions{opacity:1;}
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeWipeConfirm()">Hủy</button>
       <button class="btn btn-primary" style="background:var(--red);" onclick="confirmWipeData()">Xóa vĩnh viễn</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE FILTERED CUSTOMERS CONFIRM MODAL -->
+<div class="overlay" id="deleteFilteredModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" style="color:var(--red);">⚠️ Xóa khách hàng theo bộ lọc</div>
+      <button class="close-x" onclick="closeDeleteFilteredModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13.5px;">Bộ lọc hiện tại đang khớp <b id="deleteFilteredCount">0</b> khách hàng:</p>
+      <div id="deleteFilteredSummary" style="font-size:13px;background:var(--bg-soft,#F7F8FA);border:1px solid var(--border);border-radius:7px;padding:9px 11px;margin:6px 0 10px;line-height:1.6;"></div>
+      <p style="font-size:13.5px;">Hành động này sẽ <b>xóa vĩnh viễn</b> toàn bộ khách hàng khớp bộ lọc trên, cùng dữ liệu liên quan (lịch sử NAV/phí/phòng, khoản vay, RRUB/Call Margin, quyền mua...). Không thể hoàn tác.</p>
+      <p style="font-size:13.5px;">Gõ chính xác <b>XOA KHACH HANG</b> vào ô bên dưới để xác nhận:</p>
+      <input type="text" id="deleteFilteredConfirmInput" placeholder="XOA KHACH HANG" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:7px;font-size:13.5px;margin-top:6px;">
+      <div id="deleteFilteredResult" style="font-size:13px;margin-top:8px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeDeleteFilteredModal()">Hủy</button>
+      <button class="btn btn-primary" id="btnConfirmDeleteFiltered" style="background:var(--red);" onclick="confirmDeleteFiltered()">Xóa vĩnh viễn</button>
     </div>
   </div>
 </div>
@@ -1412,6 +1438,35 @@ tbody tr:hover .row-actions{opacity:1;}
         <div class="form-field"><label>ID người quản lý *</label><input type="text" placeholder="VD: MG01" id="f_managerid" oninput="updateTelegramPreview()"></div>
         <div class="form-field"><label>Số tài khoản <span style="font-weight:500;color:var(--text-muted);">(để trống nếu chưa mở TK)</span></label><input type="text" placeholder="VD: 091234" id="f_stk" maxlength="6" oninput="updateTelegramPreview()"></div>
         <div class="form-field full"><label>Họ và tên KH <span style="font-weight:500;color:var(--text-muted);">(không bắt buộc — để trống nếu chưa biết họ tên đầy đủ, khi đó gõ thẳng Tên Telegram bên dưới)</span></label><input type="text" placeholder="Nguyễn Văn A — có thể để trống" id="f_name" oninput="onNameFieldChange()"></div>
+        <div class="form-field full">
+          <label>Tên Telegram <span style="font-weight:500;color:var(--text-muted);">(gõ tay — đây là trường dữ liệu riêng, không tự sinh; ô bên dưới chỉ hiện gợi ý mờ theo cấu trúc, bạn gõ hoặc sửa lại tuỳ ý)</span></label>
+          <div style="display:flex;gap:8px;align-items:center;position:relative;">
+            <select id="f_pronoun" style="width:110px;flex-shrink:0;" onchange="updateTelegramPreview()"></select>
+            <button type="button" class="icon-btn" title="Thêm / bớt lựa chọn xưng hô" onclick="togglePronounManager()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+            <input type="text" id="f_telegram_preview" placeholder="Gõ tên Telegram, hoặc để trống xem gợi ý mờ…" style="flex:1;">
+            <button type="button" class="icon-btn" title="Dùng gợi ý hiện tại điền vào ô" onclick="applyTelegramSuggestion()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
+            <button type="button" class="icon-btn" title="Sao chép" onclick="copyTelegramPreview()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+            <button type="button" class="icon-btn" title="Chỉnh cấu trúc gợi ý tên Telegram" onclick="toggleTelegramTemplateEditor()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            </button>
+
+            <div class="pronoun-manager" id="pronounManager">
+              <div class="pronoun-manager-title">Danh sách xưng hô</div>
+              <div class="pronoun-chip-list" id="pronounManagerList"></div>
+              <div class="pronoun-add-row">
+                <input type="text" id="newPronounInput" placeholder="Thêm xưng hô mới…" onkeydown="if(event.key==='Enter'){event.preventDefault();addPronoun();}">
+                <button type="button" class="btn btn-primary btn-sm" onclick="addPronoun()">Thêm</button>
+              </div>
+            </div>
+          </div>
+          <div class="field-hint">Đây là trường dữ liệu lưu riêng, bạn gõ tay hoặc bấm ✓ để lấy gợi ý. Gợi ý (chữ mờ) ghép theo cấu trúc: Xưng hô + Tên gọi (từ cuối trong họ tên, VD "Nguyễn Văn An" → "An") - STK - NAV quy ước (100.000.000 = 0.10T) - ID người quản lý. Bấm ⚙ để thêm/bớt lựa chọn xưng hô, bấm ✎ để tự chỉnh cấu trúc gợi ý.</div>
+        </div>
         <div class="form-field">
           <label>Giới tính *</label>
           <select id="f_gender" onchange="onGenderChange()"><option value="Nam">Nam</option><option value="Nữ">Nữ</option><option value="Khác">Khác</option></select>
@@ -1437,32 +1492,6 @@ tbody tr:hover .row-actions{opacity:1;}
           <label>Ngày remove <span style="font-weight:500;color:var(--text-muted);">(hệ thống tự ghi nhận)</span></label>
           <input type="text" id="f_removed_date" readonly style="background:#F5F7FA;color:var(--text-muted);">
           <div class="field-hint">Ghi lý do/chi tiết KH chuyển đi vào ô "Ghi chú" bên dưới.</div>
-        </div>
-        <div class="form-field full">
-          <label>Tên Telegram <span style="font-weight:500;color:var(--text-muted);">(tự sinh, có thể chỉnh xưng hô)</span></label>
-          <div style="display:flex;gap:8px;align-items:center;position:relative;">
-            <select id="f_pronoun" style="width:110px;flex-shrink:0;" onchange="updateTelegramPreview()"></select>
-            <button type="button" class="icon-btn" title="Thêm / bớt lựa chọn xưng hô" onclick="togglePronounManager()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            </button>
-            <input type="text" id="f_telegram_preview" readonly style="flex:1;background:#F5F7FA;color:var(--text-muted);font-weight:600;">
-            <button type="button" class="icon-btn" title="Sao chép" onclick="copyTelegramPreview()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            </button>
-            <button type="button" class="icon-btn" title="Chỉnh cấu trúc tên Telegram" onclick="toggleTelegramTemplateEditor()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-            </button>
-
-            <div class="pronoun-manager" id="pronounManager">
-              <div class="pronoun-manager-title">Danh sách xưng hô</div>
-              <div class="pronoun-chip-list" id="pronounManagerList"></div>
-              <div class="pronoun-add-row">
-                <input type="text" id="newPronounInput" placeholder="Thêm xưng hô mới…" onkeydown="if(event.key==='Enter'){event.preventDefault();addPronoun();}">
-                <button type="button" class="btn btn-primary btn-sm" onclick="addPronoun()">Thêm</button>
-              </div>
-            </div>
-          </div>
-          <div class="field-hint">Cấu trúc mặc định: Xưng hô + Tên gọi (từ cuối trong họ tên, VD "Nguyễn Văn An" → "An") - STK - NAV quy ước (100.000.000 = 0.10T) - ID người quản lý. Xưng hô tự đề xuất theo năm sinh so với 1984 (sinh &lt;1984: Anh/Chị theo giới tính · sinh =1984: Bạn · sinh &gt;1984: Em) — bấm ⚙ để thêm/bớt lựa chọn xưng hô, bấm ✎ để tự chỉnh cấu trúc tên.</div>
         </div>
         <div class="form-field full"><label>Ghi chú</label><textarea placeholder="VD: KH ưu tiên, KH NV…" id="f_note"></textarea></div>
         <div class="form-field full">
@@ -2697,12 +2726,8 @@ function openAddModal(prefillStk){
   document.getElementById('f_note').value = '';
   document.getElementById('f_removed_date_wrap').style.display = 'none';
   renderLinkedSelect(null);
-  const telegramInput = document.getElementById('f_telegram_preview');
-  telegramInput.readOnly = true;
-  telegramInput.style.background = '#F5F7FA';
-  telegramInput.style.color = 'var(--text-muted)';
-  telegramInput.placeholder = '';
-  onNameFieldChange();
+  document.getElementById('f_telegram_preview').value = '';
+  updateTelegramPreview();
 }
 
 function renderRoomSelect(){
@@ -2869,24 +2894,14 @@ function openEditModal(stk){
   document.getElementById('f_pronoun').value = c.pronoun || '';
   renderLinkedSelect(c.stk, c.linkedTo);
   const dateWrap = document.getElementById('f_removed_date_wrap');
-  const telegramInput = document.getElementById('f_telegram_preview');
-  if(c.status === 'KH ưu tiên'){
-    telegramInput.readOnly = false;
-    telegramInput.style.background = '#fff';
-    telegramInput.style.color = 'var(--text)';
-    telegramInput.value = c.telegram || '';
-  } else {
-    telegramInput.readOnly = true;
-    telegramInput.style.background = '#F5F7FA';
-    telegramInput.style.color = 'var(--text-muted)';
-  }
+  document.getElementById('f_telegram_preview').value = c.telegram || '';
+  updateTelegramPreview();
   if(c.status === 'Đã chuyển đi'){
     dateWrap.style.display = 'block';
     document.getElementById('f_removed_date').value = c.mgmtEnd || new Date().toLocaleDateString('vi-VN');
   } else {
     dateWrap.style.display = 'none';
   }
-  if(c.status !== 'KH ưu tiên') onNameFieldChange();
 }
 
 function editFromDetail(){
@@ -3006,7 +3021,6 @@ function onStatusChange(){
   const status = document.getElementById('f_status').value;
   const roomSel = document.getElementById('f_room');
   const dateWrap = document.getElementById('f_removed_date_wrap');
-  const telegramInput = document.getElementById('f_telegram_preview');
   if(status === 'Đã chuyển đi'){
     roomSel.value = 'Remove';
     dateWrap.style.display = 'block';
@@ -3014,16 +3028,7 @@ function onStatusChange(){
   } else {
     dateWrap.style.display = 'none';
   }
-  if(status === 'KH ưu tiên'){
-    // KH ưu tiên: chỉ bắt buộc Tên Telegram, các trường khác không bắt buộc —
-    // cho gõ tay trực tiếp vì có thể chưa đủ dữ liệu (STK, NAV...) để tự sinh tên.
-    telegramInput.readOnly = false;
-    telegramInput.style.background = '#fff';
-    telegramInput.style.color = 'var(--text)';
-    telegramInput.placeholder = 'Nhập tên Telegram trực tiếp (VD: Anh Tuấn VIP)';
-  } else {
-    onNameFieldChange();
-  }
+  updateTelegramPreview();
 }
 function onRoomManualChange(){
   const room = document.getElementById('f_room').value;
@@ -3178,42 +3183,38 @@ function restoreDefaultTelegramTemplate(){
 }
 
 function onNameFieldChange(){
-  // Họ và tên KH để trống (và không phải KH ưu tiên) → cho gõ thẳng Tên Telegram,
-  // vì không có tên để tự trích "tên gọi". Có tên trở lại → tự sinh lại như cũ.
-  const name = document.getElementById('f_name').value.trim();
-  const status = document.getElementById('f_status').value;
-  const telegramInput = document.getElementById('f_telegram_preview');
-  if(!name && status !== 'KH ưu tiên'){
-    telegramInput.readOnly = false;
-    telegramInput.style.background = '#fff';
-    telegramInput.style.color = 'var(--text)';
-    telegramInput.placeholder = 'Chưa có họ tên — nhập thẳng Tên Telegram (VD: Em Loan - 234817 - 1T - BDFV)';
-  } else if(status !== 'KH ưu tiên'){
-    telegramInput.readOnly = true;
-    telegramInput.style.background = '#F5F7FA';
-    telegramInput.style.color = 'var(--text-muted)';
-    telegramInput.placeholder = '';
-    updateTelegramPreview();
-  }
+  // Tên Telegram là trường dữ liệu riêng, gõ tay — không còn tự sinh/khoá ô theo tên nữa.
+  // Chỉ cần làm mới gợi ý (chữ mờ, placeholder) mỗi khi Họ và tên KH đổi.
+  updateTelegramPreview();
 }
-function updateTelegramPreview(){
+// Chuỗi gợi ý theo cấu trúc hiện tại (dùng cho cả placeholder và nút "dùng gợi ý")
+function buildTelegramSuggestion(){
   const pronoun = document.getElementById('f_pronoun').value || 'Anh';
   const name = document.getElementById('f_name').value.trim() || 'Tên khách hàng';
   const givenName = extractGivenName(name) || name;
   const stk = document.getElementById('f_stk').value.trim() || 'STK';
   const nav = navToTyUoc(document.getElementById('f_nav').value);
   const managerId = document.getElementById('f_managerid').value.trim() || 'ID quản lý';
-  const text = telegramNameTemplate
+  return telegramNameTemplate
     .replace(/\{xung_ho\}/g, pronoun)
     .replace(/\{ten_kh\}/g, name)
     .replace(/\{ten_goi\}/g, givenName)
     .replace(/\{stk\}/g, stk)
     .replace(/\{nav\}/g, nav)
     .replace(/\{id_ql\}/g, managerId);
-  document.getElementById('f_telegram_preview').value = text;
+}
+// Tên Telegram là trường dữ liệu riêng (gõ tay, lưu thẳng) — hàm này CHỈ cập nhật placeholder
+// (chữ mờ gợi ý), không bao giờ ghi đè giá trị thật đang có trong ô.
+function updateTelegramPreview(){
+  document.getElementById('f_telegram_preview').placeholder = buildTelegramSuggestion();
+}
+// Bấm nút ✓ để lấy gợi ý hiện tại điền thẳng vào ô — vẫn sửa lại được bình thường sau đó.
+function applyTelegramSuggestion(){
+  document.getElementById('f_telegram_preview').value = buildTelegramSuggestion();
 }
 function copyTelegramPreview(){
-  const text = document.getElementById('f_telegram_preview').value;
+  const input = document.getElementById('f_telegram_preview');
+  const text = input.value.trim() || input.placeholder;
   navigator.clipboard.writeText(text).then(()=>{
     alert('Đã sao chép: ' + text);
   }).catch(()=>{
@@ -4845,12 +4846,14 @@ function analyzeImportRows(type, rows, mapping){
       let name = String(getMapped(row,mapping,'name')).trim();
       const telegram = String(getMapped(row,mapping,'telegram')).trim();
       const managerId = String(getMapped(row,mapping,'managerId')).trim();
-      const gender = String(getMapped(row,mapping,'gender')).trim() || 'Khác';
+      const genderRaw = String(getMapped(row,mapping,'gender')).trim();
+      const gender = genderRaw || 'Khác';
       const birthYear = parseInt(getMapped(row,mapping,'birthYear')) || null;
       const nav = parseNum(getMapped(row,mapping,'nav'));
       const fee = parseNum(getMapped(row,mapping,'fee'));
       const roomRaw = String(getMapped(row,mapping,'room')).trim();
-      const status = String(getMapped(row,mapping,'status')).trim() || 'Đang quản lý';
+      const statusRaw = String(getMapped(row,mapping,'status')).trim();
+      const status = statusRaw || 'Đang quản lý';
       const mgmtStart = String(getMapped(row,mapping,'mgmtStart')).trim();
       const note = String(getMapped(row,mapping,'note')).trim();
       // LƯU Ý: "Tên KH" và "Tên Telegram" là 2 trường tách biệt — không copy Telegram vào Tên KH.
@@ -4902,9 +4905,22 @@ function analyzeImportRows(type, rows, mapping){
         plan.unchangedCount++;
       } else if(!existing){ item.isNew = true; plan.newCount++; }
       else {
-        const navChanged = nav!==undefined && nav !== existing.nav;
-        const feeChanged = fee!==undefined && fee !== existing.fee;
+        // Quy tắc cập nhật theo CỘT ĐÃ MAP (chọn ở bước gán cột) — không theo việc ô đó có trống hay không:
+        // Cột nào bạn ĐÃ map ở bước nhập, trường đó luôn được ghi đè bằng dữ liệu mới nhất trong file,
+        // kể cả khi ô đó để trống (sẽ xóa dữ liệu cũ của trường đó). Cột nào KHÔNG map thì giữ nguyên dữ liệu cũ.
+        // Riêng Giới tính/Trạng thái bắt buộc phải có giá trị hợp lệ (hệ thống không cho lưu rỗng) nên nếu map cột
+        // nhưng để trống ở dòng nào, dòng đó vẫn giữ nguyên giá trị cũ để tránh lỗi dữ liệu.
+        const navChanged = !!mapping.nav && nav !== existing.nav;
+        const feeChanged = !!mapping.fee && fee !== existing.fee;
         item.navChanged = navChanged; item.feeChanged = feeChanged;
+
+        item.nameChanged = !!mapping.name && name !== existing.name;
+        item.telegramChanged = !!mapping.telegram && telegram !== (existing.telegram||'');
+        item.managerIdChanged = !!mapping.managerId && managerId !== (existing.managerId||'');
+        item.genderChanged = !!genderRaw && genderRaw !== (existing.gender||'');
+        item.birthYearChanged = !!mapping.birthYear && birthYear !== existing.birthYear;
+        item.statusChanged = !!statusRaw && statusRaw !== existing.status;
+        item.noteChanged = !!mapping.note && note !== (existing.note||'');
 
         // Xác định Room mục tiêu từ file (nếu có) để so sánh với Room hiện tại của KH
         if(roomRaw){
@@ -4916,7 +4932,10 @@ function analyzeImportRows(type, rows, mapping){
             item.targetRoomKey = targetRoomKey;
           }
         }
-        if(isAssignStk || navChanged || feeChanged || item.roomChanged) plan.changedCount++; else plan.unchangedCount++;
+        const anyFieldChanged = isAssignStk || navChanged || feeChanged || item.roomChanged
+          || item.nameChanged || item.telegramChanged || item.managerIdChanged
+          || item.genderChanged || item.birthYearChanged || item.statusChanged || item.noteChanged;
+        if(anyFieldChanged) plan.changedCount++; else plan.unchangedCount++;
       }
       plan.valid.push(item);
     }
@@ -5191,10 +5210,21 @@ async function confirmImportToDatabase(){
             if(it.fee) await sb.from('fee_history').insert({customer_id:ins.customer_id, update_date:toDbDate(today), fee:it.fee, source: plan.type==='bc12'?'import_bc12':'import_nav'});
             newCount++;
             if(it.isPriorityFallback) priorityFallbackCount++;
-          } else if(it.navChanged || it.feeChanged || (syncRoom && it.roomChanged)){
+          } else if(it.navChanged || it.feeChanged || (syncRoom && it.roomChanged)
+              || it.nameChanged || it.telegramChanged || it.managerIdChanged
+              || it.genderChanged || it.birthYearChanged || it.statusChanged || it.noteChanged){
             const payload = { updated_at: new Date().toISOString() };
             if(it.navChanged){ payload.current_nav = it.nav; payload.nav_updated_at = toDbDate(today); }
             if(it.feeChanged){ payload.current_fee = it.fee; payload.fee_updated_at = toDbDate(today); }
+            // Cột nào ĐÃ MAP ở bước nhập thì luôn ghi đè bằng dữ liệu mới nhất trong file — kể cả khi ô đó
+            // để trống (ghi thành rỗng/null, xóa dữ liệu cũ của trường này). Cột không map thì không đụng tới.
+            if(it.nameChanged) payload.customer_name = it.name || '';
+            if(it.telegramChanged) payload.telegram_name = it.telegram || null;
+            if(it.managerIdChanged) payload.manager_id = it.managerId || null;
+            if(it.genderChanged) payload.gender = it.gender;
+            if(it.birthYearChanged) payload.birth_year = it.birthYear || null;
+            if(it.statusChanged) payload.status = it.status;
+            if(it.noteChanged) payload.note = it.note || null;
             let didSyncRoom = false;
             if(syncRoom && it.roomChanged){
               if(SPECIAL_ROOMS.includes(it.targetRoomKey)){ payload.current_room_id = null; payload.special_room = it.targetRoomKey; }
@@ -5221,7 +5251,7 @@ async function confirmImportToDatabase(){
       }
       await sb.from('import_batches').insert({ import_type: plan.type, file_name: document.getElementById('fileInput').files[0]?.name, imported_by: currentUserEmail, total_rows: plan.valid.length+plan.errors.length+(plan.unmatchedCount||0), new_customers:newCount, updated_rows:updatedCount, error_rows: plan.errors.length+errCount });
       document.getElementById('importResultTitle').textContent = 'Đã cập nhật thành công';
-      document.getElementById('importResultSub').textContent = `${newCount} khách mới được thêm · ${updatedCount} khách được cập nhật NAV/phí${assignedStkCount?` (trong đó ${assignedStkCount} khách được gán STK thật, chuyển khỏi "KH ưu tiên")`:''}${roomSyncedCount?` (trong đó ${roomSyncedCount} khách được đồng bộ lại Room)`:''}${plan.unmatchedCount?` · ${plan.unmatchedCount} STK trong file không tìm thấy trong hệ thống (xem lại ở bước Kiểm tra dữ liệu)`:''}${plan.skippedHasStkCount?` · ${plan.skippedHasStkCount} dòng khớp Tên Telegram nhưng KH đã có STK thật — đã bỏ qua, không sửa gì`:''}${errCount?` · ${errCount} dòng lỗi khi ghi`:''}${roomUnmatchedCount?` · ${roomUnmatchedCount} dòng có tên Room không khớp, đã tự gán theo ngưỡng NAV`:''}${priorityFallbackCount?` · ${priorityFallbackCount} dòng thiếu STK đã lưu tạm dạng "KH ưu tiên" — vào Danh sách khách hàng lọc trạng thái này để rà soát và xóa dòng không đúng`:''} · Dữ liệu cũ vẫn được lưu giữ nguyên vẹn.`;
+      document.getElementById('importResultSub').textContent = `${newCount} khách mới được thêm · ${updatedCount} khách được cập nhật theo cột đã map (NAV/phí, Tên KH, Tên Telegram, ID QL, giới tính, năm sinh, trạng thái, ghi chú — ghi đè bằng dữ liệu mới nhất trong file kể cả khi để trống)${assignedStkCount?` (trong đó ${assignedStkCount} khách được gán STK thật, chuyển khỏi "KH ưu tiên")`:''}${roomSyncedCount?` (trong đó ${roomSyncedCount} khách được đồng bộ lại Room)`:''}${plan.unmatchedCount?` · ${plan.unmatchedCount} STK trong file không tìm thấy trong hệ thống (xem lại ở bước Kiểm tra dữ liệu)`:''}${plan.skippedHasStkCount?` · ${plan.skippedHasStkCount} dòng khớp Tên Telegram nhưng KH đã có STK thật — đã bỏ qua, không sửa gì`:''}${errCount?` · ${errCount} dòng lỗi khi ghi`:''}${roomUnmatchedCount?` · ${roomUnmatchedCount} dòng có tên Room không khớp, đã tự gán theo ngưỡng NAV`:''}${priorityFallbackCount?` · ${priorityFallbackCount} dòng thiếu STK đã lưu tạm dạng "KH ưu tiên" — vào Danh sách khách hàng lọc trạng thái này để rà soát và xóa dòng không đúng`:''} · Cột nào bạn KHÔNG map ở file lần này thì dữ liệu cũ vẫn giữ nguyên.`;
     }
     else if(plan.type==='loan'){
       const toInsert = plan.valid.filter(it=>it.isNew).map(it=>({ account_number: it.account, due_date: toDbDate(it.dueDate), status:'Chưa xử lý', manager_id: it.managerId||null }));
@@ -5627,6 +5657,69 @@ async function confirmWipeData(){
     alert('Đã xóa toàn bộ dữ liệu Khách hàng, Khoản vay, RRUB/Call Margin, Quyền mua khỏi hệ thống.');
   } catch(err){
     alert('Lỗi khi xóa dữ liệu: ' + err.message);
+  }
+}
+
+// ---------------- XÓA KHÁCH HÀNG THEO BỘ LỌC (Owner only) ----------------
+function describeCurrentCustomerFilters(){
+  const q = (document.getElementById('searchInput').value||'').trim();
+  const roomF = document.getElementById('filterRoom').value;
+  const statusF = document.getElementById('filterStatus').value;
+  const parts = [];
+  if(q) parts.push(`Tìm kiếm: "<b>${q}</b>"`);
+  if(roomF){
+    const r = rooms.find(r=>String(r.id)===roomF);
+    parts.push(`Room: <b>${r ? r.name : roomF}</b>`);
+  }
+  if(statusF) parts.push(`Trạng thái: <b>${statusF}</b>`);
+  if(advancedFilters.length) parts.push(`Bộ lọc nâng cao: <b>${advancedFilters.length} điều kiện</b>`);
+  if(!parts.length) parts.push('<i>Không có bộ lọc nào đang áp dụng — sẽ khớp TOÀN BỘ khách hàng trong hệ thống.</i>');
+  return parts.join('<br>');
+}
+function openDeleteFilteredModal(){
+  if(currentRole !== 'owner'){ alert('Chỉ Owner mới có quyền xóa khách hàng.'); return; }
+  const list = getFilteredSortedList();
+  if(!list.length){ alert('Không có khách hàng nào khớp bộ lọc hiện tại.'); return; }
+  document.getElementById('deleteFilteredCount').textContent = list.length;
+  document.getElementById('deleteFilteredSummary').innerHTML = describeCurrentCustomerFilters();
+  document.getElementById('deleteFilteredConfirmInput').value = '';
+  document.getElementById('deleteFilteredResult').textContent = '';
+  document.getElementById('deleteFilteredModalOverlay').classList.add('active');
+}
+function closeDeleteFilteredModal(){ document.getElementById('deleteFilteredModalOverlay').classList.remove('active'); }
+async function confirmDeleteFiltered(){
+  const val = document.getElementById('deleteFilteredConfirmInput').value.trim();
+  if(val !== 'XOA KHACH HANG'){ alert('Vui lòng gõ đúng "XOA KHACH HANG" để xác nhận.'); return; }
+  if(currentRole !== 'owner'){ alert('Chỉ Owner mới có quyền xóa khách hàng.'); return; }
+  const list = getFilteredSortedList();
+  if(!list.length){ alert('Không có khách hàng nào khớp bộ lọc hiện tại.'); closeDeleteFilteredModal(); return; }
+  const ids = list.map(c=>c.customer_id);
+  const btn = document.getElementById('btnConfirmDeleteFiltered');
+  const resultEl = document.getElementById('deleteFilteredResult');
+  btn.disabled = true;
+  resultEl.textContent = `Đang xóa 0/${ids.length}...`;
+  try {
+    const CHUNK = 200;
+    let done = 0;
+    for(let i=0;i<ids.length;i+=CHUNK){
+      const chunk = ids.slice(i, i+CHUNK);
+      // Xóa customers sẽ tự động cascade xóa nav_history/fee_history/change_log/room_history liên quan
+      const { error } = await sb.from('customers').delete().in('customer_id', chunk);
+      if(error) throw error;
+      done += chunk.length;
+      resultEl.textContent = `Đang xóa ${done}/${ids.length}...`;
+    }
+    await loadAllData();
+    closeDeleteFilteredModal();
+    renderCustomers();
+    renderDashboard();
+    renderRooms();
+    alert(`Đã xóa ${ids.length} khách hàng khớp bộ lọc hiện tại.`);
+  } catch(err){
+    resultEl.textContent = '';
+    alert('Lỗi khi xóa khách hàng: ' + err.message);
+  } finally {
+    btn.disabled = false;
   }
 }
 // (Khởi tạo thật sự diễn ra trong checkAuthAndInit() sau khi đăng nhập + tải dữ liệu xong)
