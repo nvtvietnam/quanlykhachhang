@@ -1435,9 +1435,9 @@ tbody tr:hover .row-actions{opacity:1;}
     </div>
     <div class="modal-body">
       <div class="form-grid">
+        <div class="form-field"><label>Số tài khoản</label><input type="text" placeholder="VD: 091234" id="f_stk" maxlength="6" oninput="updateTelegramPreview()"></div>
+        <div class="form-field full"><label>Họ và tên KH</label><input type="text" placeholder="Nguyễn Văn A — có thể để trống" id="f_name" oninput="onNameFieldChange()"></div>
         <div class="form-field"><label>ID người quản lý *</label><input type="text" placeholder="VD: MG01" id="f_managerid" oninput="updateTelegramPreview()"></div>
-        <div class="form-field"><label>Số tài khoản <span style="font-weight:500;color:var(--text-muted);">(để trống nếu chưa mở TK)</span></label><input type="text" placeholder="VD: 091234" id="f_stk" maxlength="6" oninput="updateTelegramPreview()"></div>
-        <div class="form-field full"><label>Họ và tên KH <span style="font-weight:500;color:var(--text-muted);">(không bắt buộc — để trống nếu chưa biết họ tên đầy đủ, khi đó gõ thẳng Tên Telegram bên dưới)</span></label><input type="text" placeholder="Nguyễn Văn A — có thể để trống" id="f_name" oninput="onNameFieldChange()"></div>
         <div class="form-field">
           <label>Giới tính *</label>
           <select id="f_gender" onchange="onGenderChange()"><option value="Nam">Nam</option><option value="Nữ">Nữ</option><option value="Khác">Khác</option></select>
@@ -1446,8 +1446,27 @@ tbody tr:hover .row-actions{opacity:1;}
         <div class="form-field"><label>NAV hiện tại (VNĐ) *</label><input type="text" placeholder="500.000.000" id="f_nav" oninput="updateTelegramPreview()"></div>
         <div class="form-field"><label>Phí tháng hiện tại (VNĐ) *</label><input type="text" placeholder="2.000.000" id="f_fee"></div>
         <div class="form-field"><label>Ngày bắt đầu quản lý</label><input type="text" placeholder="dd/mm/yyyy — để trống = hôm nay" id="f_mgmtstart"></div>
-        <div class="form-field full" style="background:var(--accent-soft);border:1.5px solid var(--accent);border-radius:10px;padding:12px 14px;margin:2px 0;">
-          <label style="color:var(--accent-dark);font-weight:700;">★ Tên Telegram <span style="font-weight:500;color:var(--text-muted);">(gõ tay — đây là trường dữ liệu riêng, không tự sinh; ô bên dưới chỉ hiện gợi ý mờ theo cấu trúc, bạn gõ hoặc sửa lại tuỳ ý)</span></label>
+        <div class="form-field">
+          <label>Nhóm / Room *</label>
+          <select id="f_room" onchange="onRoomManualChange()"></select>
+        </div>
+        <div class="form-field">
+          <label>Trạng thái *</label>
+          <select id="f_status" onchange="onStatusChange()">
+            <option>Chờ xác nhận</option>
+            <option selected>Đang quản lý</option>
+            <option>Đã chuyển đi</option>
+            <option>KH ưu tiên</option>
+          </select>
+        </div>
+        <div class="form-field full" id="f_removed_date_wrap" style="display:none;">
+          <label>Ngày remove <span style="font-weight:500;color:var(--text-muted);">(hệ thống tự ghi nhận)</span></label>
+          <input type="text" id="f_removed_date" readonly style="background:#F5F7FA;color:var(--text-muted);">
+          <div class="field-hint">Ghi lý do/chi tiết KH chuyển đi vào ô "Ghi chú" bên dưới.</div>
+        </div>
+        <div class="form-field full"><label>Ghi chú</label><textarea placeholder="VD: KH ưu tiên, KH NV…" id="f_note"></textarea></div>
+        <div class="form-field full" style="background:var(--amber-soft);border:1.5px solid var(--amber);border-radius:10px;padding:12px 14px;margin:2px 0;">
+          <label style="color:var(--amber);font-weight:700;">★ Tên Telegram <span style="font-weight:500;color:var(--text-muted);">(gõ tay — đây là trường dữ liệu riêng, không tự sinh; ô bên dưới chỉ hiện gợi ý mờ theo cấu trúc, bạn gõ hoặc sửa lại tuỳ ý)</span></label>
           <div style="display:flex;gap:8px;align-items:center;position:relative;">
             <select id="f_pronoun" style="width:110px;flex-shrink:0;" onchange="updateTelegramPreview()"></select>
             <button type="button" class="icon-btn" title="Thêm / bớt lựa chọn xưng hô" onclick="togglePronounManager()">
@@ -1475,25 +1494,6 @@ tbody tr:hover .row-actions{opacity:1;}
           </div>
           <div class="field-hint">Đây là trường dữ liệu lưu riêng, bạn gõ tay hoặc bấm ✓ để lấy gợi ý. Gợi ý (chữ mờ) ghép theo cấu trúc: Xưng hô + Tên gọi (từ cuối trong họ tên, VD "Nguyễn Văn An" → "An") - STK - NAV quy ước (100.000.000 = 0.10T) - ID người quản lý. Bấm ⚙ để thêm/bớt lựa chọn xưng hô, bấm ✎ để tự chỉnh cấu trúc gợi ý.</div>
         </div>
-        <div class="form-field">
-          <label>Nhóm / Room *</label>
-          <select id="f_room" onchange="onRoomManualChange()"></select>
-        </div>
-        <div class="form-field">
-          <label>Trạng thái *</label>
-          <select id="f_status" onchange="onStatusChange()">
-            <option>Chờ xác nhận</option>
-            <option selected>Đang quản lý</option>
-            <option>Đã chuyển đi</option>
-            <option>KH ưu tiên</option>
-          </select>
-        </div>
-        <div class="form-field full" id="f_removed_date_wrap" style="display:none;">
-          <label>Ngày remove <span style="font-weight:500;color:var(--text-muted);">(hệ thống tự ghi nhận)</span></label>
-          <input type="text" id="f_removed_date" readonly style="background:#F5F7FA;color:var(--text-muted);">
-          <div class="field-hint">Ghi lý do/chi tiết KH chuyển đi vào ô "Ghi chú" bên dưới.</div>
-        </div>
-        <div class="form-field full"><label>Ghi chú</label><textarea placeholder="VD: KH ưu tiên, KH NV…" id="f_note"></textarea></div>
         <div class="form-field full">
           <label>STK này là tài khoản <b>phụ</b> của khách hàng nào? <span style="font-weight:500;color:var(--text-muted);">(nếu 1 người có nhiều STK)</span></label>
           <input type="text" id="f_linked" list="f_linked_datalist" placeholder="Để trống nếu STK này là tài khoản CHÍNH (độc lập) — gõ tên hoặc STK để tìm tài khoản chính…" autocomplete="off">
