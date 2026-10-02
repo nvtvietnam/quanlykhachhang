@@ -1443,8 +1443,8 @@ tbody tr:hover .row-actions{opacity:1;}
           <select id="f_gender" onchange="onGenderChange()"><option value="Nam">Nam</option><option value="Nữ">Nữ</option><option value="Khác">Khác</option></select>
         </div>
         <div class="form-field"><label>Năm sinh</label><input type="number" placeholder="VD: 1985" id="f_birthyear" min="1930" max="2020" oninput="onBirthYearChange()"></div>
-        <div class="form-field"><label>NAV hiện tại (VNĐ) *</label><input type="text" placeholder="500.000.000" id="f_nav" oninput="updateTelegramPreview()"></div>
-        <div class="form-field"><label>Phí tháng hiện tại (VNĐ) *</label><input type="text" placeholder="2.000.000" id="f_fee"></div>
+        <div class="form-field"><label>NAV hiện tại (VNĐ) *</label><input type="text" inputmode="numeric" placeholder="500.000.000" id="f_nav" oninput="formatMoneyInput(this);updateTelegramPreview()"></div>
+        <div class="form-field"><label>Phí tháng hiện tại (VNĐ) *</label><input type="text" inputmode="numeric" placeholder="2.000.000" id="f_fee" oninput="formatMoneyInput(this)"></div>
         <div class="form-field"><label>Ngày bắt đầu quản lý</label><input type="text" placeholder="dd/mm/yyyy — để trống = hôm nay" id="f_mgmtstart"></div>
         <div class="form-field">
           <label>Nhóm / Room *</label>
@@ -1856,6 +1856,13 @@ let rooms = []; // nạp từ Supabase lúc khởi động
 let customers = []; // nạp từ Supabase lúc khởi động
 
 function fmt(n){ return n.toLocaleString('vi-VN'); }
+
+// Tự động chèn dấu chấm ngăn cách hàng nghìn khi gõ số tiền (500000000 -> 500.000.000).
+// Gõ tới đâu định dạng tới đó — chỉ giữ lại chữ số, con trỏ luôn về cuối ô (đơn giản, phù hợp gõ số tiền từ trái sang phải).
+function formatMoneyInput(el){
+  const digits = el.value.replace(/[^\d]/g,'');
+  el.value = digits ? Number(digits).toLocaleString('vi-VN') : '';
+}
 
 // ---------------- ẨN/HIỆN THANH MENU (SIDEBAR) ----------------
 function toggleSidebar(){
@@ -2884,8 +2891,8 @@ function openEditModal(stk){
   document.getElementById('f_name').value = c.name;
   document.getElementById('f_gender').value = c.gender || 'Nam';
   document.getElementById('f_birthyear').value = c.birthYear || '';
-  document.getElementById('f_nav').value = c.nav;
-  document.getElementById('f_fee').value = c.fee;
+  document.getElementById('f_nav').value = c.nav ? Number(c.nav).toLocaleString('vi-VN') : '';
+  document.getElementById('f_fee').value = c.fee ? Number(c.fee).toLocaleString('vi-VN') : '';
   document.getElementById('f_mgmtstart').value = c.mgmtStart || '';
   renderRoomSelect();
   document.getElementById('f_room').value = c.room;
@@ -2920,6 +2927,7 @@ async function saveCustomer(){
   // (gõ tay) để KH vẫn có tên hiển thị. LƯU Ý: Tên Telegram KHÔNG được copy vào Họ và tên KH —
   // 2 trường này luôn tách biệt, "Họ và tên KH" để trống (null) nếu chưa biết.
   if(!name && !telegramVal){ alert('Chưa nhập Họ và tên KH — vui lòng nhập Tên Telegram để thay thế.'); return; }
+  // STK có thể để trống (KH chưa mở TK — hệ thống tự gán STK tạm). Nếu CÓ nhập thì bắt buộc đủ 6 ký tự.
   if(stk && stk.length !== 6){ alert('Số tài khoản phải đúng 6 ký tự (hoặc để trống nếu KH chưa mở tài khoản).'); return; }
   if(!editingCustomerStk && !stk) stk = generateTempStk();
 
@@ -2990,7 +2998,15 @@ async function saveCustomer(){
         });
       }
     } else {
-      if(customers.some(x=>x.stk===stk)){ alert('STK này đã tồn tại trong hệ thống.'); document.getElementById('modalSaveBtn').disabled=false; document.getElementById('modalSaveBtn').textContent='Lưu khách hàng'; return; }
+      const dupCustomer = customers.find(x=>x.stk===stk);
+      if(dupCustomer){
+        document.getElementById('modalSaveBtn').disabled=false; document.getElementById('modalSaveBtn').textContent='Lưu khách hàng';
+        const dupLabel = dupCustomer.name || dupCustomer.telegram || dupCustomer.stk;
+        if(confirm(`STK ${stk} đã tồn tại trong hệ thống (KH: "${dupLabel}"). Không thể thêm mới trùng STK.\n\nBấm OK để chuyển sang màn hình SỬA khách hàng này và cập nhật lại thông tin, hoặc bấm Hủy để tự sửa lại STK vừa nhập.`)){
+          openEditModal(stk);
+        }
+        return;
+      }
       dbPayload.created_at = new Date().toISOString();
       const { data: inserted, error } = await sb.from('customers').insert(dbPayload).select().single();
       if(error) throw error;
