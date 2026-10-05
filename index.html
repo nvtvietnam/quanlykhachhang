@@ -730,6 +730,7 @@ tbody tr:hover .row-actions{opacity:1;}
             <div class="loan-sidebar-total" id="mcSidebarTotal"></div>
 
             <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:14px;" id="btnBulkSelectMC" onclick="toggleMcBulkSelectMode()">🗑 Chọn để xoá</button>
+            <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;color:var(--red);border-color:#F3C6C6;" onclick="openDeleteFilteredMarginCallsModal()" title="Xóa toàn bộ khoản RRUB/Call Margin đang khớp bộ lọc hiện tại (Trạng thái/Ngày/Tìm kiếm/Xem tất cả)">🗑 Xóa theo bộ lọc</button>
             <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;" onclick="refreshMarginCalls()">🔄 Làm mới danh sách</button>
             <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;" onclick="toggleMarginCallTemplateEditor()">📝 Mẫu tin nhắn</button>
           </div>
@@ -1044,6 +1045,28 @@ tbody tr:hover .row-actions{opacity:1;}
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeDeleteFilteredLoansModal()">Hủy</button>
       <button class="btn btn-primary" id="btnConfirmDeleteFilteredLoans" style="background:var(--red);" onclick="confirmDeleteFilteredLoans()">Xóa vĩnh viễn</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE FILTERED MARGIN CALLS CONFIRM MODAL -->
+<div class="overlay" id="deleteFilteredMarginCallsModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" style="color:var(--red);">⚠️ Xóa khoản RRUB/Call Margin theo bộ lọc</div>
+      <button class="close-x" onclick="closeDeleteFilteredMarginCallsModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13.5px;">Bộ lọc hiện tại đang khớp <b id="deleteFilteredMarginCallsCount">0</b> khoản RRUB/Call Margin:</p>
+      <div id="deleteFilteredMarginCallsSummary" style="font-size:13px;background:var(--bg-soft,#F7F8FA);border:1px solid var(--border);border-radius:7px;padding:9px 11px;margin:6px 0 10px;line-height:1.6;"></div>
+      <p style="font-size:13.5px;">Hành động này sẽ <b>xóa vĩnh viễn</b> toàn bộ khoản RRUB/Call Margin khớp bộ lọc trên (không xóa khách hàng, chỉ xóa khoản này). Không thể hoàn tác.</p>
+      <p style="font-size:13.5px;">Gõ chính xác <b>XOA RRUB</b> vào ô bên dưới để xác nhận:</p>
+      <input type="text" id="deleteFilteredMarginCallsConfirmInput" placeholder="XOA RRUB" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:7px;font-size:13.5px;margin-top:6px;">
+      <div id="deleteFilteredMarginCallsResult" style="font-size:13px;margin-top:8px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeDeleteFilteredMarginCallsModal()">Hủy</button>
+      <button class="btn btn-primary" id="btnConfirmDeleteFilteredMarginCalls" style="background:var(--red);" onclick="confirmDeleteFilteredMarginCalls()">Xóa vĩnh viễn</button>
     </div>
   </div>
 </div>
@@ -3798,6 +3821,7 @@ function renderLoans(){
     <div class="loan-pill ${loanDatePillFilter==='soon'?'active':''}" onclick="setLoanDatePill('soon')">Sắp đến hạn (7 ngày) <span class="cnt">${soonCount}</span></div>
   `;
 
+  const showAll = document.getElementById('loanShowAll').checked;
   const filtered = getFilteredLoansList();
   document.getElementById('loanResultCount').textContent = filtered.length + ' khoản vay';
   document.getElementById('loanSidebarTotal').innerHTML = `Tổng: <b>${loans.length}</b> khoản vay${showAll?'':' (đang ẩn khoản đã xử lý)'}`;
@@ -4150,6 +4174,56 @@ async function deleteBulkSelectedMarginCalls(){
     renderDashboard();
   } catch(err){ alert('Lỗi khi xóa hàng loạt (có thể do bạn không phải Owner): ' + err.message); }
 }
+
+// ---------------- XÓA RRUB/CALL MARGIN THEO BỘ LỌC (Owner only) ----------------
+function openDeleteFilteredMarginCallsModal(){
+  if(currentRole !== 'owner'){ alert('Chỉ Owner mới có quyền xóa khoản RRUB/Call Margin.'); return; }
+  const list = getFilteredMarginCallsList();
+  if(!list.length){ alert('Không có khoản RRUB/Call Margin nào khớp bộ lọc hiện tại.'); return; }
+  document.getElementById('deleteFilteredMarginCallsCount').textContent = list.length;
+  document.getElementById('deleteFilteredMarginCallsSummary').innerHTML = describeCurrentMarginCallFilters();
+  document.getElementById('deleteFilteredMarginCallsConfirmInput').value = '';
+  document.getElementById('deleteFilteredMarginCallsResult').textContent = '';
+  document.getElementById('deleteFilteredMarginCallsModalOverlay').classList.add('active');
+}
+function closeDeleteFilteredMarginCallsModal(){ document.getElementById('deleteFilteredMarginCallsModalOverlay').classList.remove('active'); }
+async function confirmDeleteFilteredMarginCalls(){
+  const val = document.getElementById('deleteFilteredMarginCallsConfirmInput').value.trim();
+  if(val !== 'XOA RRUB'){ alert('Vui lòng gõ đúng "XOA RRUB" để xác nhận.'); return; }
+  if(currentRole !== 'owner'){ alert('Chỉ Owner mới có quyền xóa khoản RRUB/Call Margin.'); return; }
+  const list = getFilteredMarginCallsList();
+  if(!list.length){ alert('Không có khoản RRUB/Call Margin nào khớp bộ lọc hiện tại.'); closeDeleteFilteredMarginCallsModal(); return; }
+  const ids = list.map(m=>m.id);
+  const btn = document.getElementById('btnConfirmDeleteFilteredMarginCalls');
+  const resultEl = document.getElementById('deleteFilteredMarginCallsResult');
+  btn.disabled = true;
+  resultEl.textContent = `Đang xóa 0/${ids.length}...`;
+  try {
+    const CHUNK = 200;
+    let done = 0;
+    for(let i=0;i<ids.length;i+=CHUNK){
+      const chunk = ids.slice(i, i+CHUNK);
+      const { error } = await sb.from('margin_calls').delete().in('margin_call_id', chunk);
+      if(error) throw error;
+      done += chunk.length;
+      resultEl.textContent = `Đang xóa ${done}/${ids.length}...`;
+    }
+    const idSet = new Set(ids);
+    for(let i=marginCalls.length-1;i>=0;i--){
+      if(idSet.has(marginCalls[i].id)) marginCalls.splice(i,1);
+    }
+    closeDeleteFilteredMarginCallsModal();
+    renderMarginCalls();
+    renderDashboard();
+    alert(`Đã xóa ${ids.length} khoản RRUB/Call Margin khớp bộ lọc hiện tại.`);
+  } catch(err){
+    resultEl.textContent = '';
+    alert('Lỗi khi xóa khoản RRUB/Call Margin: ' + err.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 function setMarginCallStatusFromDropdown(val){
   mcStatusPillFilter = val;
   renderMarginCalls();
@@ -4251,10 +4325,43 @@ function setMarginCallDatePill(key){
   renderMarginCalls();
 }
 
-function renderMarginCalls(){
+// Dùng chung cho renderMarginCalls() và cho chức năng "Xóa theo bộ lọc".
+function getFilteredMarginCallsList(){
   const q = (document.getElementById('mcSearchInput').value||'').toLowerCase();
   const showAll = document.getElementById('mcShowAll').checked;
   const RESOLVED = ['KH xử lý xong','Công ty đã xử lý'];
+  return marginCalls.filter(m=>{
+    const c = findCustomerByAccountNumber(m.account);
+    const name = c ? c.name : '';
+    const matchQ = !q || name.toLowerCase().includes(q) || m.account.includes(q) || (c && c.stk.includes(q));
+    const matchResolved = showAll || !RESOLVED.includes(m.status);
+    const matchStatusPill = !mcStatusPillFilter || m.status===mcStatusPillFilter;
+    const d = daysUntil(m.dueDate);
+    const matchDatePill = !mcDatePillFilter ||
+      (mcDatePillFilter==='today' && d===0) ||
+      (mcDatePillFilter==='overdue' && d<0) ||
+      (mcDatePillFilter==='soon' && d>0 && d<=7);
+    return matchQ && matchResolved && matchStatusPill && matchDatePill;
+  });
+}
+// Tóm tắt bộ lọc hiện tại của trang RRUB/Call Margin, dùng để hiện trong modal xác nhận xóa.
+function describeCurrentMarginCallFilters(){
+  const q = (document.getElementById('mcSearchInput').value||'').trim();
+  const showAll = document.getElementById('mcShowAll').checked;
+  const parts = [];
+  if(q) parts.push(`Tìm kiếm: "<b>${q}</b>"`);
+  if(!showAll) parts.push(`Đang <b>ẩn</b> các khoản đã xử lý (KH xử lý xong / Công ty đã xử lý)`);
+  if(mcStatusPillFilter) parts.push(`Trạng thái: <b>${mcStatusPillFilter}</b>`);
+  if(mcDatePillFilter){
+    const label = {today:'Đến hạn hôm nay', overdue:'Quá hạn', soon:'Sắp đến hạn (7 ngày)'}[mcDatePillFilter];
+    parts.push(`Lọc theo ngày: <b>${label}</b>`);
+  }
+  if(!parts.length) parts.push('<i>Không có bộ lọc nào đang áp dụng — sẽ khớp TOÀN BỘ khoản RRUB/Call Margin trong hệ thống.</i>');
+  return parts.join('<br>');
+}
+
+function renderMarginCalls(){
+  const showAll = document.getElementById('mcShowAll').checked;
 
   const statusCounts = {};
   ['Chưa xử lý','Đã check','Đã liên hệ','KH xử lý xong','Công ty đã xử lý'].forEach(s=>{
@@ -4273,19 +4380,7 @@ function renderMarginCalls(){
     <div class="loan-pill ${mcDatePillFilter==='soon'?'active':''}" onclick="setMarginCallDatePill('soon')">Sắp đến hạn (7 ngày) <span class="cnt">${soonCount}</span></div>
   `;
 
-  const filtered = marginCalls.filter(m=>{
-    const c = findCustomerByAccountNumber(m.account);
-    const name = c ? c.name : '';
-    const matchQ = !q || name.toLowerCase().includes(q) || m.account.includes(q) || (c && c.stk.includes(q));
-    const matchResolved = showAll || !RESOLVED.includes(m.status);
-    const matchStatusPill = !mcStatusPillFilter || m.status===mcStatusPillFilter;
-    const d = daysUntil(m.dueDate);
-    const matchDatePill = !mcDatePillFilter ||
-      (mcDatePillFilter==='today' && d===0) ||
-      (mcDatePillFilter==='overdue' && d<0) ||
-      (mcDatePillFilter==='soon' && d>0 && d<=7);
-    return matchQ && matchResolved && matchStatusPill && matchDatePill;
-  });
+  const filtered = getFilteredMarginCallsList();
   document.getElementById('mcResultCount').textContent = filtered.length + ' khoản RRUB/Call Margin';
   document.getElementById('mcSidebarTotal').innerHTML = `Tổng: <b>${marginCalls.length}</b> khoản${showAll?'':' (đang ẩn khoản đã xử lý)'}`;
 
