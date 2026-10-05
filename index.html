@@ -685,6 +685,7 @@ tbody tr:hover .row-actions{opacity:1;}
             <div class="loan-sidebar-total" id="loanSidebarTotal"></div>
 
             <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:14px;" id="btnBulkSelect" onclick="toggleBulkSelectMode()">🗑 Chọn để xoá</button>
+            <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;color:var(--red);border-color:#F3C6C6;" onclick="openDeleteFilteredLoansModal()" title="Xóa toàn bộ khoản vay đang khớp bộ lọc hiện tại (Trạng thái/Ngày/Tìm kiếm/Xem tất cả)">🗑 Xóa theo bộ lọc</button>
             <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;" onclick="refreshLoans()">🔄 Làm mới danh sách</button>
             <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;" onclick="toggleLoanTemplateEditor()">📝 Mẫu tin nhắn</button>
           </div>
@@ -1021,6 +1022,28 @@ tbody tr:hover .row-actions{opacity:1;}
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeDeleteFilteredModal()">Hủy</button>
       <button class="btn btn-primary" id="btnConfirmDeleteFiltered" style="background:var(--red);" onclick="confirmDeleteFiltered()">Xóa vĩnh viễn</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE FILTERED LOANS CONFIRM MODAL -->
+<div class="overlay" id="deleteFilteredLoansModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" style="color:var(--red);">⚠️ Xóa khoản vay theo bộ lọc</div>
+      <button class="close-x" onclick="closeDeleteFilteredLoansModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13.5px;">Bộ lọc hiện tại đang khớp <b id="deleteFilteredLoansCount">0</b> khoản vay:</p>
+      <div id="deleteFilteredLoansSummary" style="font-size:13px;background:var(--bg-soft,#F7F8FA);border:1px solid var(--border);border-radius:7px;padding:9px 11px;margin:6px 0 10px;line-height:1.6;"></div>
+      <p style="font-size:13.5px;">Hành động này sẽ <b>xóa vĩnh viễn</b> toàn bộ khoản vay khớp bộ lọc trên (không xóa khách hàng, chỉ xóa khoản vay). Không thể hoàn tác.</p>
+      <p style="font-size:13.5px;">Gõ chính xác <b>XOA KHOAN VAY</b> vào ô bên dưới để xác nhận:</p>
+      <input type="text" id="deleteFilteredLoansConfirmInput" placeholder="XOA KHOAN VAY" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:7px;font-size:13.5px;margin-top:6px;">
+      <div id="deleteFilteredLoansResult" style="font-size:13px;margin-top:8px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeDeleteFilteredLoansModal()">Hủy</button>
+      <button class="btn btn-primary" id="btnConfirmDeleteFilteredLoans" style="background:var(--red);" onclick="confirmDeleteFilteredLoans()">Xóa vĩnh viễn</button>
     </div>
   </div>
 </div>
@@ -3557,6 +3580,56 @@ async function deleteBulkSelected(){
     renderDashboard();
   } catch(err){ alert('Lỗi khi xóa hàng loạt (có thể do bạn không phải Owner): ' + err.message); }
 }
+
+// ---------------- XÓA KHOẢN VAY THEO BỘ LỌC (Owner only) ----------------
+function openDeleteFilteredLoansModal(){
+  if(currentRole !== 'owner'){ alert('Chỉ Owner mới có quyền xóa khoản vay.'); return; }
+  const list = getFilteredLoansList();
+  if(!list.length){ alert('Không có khoản vay nào khớp bộ lọc hiện tại.'); return; }
+  document.getElementById('deleteFilteredLoansCount').textContent = list.length;
+  document.getElementById('deleteFilteredLoansSummary').innerHTML = describeCurrentLoanFilters();
+  document.getElementById('deleteFilteredLoansConfirmInput').value = '';
+  document.getElementById('deleteFilteredLoansResult').textContent = '';
+  document.getElementById('deleteFilteredLoansModalOverlay').classList.add('active');
+}
+function closeDeleteFilteredLoansModal(){ document.getElementById('deleteFilteredLoansModalOverlay').classList.remove('active'); }
+async function confirmDeleteFilteredLoans(){
+  const val = document.getElementById('deleteFilteredLoansConfirmInput').value.trim();
+  if(val !== 'XOA KHOAN VAY'){ alert('Vui lòng gõ đúng "XOA KHOAN VAY" để xác nhận.'); return; }
+  if(currentRole !== 'owner'){ alert('Chỉ Owner mới có quyền xóa khoản vay.'); return; }
+  const list = getFilteredLoansList();
+  if(!list.length){ alert('Không có khoản vay nào khớp bộ lọc hiện tại.'); closeDeleteFilteredLoansModal(); return; }
+  const ids = list.map(l=>l.id);
+  const btn = document.getElementById('btnConfirmDeleteFilteredLoans');
+  const resultEl = document.getElementById('deleteFilteredLoansResult');
+  btn.disabled = true;
+  resultEl.textContent = `Đang xóa 0/${ids.length}...`;
+  try {
+    const CHUNK = 200;
+    let done = 0;
+    for(let i=0;i<ids.length;i+=CHUNK){
+      const chunk = ids.slice(i, i+CHUNK);
+      const { error } = await sb.from('loans').delete().in('loan_id', chunk);
+      if(error) throw error;
+      done += chunk.length;
+      resultEl.textContent = `Đang xóa ${done}/${ids.length}...`;
+    }
+    const idSet = new Set(ids);
+    for(let i=loans.length-1;i>=0;i--){
+      if(idSet.has(loans[i].id)) loans.splice(i,1);
+    }
+    closeDeleteFilteredLoansModal();
+    renderLoans();
+    renderDashboard();
+    alert(`Đã xóa ${ids.length} khoản vay khớp bộ lọc hiện tại.`);
+  } catch(err){
+    resultEl.textContent = '';
+    alert('Lỗi khi xóa khoản vay: ' + err.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 function setLoanStatusFromDropdown(val){
   loanStatusPillFilter = val;
   renderLoans();
@@ -3670,11 +3743,43 @@ function setLoanDatePill(key){
   renderLoans();
 }
 
-function renderLoans(){
+// Dùng chung cho renderLoans() và cho chức năng "Xóa theo bộ lọc" — trả về danh sách khoản vay
+// đang khớp đúng bộ lọc hiện tại (tìm kiếm / Xem tất cả / trạng thái / ngày).
+function getFilteredLoansList(){
   const q = (document.getElementById('loanSearchInput').value||'').toLowerCase();
   const showAll = document.getElementById('loanShowAll').checked;
   const RESOLVED = ['KH xử lý xong','Công ty đã xử lý'];
+  return loans.filter(l=>{
+    const c = findCustomerByAccountNumber(l.account);
+    const name = c ? c.name : '';
+    const matchQ = !q || name.toLowerCase().includes(q) || l.account.includes(q) || (c && c.stk.includes(q));
+    const matchResolved = showAll || !RESOLVED.includes(l.status);
+    const matchStatusPill = !loanStatusPillFilter || l.status===loanStatusPillFilter;
+    const d = daysUntil(l.dueDate);
+    const matchDatePill = !loanDatePillFilter ||
+      (loanDatePillFilter==='today' && d===0) ||
+      (loanDatePillFilter==='overdue' && d<0) ||
+      (loanDatePillFilter==='soon' && d>0 && d<=7);
+    return matchQ && matchResolved && matchStatusPill && matchDatePill;
+  });
+}
+// Tóm tắt bộ lọc hiện tại của trang Khoản vay, dùng để hiện trong modal xác nhận xóa.
+function describeCurrentLoanFilters(){
+  const q = (document.getElementById('loanSearchInput').value||'').trim();
+  const showAll = document.getElementById('loanShowAll').checked;
+  const parts = [];
+  if(q) parts.push(`Tìm kiếm: "<b>${q}</b>"`);
+  if(!showAll) parts.push(`Đang <b>ẩn</b> các khoản đã xử lý (KH xử lý xong / Công ty đã xử lý)`);
+  if(loanStatusPillFilter) parts.push(`Trạng thái: <b>${loanStatusPillFilter}</b>`);
+  if(loanDatePillFilter){
+    const label = {today:'Đến hạn hôm nay', overdue:'Quá hạn', soon:'Sắp đến hạn (7 ngày)'}[loanDatePillFilter];
+    parts.push(`Lọc theo ngày: <b>${label}</b>`);
+  }
+  if(!parts.length) parts.push('<i>Không có bộ lọc nào đang áp dụng — sẽ khớp TOÀN BỘ khoản vay trong hệ thống.</i>');
+  return parts.join('<br>');
+}
 
+function renderLoans(){
   // Đếm số liệu cho các pill (tính trên toàn bộ loans, không phụ thuộc bộ lọc khác — giống hệ thống cũ)
   const statusCounts = {};
   ['Chưa xử lý','Đã check','Đã liên hệ','KH xử lý xong','Công ty đã xử lý'].forEach(s=>{
@@ -3693,19 +3798,7 @@ function renderLoans(){
     <div class="loan-pill ${loanDatePillFilter==='soon'?'active':''}" onclick="setLoanDatePill('soon')">Sắp đến hạn (7 ngày) <span class="cnt">${soonCount}</span></div>
   `;
 
-  const filtered = loans.filter(l=>{
-    const c = findCustomerByAccountNumber(l.account);
-    const name = c ? c.name : '';
-    const matchQ = !q || name.toLowerCase().includes(q) || l.account.includes(q) || (c && c.stk.includes(q));
-    const matchResolved = showAll || !RESOLVED.includes(l.status);
-    const matchStatusPill = !loanStatusPillFilter || l.status===loanStatusPillFilter;
-    const d = daysUntil(l.dueDate);
-    const matchDatePill = !loanDatePillFilter ||
-      (loanDatePillFilter==='today' && d===0) ||
-      (loanDatePillFilter==='overdue' && d<0) ||
-      (loanDatePillFilter==='soon' && d>0 && d<=7);
-    return matchQ && matchResolved && matchStatusPill && matchDatePill;
-  });
+  const filtered = getFilteredLoansList();
   document.getElementById('loanResultCount').textContent = filtered.length + ' khoản vay';
   document.getElementById('loanSidebarTotal').innerHTML = `Tổng: <b>${loans.length}</b> khoản vay${showAll?'':' (đang ẩn khoản đã xử lý)'}`;
 
