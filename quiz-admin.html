@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản trị bộ đề trắc nghiệm</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<style>
+  :root{ --navy:#1E2761; --ice:#CADCFC; --white:#FFFFFF; --dark:#1A1A2E; --light:#EEF1FB; --green:#1e7a34; --red:#b3261e; }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--light);color:var(--dark);}
+  header{background:var(--navy);color:var(--white);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;}
+  header h1{margin:0;font-size:1.1rem;}
+  main{max-width:980px;margin:0 auto;padding:18px;}
+  .card{background:var(--white);border-radius:10px;padding:18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+  .card h2{margin:0 0 12px;font-size:1rem;color:var(--navy);}
+  label{display:block;font-size:.85rem;font-weight:600;margin:10px 0 4px;}
+  input[type=text],input[type=password],select,textarea{width:100%;padding:9px 10px;border:1px solid #ccd3e8;border-radius:7px;font-size:.92rem;font-family:inherit;}
+  button{cursor:pointer;border:none;border-radius:7px;font-size:.88rem;font-weight:600;padding:9px 16px;}
+  .btn-primary{background:var(--navy);color:var(--white);}
+  .btn-danger{background:var(--red);color:var(--white);}
+  .btn-secondary{background:var(--light);color:var(--navy);border:1px solid var(--navy);}
+  table{width:100%;border-collapse:collapse;font-size:.85rem;margin-top:10px;}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid #eceff8;}
+  th{color:var(--navy);font-weight:700;background:var(--light);}
+  tr:hover td{background:#f7f9fe;}
+  .row{display:flex;gap:10px;flex-wrap:wrap;}
+  .row > *{flex:1;min-width:160px;}
+  .msg{font-size:.85rem;margin-top:8px;padding:8px 10px;border-radius:6px;}
+  .msg.ok{background:#e9f7ec;color:var(--green);}
+  .msg.err{background:#fbeceb;color:var(--red);}
+  .muted{color:#888;font-size:.85rem;}
+  .pill{display:inline-block;background:var(--ice);color:var(--navy);font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:10px;}
+  .hidden{display:none;}
+  .center{text-align:center;}
+  .tabs{position:sticky;top:0;z-index:20;display:flex;gap:6px;background:var(--white);border-radius:10px;padding:6px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow-x:auto;}
+  .tab-btn{flex:1;min-width:150px;white-space:nowrap;background:transparent;color:var(--navy);border-radius:7px;padding:10px 14px;font-weight:700;font-size:.88rem;text-align:center;}
+  .tab-btn:hover{background:var(--light);}
+  .tab-btn.active{background:var(--navy);color:var(--white);}
+  .tab-content.hidden{display:none;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚙️ Quản trị bộ đề trắc nghiệm</h1>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <a href="portal.html" class="btn-secondary" style="text-decoration:none;display:inline-block;">← Về trang học viên</a>
+    <button class="btn-secondary hidden" id="btn-logout" onclick="logout()">Đăng xuất</button>
+  </div>
+</header>
+
+<main id="app">
+  <div class="card" id="login-card">
+    <h2>Đăng nhập quản trị</h2>
+    <label>Mật khẩu admin</label>
+    <input type="password" id="pw-input" placeholder="Mật khẩu">
+    <button class="btn-primary" style="margin-top:12px;" onclick="login()">Đăng nhập</button>
+    <div id="login-msg"></div>
+  </div>
+</main>
+
+<script>
+const SUPABASE_URL = "https://tvhzojcfycbikxkenhev.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2aHpvamNmeWNiaWt4a2VuaGV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxMjMzMzAsImV4cCI6MjEwMDY5OTMzMH0.-_hvVaUqsArDZcHHkv_5y0HSWNQuezyeYNTrzXEfmpU";
+
+async function callRpc(fn, args){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "apikey": SUPABASE_ANON_KEY, "Authorization": `Bearer ${SUPABASE_ANON_KEY}` },
+    body: JSON.stringify(args || {})
+  });
+  return res.json();
+}
+
+function esc(s){ const d=document.createElement("div"); d.innerText = s==null?"":String(s); return d.innerHTML; }
+
+// Chuẩn hoá slug dùng trong đường dẫn upload: bỏ dấu tiếng Việt, đổi khoảng trắng/ký tự lạ thành "-"
+function slugify(s){
+  return String(s||"")
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/đ/g, "d").replace(/Đ/g, "D")
+    .trim().toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    || "tam";
+}
+
+let PASSWORD = sessionStorage.getItem("quiz_admin_pw") || "";
+const app = document.getElementById("app");
+const btnLogout = document.getElementById("btn-logout");
+let quizSets = [];
+let currentSlug = null;
+
+async function login(){
+  const pw = document.getElementById("pw-input").value;
+  const data = await callRpc("admin_list_quiz_sets", { p_password: pw });
+  if(data && data.status === "ok"){
+    PASSWORD = pw;
+    sessionStorage.setItem("quiz_admin_pw", pw);
+    renderMain(data.quiz_sets);
+  } else {
+    document.getElementById("login-msg").innerHTML = `<div class="msg err">Sai mật khẩu.</div>`;
+  }
+}
+function logout(){
+  sessionStorage.removeItem("quiz_admin_pw");
+  location.reload();
+}
+
+async function refreshSets(){
+  const data = await callRpc("admin_list_quiz_sets", { p_password: PASSWORD });
+  if(data && data.status === "ok"){ quizSets = data.quiz_sets; renderSetsTable(); }
+}
+
+function renderMain(sets){
+  quizSets = sets;
+  btnLogout.classList.remove("hidden");
+  app.innerHTML = `
+    <div class="tabs">
+      <button class="tab-btn" data-tab="tab-quiz" onclick="showTab('tab-quiz')">📝 Bộ đề trắc nghiệm</button>
+      <button class="tab-btn" data-tab="tab-subjects" onclick="showTab('tab-subjects')">📚 Môn học &amp; bài học</button>
+      <button class="tab-btn" data-tab="tab-students" onclick="showTab('tab-students')">👤 Tài khoản học viên</button>
+      <button class="tab-btn" data-tab="tab-settings" onclick="showTab('tab-settings')">⚙️ Cấu hình hỗ trợ</button>
+      <button class="tab-btn" data-tab="tab-feedback" onclick="showTab('tab-feedback')">💬 Phản hồi câu hỏi</button>
+    </div>
+
+    <div id="tab-quiz" class="tab-content">
+      <div class="card">
+        <h2>Tạo bộ đề mới</h2>
+        <div class="row">
+          <div>
+            <label>Slug (không dấu, không khoảng trắng, dùng trong URL)</label>
+            <input type="text" id="new-slug" placeholder="vd: buoi9-tong-on">
+          </div>
+          <div>
+            <label>Tên bộ đề</label>
+            <input type="text" id="new-title" placeholder="vd: Bộ 100 câu ôn tập tổng hợp">
+          </div>
+        </div>
+        <label>Mô tả (hiển thị cho người làm bài)</label>
+        <textarea id="new-desc" rows="2" placeholder="Mô tả ngắn về bộ đề..."></textarea>
+        <button class="btn-primary" style="margin-top:12px;" onclick="createSet()">+ Tạo bộ đề</button>
+        <div id="create-msg"></div>
+      </div>
+
+      <div class="card">
+        <h2>🔍 Kiểm tra lỗi đáp án (áp dụng cho câu hỏi đã nhập từ trước)</h2>
+        <p class="muted" style="margin-top:-6px;">Quét toàn bộ câu hỏi ở mọi bộ đề, tìm câu nào cột "Đáp án đúng" không khớp đúng 1 trong 4 lựa chọn (gõ sai/thừa khoảng trắng từ trước khi có cơ chế chọn A/B/C/D) — không cần đoán xem có bị hay không.</p>
+        <button class="btn-secondary" id="audit-answers-btn" onclick="auditAllAnswers()">Quét toàn bộ</button>
+        <div id="audit-answers-result" style="margin-top:10px;"></div>
+      </div>
+
+      <div class="card">
+        <h2>Danh sách bộ đề</h2>
+        <div id="sets-table"></div>
+      </div>
+
+      <div id="detail-panel"></div>
+    </div>
+
+    <div id="tab-subjects" class="tab-content hidden">
+      <div class="card">
+        <h2>📚 Quản lý Môn học & Bài học (portal.html)</h2>
+        <div class="row">
+          <div>
+            <label>Slug môn học</label>
+            <input type="text" id="subj-slug" placeholder="vd: phap-luat">
+          </div>
+          <div>
+            <label>Tên môn học</label>
+            <input type="text" id="subj-title" placeholder="vd: Môn Pháp luật">
+          </div>
+        </div>
+        <label>Mô tả</label>
+        <textarea id="subj-desc" rows="2" placeholder="Mô tả ngắn..."></textarea>
+        <div class="row">
+          <div>
+            <label>Thứ tự hiển thị</label>
+            <input type="text" id="subj-order" placeholder="1">
+          </div>
+          <div>
+            <label>Slug bộ đề dùng cho "Câu hỏi ôn tập" (đề random)</label>
+            <input type="text" id="subj-mock-slug" placeholder="vd: buoi9-100-cau">
+          </div>
+          <div>
+            <label>Số câu random</label>
+            <input type="text" id="subj-mock-count" placeholder="35">
+          </div>
+        </div>
+        <button class="btn-primary" style="margin-top:12px;" onclick="createSubject()">+ Tạo / cập nhật môn học</button>
+        <div id="subj-msg"></div>
+
+        <h2 style="margin-top:18px;">Danh sách môn học</h2>
+        <div id="subjects-table"><span class="muted">Đang tải...</span></div>
+
+        <div id="lessons-panel"></div>
+      </div>
+    </div>
+
+    <div id="tab-students" class="tab-content hidden">
+      <div class="card">
+        <h2>👤 Tài khoản học viên đã đăng ký (SĐT + email)</h2>
+        <div class="row" style="align-items:end;">
+          <div>
+            <label>Tìm theo tên / SĐT / email / ID môi giới</label>
+            <input type="text" id="stu-search" placeholder="Gõ để tìm..." oninput="debounceSearchStudents()">
+          </div>
+          <div>
+            <label>Trạng thái duyệt</label>
+            <select id="stu-status" onchange="loadStudents(0)">
+              <option value="all">Tất cả</option>
+              <option value="pending">⏳ Chờ duyệt</option>
+              <option value="approved">✅ Đã duyệt</option>
+              <option value="rejected">❌ Từ chối</option>
+              <option value="none">Chưa yêu cầu</option>
+            </select>
+          </div>
+          <div><button class="btn-secondary" type="button" onclick="loadStudents(0)">Làm mới</button></div>
+        </div>
+        <div id="students-table" style="margin-top:10px;"><span class="muted">Đang tải...</span></div>
+        <div id="students-pager" style="margin-top:10px;"></div>
+      </div>
+    </div>
+
+    <div id="tab-settings" class="tab-content hidden">
+      <div class="card">
+        <h2>⚙️ Cấu hình hỗ trợ (hiển thị khi từ chối duyệt)</h2>
+        <div class="row">
+          <div>
+            <label>SĐT hỗ trợ</label>
+            <input type="text" id="settings-phone" placeholder="VD: 0912345678">
+          </div>
+          <div>
+            <label>Link điền thông tin mở ID CTV (nếu có)</label>
+            <input type="text" id="settings-ctv" placeholder="https://...">
+          </div>
+        </div>
+        <button class="btn-primary" style="margin-top:12px;" onclick="saveSettings()">Lưu cấu hình</button>
+        <div id="settings-msg"></div>
+      </div>
+
+      <div class="card">
+        <h2>✏️ Nội dung popup "Mở khoá bài học"</h2>
+        <p class="muted">Popup này hiện ra khi học viên bấm vào bài bị khoá, để nhập ID môi giới + phòng.</p>
+        <label>Tiêu đề popup</label>
+        <input type="text" id="settings-req-title" placeholder="🔓 Mở khoá toàn bộ bài học">
+        <label>Mô tả (dưới tiêu đề)</label>
+        <textarea id="settings-req-desc" rows="2" placeholder="Nhập thông tin để được duyệt truy cập đầy đủ nội dung khoá học."></textarea>
+        <button class="btn-primary" style="margin-top:12px;" onclick="saveSettings()">Lưu cấu hình</button>
+        <div id="settings-req-msg"></div>
+      </div>
+
+      <div class="card">
+        <h2>✏️ Nội dung popup "Đang chờ duyệt / Bị từ chối"</h2>
+        <label>Nội dung khi đang chờ duyệt</label>
+        <p class="muted" style="margin:2px 0 6px;">Có thể dùng <code>{broker_id}</code> và <code>{department}</code>, hệ thống sẽ tự thay bằng thông tin học viên đã gửi.</p>
+        <textarea id="settings-pending-text" rows="2" placeholder="Yêu cầu mở khoá của bạn (ID môi giới: {broker_id}, phòng: {department}) đã được gửi và đang chờ duyệt. Vui lòng quay lại sau."></textarea>
+        <label>Nội dung khi bị từ chối (hiện phía trên SĐT hỗ trợ)</label>
+        <textarea id="settings-rejected-text" rows="2" placeholder="Thông tin bạn cung cấp chưa xác nhận thuộc phòng đăng ký học."></textarea>
+        <button class="btn-primary" style="margin-top:12px;" onclick="saveSettings()">Lưu cấu hình</button>
+        <div id="settings-reject-msg"></div>
+      </div>
+    </div>
+
+    <div id="tab-feedback" class="tab-content hidden">
+      <div class="card">
+        <h2>💬 Phản hồi / báo lỗi câu hỏi từ học viên</h2>
+        <div class="row" style="align-items:end;">
+          <div>
+            <label>Trạng thái</label>
+            <select id="fb-status" onchange="loadFeedback(0)">
+              <option value="all">Tất cả</option>
+              <option value="new" selected>🆕 Chưa xem</option>
+              <option value="reviewed">✅ Đã xem</option>
+            </select>
+          </div>
+          <div><button class="btn-secondary" type="button" onclick="loadFeedback(0)">Làm mới</button></div>
+        </div>
+        <div id="feedback-table" style="margin-top:10px;"><span class="muted">Đang tải...</span></div>
+        <div id="feedback-pager" style="margin-top:10px;"></div>
+      </div>
+    </div>
+  `;
+  renderSetsTable();
+  loadSubjects();
+  loadStudents(0);
+  loadSettings();
+  loadFeedback(0);
+  showTab(sessionStorage.getItem("quiz_admin_tab") || "tab-quiz");
+}
+
+function showTab(id){
+  document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  const panel = document.getElementById(id);
+  const btn = document.querySelector(`.tab-btn[data-tab="${id}"]`);
+  if(panel) panel.classList.remove("hidden");
+  if(btn) btn.classList.add("active");
+  sessionStorage.setItem("quiz_admin_tab", id);
+}
+
+let allQuizSlugs = [];
+let currentSubjectSlug = null;
+let lastLoadedSubjects = [];
+
+function editSubject(i){
+  const s = lastLoadedSubjects[i];
+  if(!s) return;
+  document.getElementById("subj-slug").value = s.slug;
+  document.getElementById("subj-title").value = s.title;
+  document.getElementById("subj-desc").value = s.description || "";
+  document.getElementById("subj-order").value = s.order_index;
+  document.getElementById("subj-mock-slug").value = s.mock_exam_quiz_slug || "";
+  document.getElementById("subj-mock-count").value = s.mock_exam_count;
+  document.getElementById("subj-slug").scrollIntoView({behavior:"smooth", block:"center"});
+}
+
+async function loadSubjects(){
+  const [data, timeData, hoursData] = await Promise.all([
+    callRpc("admin_list_subjects", { p_password: PASSWORD }),
+    callRpc("admin_list_mock_exam_time_limits", { p_password: PASSWORD }).catch(() => null),
+    callRpc("admin_list_subject_hours", { p_password: PASSWORD }).catch(() => null)
+  ]);
+  const el = document.getElementById("subjects-table");
+  if(!data || data.status !== "ok"){ el.innerHTML = `<p class="muted">Không tải được.</p>`; return; }
+  allQuizSlugs = quizSets.map(s => s.slug);
+  const subs = data.subjects;
+  const timeLimits = {};
+  if(timeData && timeData.status === "ok"){
+    (timeData.items||[]).forEach(it => { timeLimits[it.slug] = it.mock_exam_time_limit_minutes; });
+  }
+  const subjectHours = {};
+  if(hoursData && hoursData.status === "ok"){
+    (hoursData.items||[]).forEach(it => { subjectHours[it.slug] = it.estimated_hours; });
+  }
+  lastLoadedSubjects = subs;
+  if(subs.length === 0){ el.innerHTML = `<p class="muted">Chưa có môn học nào.</p>`; return; }
+  el.innerHTML = `
+    <table>
+      <tr><th>Môn học</th><th>Số bài</th><th>Đề ôn tập</th><th>Thời gian làm bài</th><th>Tổng số giờ học</th><th></th><th></th><th></th></tr>
+      ${subs.map((s,i) => `
+        <tr>
+          <td><b>${esc(s.title)}</b><br><span class="muted">${esc(s.slug)}</span></td>
+          <td>${s.lesson_count}</td>
+          <td>${esc(s.mock_exam_quiz_slug||"—")} (${s.mock_exam_count})</td>
+          <td style="white-space:nowrap;">
+            <input type="text" id="time-${esc(s.slug)}" value="${timeLimits[s.slug] != null ? timeLimits[s.slug] : ""}" placeholder="Không giới hạn" style="width:110px;display:inline-block;">
+            <button class="btn-secondary" onclick="saveExamTimeLimit('${s.slug.replace(/'/g,"\\'")}')">Lưu</button>
+          </td>
+          <td style="white-space:nowrap;">
+            <input type="text" id="hours-${esc(s.slug)}" value="${subjectHours[s.slug] != null ? subjectHours[s.slug] : ""}" placeholder="VD: 6" style="width:80px;display:inline-block;">
+            <button class="btn-secondary" onclick="saveSubjectHours('${s.slug.replace(/'/g,"\\'")}')">Lưu</button>
+          </td>
+          <td><button class="btn-primary" onclick="manageMockExamQuestions('${(s.mock_exam_quiz_slug||"").replace(/'/g,"\\'")}')">📥 Câu hỏi ôn tập</button></td>
+          <td><button class="btn-secondary" onclick="openLessons('${s.slug.replace(/'/g,"\\'")}')">Quản lý bài học</button></td>
+          <td><button class="btn-secondary" onclick="editSubject(${i})">Sửa</button></td>
+        </tr>
+      `).join("")}
+    </table>
+    <p class="muted" style="margin-top:8px;">Thời gian làm bài tính bằng phút, để trống = không giới hạn thời gian (đáp án vẫn ẩn tới khi nộp bài).<br>
+    Tổng số giờ học là số giờ ước tính để học xong toàn bộ môn (hiện cho học viên ngay dưới tên môn); để trống = không hiển thị.</p>
+  `;
+}
+
+async function saveSubjectHours(slug){
+  const input = document.getElementById(`hours-${slug}`);
+  const raw = input.value.trim();
+  const hours = raw === "" ? null : parseFloat(raw.replace(",", "."));
+  if(raw !== "" && (isNaN(hours) || hours <= 0)){
+    alert("Số giờ phải là số dương (có thể có phần lẻ, vd 4.5), hoặc để trống nếu không muốn hiển thị.");
+    return;
+  }
+  const data = await callRpc("admin_set_subject_hours", { p_password: PASSWORD, p_subject_slug: slug, p_hours: hours });
+  if(!data || data.status !== "ok"){ alert("Lỗi khi lưu: " + (data && data.status)); return; }
+  loadSubjects();
+}
+
+async function saveExamTimeLimit(slug){
+  const input = document.getElementById(`time-${slug}`);
+  const raw = input.value.trim();
+  const minutes = raw === "" ? null : parseInt(raw);
+  if(raw !== "" && (isNaN(minutes) || minutes <= 0)){
+    alert("Số phút phải là số nguyên dương, hoặc để trống nếu không giới hạn.");
+    return;
+  }
+  const data = await callRpc("admin_set_mock_exam_time_limit", { p_password: PASSWORD, p_subject_slug: slug, p_minutes: minutes });
+  if(!data || data.status !== "ok"){ alert("Lỗi khi lưu: " + (data && data.status)); return; }
+  loadSubjects();
+}
+
+function manageMockExamQuestions(slug){
+  if(!slug){
+    alert("Môn này chưa gán bộ đề cho \"Câu hỏi ôn tập\". Vào phần tạo/cập nhật môn học ở trên, điền ô \"Slug bộ đề dùng cho Câu hỏi ôn tập\" trước nhé.");
+    return;
+  }
+  if(!quizSets.some(s => s.slug === slug)){
+    alert(`Không tìm thấy bộ đề "${slug}" trong danh sách bộ đề. Kiểm tra lại slug đã gán cho môn học này.`);
+    return;
+  }
+  showTab("tab-quiz");
+  openDetail(slug);
+  setTimeout(() => {
+    const panel = document.getElementById("detail-panel");
+    if(panel) panel.scrollIntoView({ behavior: "smooth" });
+  }, 100);
+}
+
+async function createSubject(){
+  const slug = document.getElementById("subj-slug").value.trim();
+  const title = document.getElementById("subj-title").value.trim();
+  const desc = document.getElementById("subj-desc").value.trim();
+  const order = parseInt(document.getElementById("subj-order").value) || 0;
+  let mockSlug = document.getElementById("subj-mock-slug").value.trim() || null;
+  const mockCount = parseInt(document.getElementById("subj-mock-count").value) || 35;
+  const msgEl = document.getElementById("subj-msg");
+  if(!slug || !title){ msgEl.innerHTML = `<div class="msg err">Cần nhập slug và tên môn học.</div>`; return; }
+  // Để trống ô "Slug bộ đề ôn tập" khi đang cập nhật môn đã có sẵn => giữ nguyên giá trị cũ, không xoá mất.
+  if(!mockSlug){
+    const existing = lastLoadedSubjects.find(s => s.slug === slug);
+    if(existing && existing.mock_exam_quiz_slug) mockSlug = existing.mock_exam_quiz_slug;
+  }
+  const data = await callRpc("admin_upsert_subject", { p_password: PASSWORD, p_slug: slug, p_title: title, p_description: desc, p_order_index: order, p_mock_exam_quiz_slug: mockSlug, p_mock_exam_count: mockCount });
+  if(data.status === "ok"){
+    msgEl.innerHTML = `<div class="msg ok">Đã lưu môn học "${esc(title)}".</div>`;
+    loadSubjects();
+  } else {
+    msgEl.innerHTML = `<div class="msg err">Lỗi: ${esc(data.status)}</div>`;
+  }
+}
+
+async function openLessons(subjectSlug){
+  currentSubjectSlug = subjectSlug;
+  const panel = document.getElementById("lessons-panel");
+  panel.innerHTML = `
+    <h2 style="margin-top:18px;">Bài học của "${esc(subjectSlug)}"</h2>
+    <div class="row">
+      <div><label>Slug bài</label><input type="text" id="les-slug" placeholder="vd: bai-1"></div>
+      <div><label>Tên bài</label><input type="text" id="les-title" placeholder="vd: Bài 1"></div>
+      <div><label>Thứ tự</label><input type="text" id="les-order" placeholder="1"></div>
+    </div>
+    <div class="row">
+      <div><label>Slug bộ đề Quizzi</label><input type="text" id="les-quiz" placeholder="vd: bai-1" list="quiz-slug-list"></div>
+    </div>
+    <datalist id="quiz-slug-list">${allQuizSlugs.map(s=>`<option value="${esc(s)}">`).join("")}</datalist>
+
+    <label>Video bài giảng (có thể thêm nhiều video)</label>
+    <div id="les-videos-list"></div>
+    <div class="row" style="align-items:end;">
+      <div><label>Tên video</label><input type="text" id="les-video-label" placeholder="vd: Video bài 1 - Phần 1"></div>
+      <div><label>Dán link (YouTube / Google Drive)</label><input type="text" id="les-video-url" placeholder="https://..."></div>
+      <div><button class="btn-secondary" type="button" onclick="addVideoLink()">+ Thêm link</button></div>
+    </div>
+    <div class="row" style="align-items:end;">
+      <div><label>...hoặc tải file video lên trực tiếp</label><input type="file" id="les-video-file" accept="video/*"></div>
+      <div><button class="btn-secondary" type="button" onclick="uploadVideoFile()">⬆️ Tải video lên & thêm</button></div>
+    </div>
+    <p class="muted">Lưu ý file video tải trực tiếp sẽ chiếm dung lượng lưu trữ — nếu video lớn, nên ưu tiên dán link YouTube/Google Drive (nhớ đổi quyền chia sẻ Drive thành "Anyone with the link").</p>
+    <div id="les-video-msg"></div>
+
+    <label>Mindmap</label>
+    <div id="les-mindmap-preview"></div>
+    <div class="row" style="align-items:end;">
+      <div><label>Tải ảnh mindmap lên (JPG/PNG...)</label><input type="file" id="les-mindmap-file" accept="image/*"></div>
+      <div><button class="btn-secondary" type="button" onclick="uploadMindmap()">⬆️ Tải ảnh lên</button></div>
+      <div><label>...hoặc dán link mindmap có sẵn</label><input type="text" id="les-mindmap" placeholder="https://..."></div>
+    </div>
+    <div id="les-mindmap-msg"></div>
+
+    <label>Tài liệu bài học</label>
+    <div id="les-docs-list"></div>
+    <div class="row" style="align-items:end;">
+      <div><label>Tên tài liệu</label><input type="text" id="les-doc-label" placeholder="vd: Tóm tắt bài giảng (Word)"></div>
+      <div><label>Chọn file</label><input type="file" id="les-doc-file"></div>
+      <div><button class="btn-secondary" type="button" onclick="uploadLessonDoc()">⬆️ Tải lên & thêm</button></div>
+    </div>
+    <div id="les-doc-msg"></div>
+
+    <button class="btn-primary" style="margin-top:14px;" onclick="saveLesson()">+ Tạo / cập nhật bài học</button>
+    <div id="les-msg"></div>
+    <div id="lessons-table" style="margin-top:12px;"><span class="muted">Đang tải...</span></div>
+
+    <h2 style="margin-top:28px;">🧮 Luyện tính toán chuyên sâu</h2>
+    <p class="muted" style="margin-top:-6px;">Phần luyện tập cuối môn, sau khi học hết lý thuyết: chia theo từng "dạng" tính toán, mỗi dạng có 1 bài mẫu (xem lời giải luôn) rồi vài bài tập tương tự để học viên tự điền đáp án số, chấm ngay tại chỗ.</p>
+    <div id="calc-practice-panel"><span class="muted">Đang tải...</span></div>
+  `;
+  currentLessonDocuments = [];
+  currentLessonVideos = [];
+  renderLessonDocsList();
+  renderVideosList();
+  renderMindmapPreview();
+  loadLessonsTable(subjectSlug);
+  loadCalcPractice(subjectSlug);
+}
+
+let currentLessonDocuments = [];
+let currentLessonVideos = [];
+
+function renderVideosList(){
+  const el = document.getElementById("les-videos-list");
+  if(!el) return;
+  if(!currentLessonVideos.length){ el.innerHTML = `<p class="muted">Chưa có video nào cho bài này.</p>`; return; }
+  el.innerHTML = currentLessonVideos.map((v,i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #eceff8;">
+      <a href="${esc(v.url)}" target="_blank" rel="noopener" style="flex:1;font-weight:600;font-size:.88rem;">▶️ ${esc(v.label)}</a>
+      <button class="btn-danger" type="button" onclick="removeVideo(${i})">Xoá</button>
+    </div>
+  `).join("");
+}
+function removeVideo(i){ currentLessonVideos.splice(i,1); renderVideosList(); }
+
+function addVideoLink(){
+  const labelEl = document.getElementById("les-video-label");
+  const urlEl = document.getElementById("les-video-url");
+  const msgEl = document.getElementById("les-video-msg");
+  const label = labelEl.value.trim();
+  const url = urlEl.value.trim();
+  if(!label || !url){ msgEl.innerHTML = `<div class="msg err">Nhập tên video và dán link trước.</div>`; return; }
+  currentLessonVideos.push({ label, url });
+  renderVideosList();
+  labelEl.value = ""; urlEl.value = "";
+  msgEl.innerHTML = `<div class="msg ok">Đã thêm "${esc(label)}".</div>`;
+}
+
+async function uploadVideoFile(){
+  const labelEl = document.getElementById("les-video-label");
+  const fileEl = document.getElementById("les-video-file");
+  const msgEl = document.getElementById("les-video-msg");
+  const label = labelEl.value.trim();
+  const file = fileEl.files[0];
+  if(!label || !file){ msgEl.innerHTML = `<div class="msg err">Nhập tên video và chọn file trước.</div>`; return; }
+  msgEl.innerHTML = `<div class="msg">Đang tải video lên, có thể mất một lúc...</div>`;
+  try{
+    const lessonSlug = slugify(document.getElementById("les-slug").value);
+    const safeName = file.name.replace(/[^\w.\-]/g, "_");
+    const path = `${slugify(currentSubjectSlug)}/${lessonSlug}/video-${Date.now()}-${safeName}`;
+    const url = await uploadToStorage(file, path);
+    currentLessonVideos.push({ label, url });
+    renderVideosList();
+    labelEl.value = ""; fileEl.value = "";
+    msgEl.innerHTML = `<div class="msg ok">Đã tải video "${esc(label)}" lên.</div>`;
+  } catch(err){
+    msgEl.innerHTML = `<div class="msg err">Lỗi tải lên: ${esc(err.message)}</div>`;
+  }
+}
+
+function renderLessonDocsList(){
+  const el = document.getElementById("les-docs-list");
+  if(!el) return;
+  if(!currentLessonDocuments.length){ el.innerHTML = `<p class="muted">Chưa có tài liệu nào cho bài này.</p>`; return; }
+  el.innerHTML = currentLessonDocuments.map((d,i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #eceff8;">
+      <a href="${esc(d.url)}" target="_blank" rel="noopener" style="flex:1;font-weight:600;font-size:.88rem;">📄 ${esc(d.label)}</a>
+      <button class="btn-danger" type="button" onclick="removeLessonDoc(${i})">Xoá</button>
+    </div>
+  `).join("");
+}
+function removeLessonDoc(i){ currentLessonDocuments.splice(i,1); renderLessonDocsList(); }
+
+async function uploadToStorage(file, path){
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/lesson-files/${path}`, {
+    method: "POST",
+    headers: {
+      "apikey": SUPABASE_ANON_KEY,
+      "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+      "Content-Type": file.type || "application/octet-stream",
+      "x-upsert": "true"
+    },
+    body: file
+  });
+  if(!res.ok){
+    const t = await res.text();
+    throw new Error(`HTTP ${res.status}: ${t}`);
+  }
+  return `${SUPABASE_URL}/storage/v1/object/public/lesson-files/${path}`;
+}
+
+function renderMindmapPreview(){
+  const el = document.getElementById("les-mindmap-preview");
+  const url = document.getElementById("les-mindmap").value.trim();
+  if(!el) return;
+  if(!url){ el.innerHTML = `<p class="muted">Chưa có mindmap cho bài này.</p>`; return; }
+  el.innerHTML = /\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i.test(url)
+    ? `<img src="${esc(url)}" style="max-width:280px;border-radius:8px;border:1px solid #e3e7f5;display:block;margin-bottom:8px;">`
+    : `<a href="${esc(url)}" target="_blank" rel="noopener">Xem mindmap hiện tại</a>`;
+}
+
+async function uploadMindmap(){
+  const fileEl = document.getElementById("les-mindmap-file");
+  const msgEl = document.getElementById("les-mindmap-msg");
+  const file = fileEl.files[0];
+  if(!file){ msgEl.innerHTML = `<div class="msg err">Chọn ảnh trước.</div>`; return; }
+  msgEl.innerHTML = `<div class="msg">Đang tải ảnh lên...</div>`;
+  try{
+    const lessonSlug = slugify(document.getElementById("les-slug").value);
+    const safeName = file.name.replace(/[^\w.\-]/g, "_");
+    const path = `${slugify(currentSubjectSlug)}/${lessonSlug}/mindmap-${Date.now()}-${safeName}`;
+    const url = await uploadToStorage(file, path);
+    document.getElementById("les-mindmap").value = url;
+    renderMindmapPreview();
+    fileEl.value = "";
+    msgEl.innerHTML = `<div class="msg ok">Đã tải ảnh mindmap lên.</div>`;
+  } catch(err){
+    msgEl.innerHTML = `<div class="msg err">Lỗi tải lên: ${esc(err.message)}</div>`;
+  }
+}
+
+async function uploadLessonDoc(){
+  const labelEl = document.getElementById("les-doc-label");
+  const fileEl = document.getElementById("les-doc-file");
+  const msgEl = document.getElementById("les-doc-msg");
+  const label = labelEl.value.trim();
+  const file = fileEl.files[0];
+  if(!label || !file){ msgEl.innerHTML = `<div class="msg err">Nhập tên tài liệu và chọn file trước.</div>`; return; }
+  msgEl.innerHTML = `<div class="msg">Đang tải lên...</div>`;
+  try{
+    const lessonSlug = slugify(document.getElementById("les-slug").value);
+    const safeName = file.name.replace(/[^\w.\-]/g, "_");
+    const path = `${slugify(currentSubjectSlug)}/${lessonSlug}/${Date.now()}-${safeName}`;
+    const url = await uploadToStorage(file, path);
+    currentLessonDocuments.push({ label, url });
+    renderLessonDocsList();
+    labelEl.value = ""; fileEl.value = "";
+    msgEl.innerHTML = `<div class="msg ok">Đã tải lên "${esc(label)}".</div>`;
+  } catch(err){
+    msgEl.innerHTML = `<div class="msg err">Lỗi tải lên: ${esc(err.message)}</div>`;
+  }
+}
+
+let lastLoadedLessons = [];
+
+async function loadLessonsTable(subjectSlug){
+  const data = await callRpc("admin_list_lessons", { p_password: PASSWORD, p_subject_slug: subjectSlug });
+  const el = document.getElementById("lessons-table");
+  if(!data || data.status !== "ok"){ el.innerHTML = `<p class="muted">Không tải được.</p>`; return; }
+  const lessons = data.lessons;
+  lastLoadedLessons = lessons;
+  if(lessons.length === 0){ el.innerHTML = `<p class="muted">Chưa có bài học nào.</p>`; return; }
+  el.innerHTML = `
+    <table>
+      <tr><th>#</th><th>Bài</th><th>Video</th><th>Mindmap</th><th>Quiz</th><th>Tài liệu</th><th></th></tr>
+      ${lessons.map((l,i) => `
+        <tr>
+          <td>${l.order_index}</td>
+          <td><b>${esc(l.title)}</b><br><span class="muted">${esc(l.slug)}</span></td>
+          <td>${(l.videos||[]).length ? "✅ ("+l.videos.length+")" : "—"}</td>
+          <td>${l.mindmap_url ? "✅" : "—"}</td>
+          <td>${esc(l.quiz_slug||"—")}</td>
+          <td>${(l.documents||[]).length} file</td>
+          <td style="white-space:nowrap;">
+            <button class="btn-secondary" onclick="editLesson(lastLoadedLessons[${i}])">Sửa</button>
+            <button class="btn-danger" onclick="deleteLesson('${l.slug.replace(/'/g,"\\'")}')">Xoá</button>
+          </td>
+        </tr>
+      `).join("")}
+    </table>
+  `;
+}
+
+async function saveLesson(){
+  const slug = document.getElementById("les-slug").value.trim();
+  const title = document.getElementById("les-title").value.trim();
+  const order = parseInt(document.getElementById("les-order").value) || 0;
+  const mindmap = document.getElementById("les-mindmap").value.trim();
+  const quizSlug = document.getElementById("les-quiz").value.trim() || null;
+  const msgEl = document.getElementById("les-msg");
+  if(!slug || !title){ msgEl.innerHTML = `<div class="msg err">Cần nhập slug và tên bài.</div>`; return; }
+
+  const data = await callRpc("admin_upsert_lesson", {
+    p_password: PASSWORD, p_subject_slug: currentSubjectSlug, p_slug: slug, p_title: title,
+    p_order_index: order, p_videos: currentLessonVideos, p_mindmap_url: mindmap, p_documents: currentLessonDocuments, p_quiz_slug: quizSlug
+  });
+  if(data.status === "ok"){
+    msgEl.innerHTML = `<div class="msg ok">Đã lưu bài "${esc(title)}".</div>`;
+    document.getElementById("les-slug").value = ""; document.getElementById("les-title").value = "";
+    document.getElementById("les-order").value = "";
+    document.getElementById("les-mindmap").value = ""; document.getElementById("les-quiz").value = "";
+    currentLessonDocuments = []; renderLessonDocsList();
+    currentLessonVideos = []; renderVideosList();
+    loadLessonsTable(currentSubjectSlug);
+    loadSubjects();
+    delete lessonsBySubjectCache[currentSubjectSlug];
+  } else {
+    msgEl.innerHTML = `<div class="msg err">Lỗi: ${esc(data.status)} ${esc(data.message||"")}</div>`;
+  }
+}
+
+function editLesson(l){
+  document.getElementById("les-slug").value = l.slug;
+  document.getElementById("les-title").value = l.title;
+  document.getElementById("les-order").value = l.order_index;
+  document.getElementById("les-mindmap").value = l.mindmap_url || "";
+  document.getElementById("les-quiz").value = l.quiz_slug || "";
+  currentLessonDocuments = (l.documents || []).slice();
+  renderLessonDocsList();
+  currentLessonVideos = (l.videos || []).slice();
+  renderVideosList();
+  renderMindmapPreview();
+  document.getElementById("les-slug").scrollIntoView({behavior:"smooth", block:"center"});
+}
+
+async function deleteLesson(lessonSlug){
+  if(!confirm("Xoá bài học này?")) return;
+  await callRpc("admin_delete_lesson", { p_password: PASSWORD, p_subject_slug: currentSubjectSlug, p_lesson_slug: lessonSlug });
+  loadLessonsTable(currentSubjectSlug);
+  loadSubjects();
+  delete lessonsBySubjectCache[currentSubjectSlug];
+}
+
+/* ---------- Luyện tính toán chuyên sâu (mẫu + bài tập điền đáp án số, theo từng dạng) ---------- */
+let currentCalcGroups = [];
+let calcGroupFormOpenFor = null; // null | 'new' | group.id đang sửa
+let calcItemFormOpenFor = null;  // null | { groupId, itemId|null }
+
+async function loadCalcPractice(subjectSlug){
+  const data = await callRpc("admin_list_calc_practice", { p_password: PASSWORD, p_subject_slug: subjectSlug });
+  const el = document.getElementById("calc-practice-panel");
+  if(!el) return;
+  if(!data || data.status !== "ok"){ el.innerHTML = `<p class="muted">Không tải được.</p>`; return; }
+  currentCalcGroups = data.groups || [];
+  renderCalcPractice();
+}
+
+function renderCalcPractice(){
+  const el = document.getElementById("calc-practice-panel");
+  if(!el) return;
+  let html = `<button class="btn-secondary" type="button" onclick="openCalcGroupForm('new')">+ Thêm dạng mới</button>`;
+  html += `<div id="calc-group-form-area"></div>`;
+
+  if(!currentCalcGroups.length){
+    html += `<p class="muted" style="margin-top:10px;">Chưa có dạng tính toán nào cho môn này.</p>`;
+  } else {
+    currentCalcGroups.forEach(g => {
+      const items = g.items || [];
+      html += `
+        <div class="card" style="background:#f7f9ff;margin-top:12px;padding:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <h3 style="margin:0;">#${g.order_index} · ${esc(g.title)} ${g.video_url ? `<span class="muted" style="font-size:.75rem;font-weight:400;">🎬 ${esc(g.video_label||"có video")}</span>` : ""}</h3>
+            <div>
+              <button class="btn-secondary" type="button" onclick="openCalcGroupForm(${g.id})">Sửa dạng</button>
+              <button class="btn-danger" type="button" onclick="deleteCalcGroup(${g.id})">Xoá dạng</button>
+            </div>
+          </div>
+          <div id="calc-group-form-${g.id}"></div>
+
+          ${items.length ? `
+            <table style="margin-top:10px;">
+              <tr><th>#</th><th>Loại</th><th>Câu hỏi</th><th>Đáp án đúng</th><th>Sai số</th><th></th></tr>
+              ${items.map(it => `
+                <tr>
+                  <td>${it.order_index}</td>
+                  <td>${it.item_type === "sample" ? "📘 Mẫu" : "✏️ Bài tập"}</td>
+                  <td>${esc((it.question||"").length > 70 ? it.question.slice(0,70)+"..." : (it.question||""))}</td>
+                  <td>${it.correct_value}${it.unit ? " "+esc(it.unit) : ""}</td>
+                  <td>${it.tolerance || 0}</td>
+                  <td style="white-space:nowrap;">
+                    <button class="btn-secondary" type="button" onclick="openCalcItemForm(${g.id}, ${it.id})">Sửa</button>
+                    <button class="btn-danger" type="button" onclick="deleteCalcItem(${it.id}, ${g.id})">Xoá</button>
+                  </td>
+                </tr>
+              `).join("")}
+            </table>
+          ` : `<p class="muted" style="margin-top:8px;">Dạng này chưa có câu nào.</p>`}
+
+          <button class="btn-secondary" type="button" style="margin-top:10px;" onclick="openCalcItemForm(${g.id}, null)">+ Thêm câu vào dạng này</button>
+          <div id="calc-item-form-${g.id}"></div>
+        </div>
+      `;
+    });
+  }
+  el.innerHTML = html;
+}
+
+function openCalcGroupForm(target){
+  calcGroupFormOpenFor = target;
+  const isNew = target === "new";
+  const g = isNew ? null : currentCalcGroups.find(x => x.id === target);
+  const formHtml = `
+    <div class="card" style="background:#fff;border:1px solid #e3e7f5;margin-top:10px;padding:12px;">
+      <div class="row">
+        <div><label>Tên dạng</label><input type="text" id="cg-title" placeholder="VD: Dạng 1: Tính EPS/P-E" value="${esc(g ? g.title : "")}"></div>
+        <div><label>Thứ tự</label><input type="text" id="cg-order" placeholder="1" value="${g ? g.order_index : (currentCalcGroups.length+1)}"></div>
+      </div>
+      <div class="row">
+        <div><label>Link video hướng dẫn (tuỳ chọn)</label><input type="text" id="cg-video-url" placeholder="https://... (YouTube/Google Drive)" value="${esc(g ? (g.video_url||"") : "")}"></div>
+        <div><label>Tên video hiển thị</label><input type="text" id="cg-video-label" placeholder="VD: Hướng dẫn giải dạng 1-6" value="${esc(g ? (g.video_label||"") : "")}"></div>
+      </div>
+      <p class="muted" style="margin-top:-6px;">1 video có thể dùng chung cho nhiều dạng: chỉ cần dán đúng link này vào ô video của các dạng khác muốn gộp chung video hướng dẫn.</p>
+      <div class="row" style="margin-top:10px;">
+        <button class="btn-primary" type="button" onclick="saveCalcGroup(${isNew ? "null" : g.id})">💾 Lưu dạng</button>
+        <button class="btn-secondary" type="button" onclick="closeCalcGroupForm()">Huỷ</button>
+      </div>
+      <div id="cg-msg"></div>
+    </div>
+  `;
+  const targetEl = isNew ? document.getElementById("calc-group-form-area") : document.getElementById(`calc-group-form-${target}`);
+  if(targetEl) targetEl.innerHTML = formHtml;
+}
+function closeCalcGroupForm(){
+  calcGroupFormOpenFor = null;
+  const areaEl = document.getElementById("calc-group-form-area");
+  if(areaEl) areaEl.innerHTML = "";
+  currentCalcGroups.forEach(g => { const e = document.getElementById(`calc-group-form-${g.id}`); if(e) e.innerHTML = ""; });
+}
+async function saveCalcGroup(id){
+  const title = document.getElementById("cg-title").value.trim();
+  const order = parseInt(document.getElementById("cg-order").value) || 0;
+  const videoUrl = document.getElementById("cg-video-url").value.trim();
+  const videoLabel = document.getElementById("cg-video-label").value.trim();
+  const msgEl = document.getElementById("cg-msg");
+  if(!title){ msgEl.innerHTML = `<div class="msg err">Nhập tên dạng.</div>`; return; }
+  const data = await callRpc("admin_upsert_calc_practice_group", {
+    p_password: PASSWORD, p_subject_slug: currentSubjectSlug, p_id: id || null, p_title: title, p_order_index: order,
+    p_video_url: videoUrl || null, p_video_label: videoLabel || null
+  });
+  if(data && data.status === "ok"){
+    closeCalcGroupForm();
+    loadCalcPractice(currentSubjectSlug);
+  } else {
+    msgEl.innerHTML = `<div class="msg err">Lỗi: ${esc(data && data.status)}</div>`;
+  }
+}
+async function deleteCalcGroup(id){
+  if(!confirm("Xoá cả dạng này cùng toàn bộ câu mẫu/bài tập bên trong?")) return;
+  await callRpc("admin_delete_calc_practice_group", { p_password: PASSWORD, p_id: id });
+  loadCalcPractice(currentSubjectSlug);
+}
+
+function openCalcItemForm(groupId, itemId){
+  calcItemFormOpenFor = { groupId, itemId };
+  const g = currentCalcGroups.find(x => x.id === groupId);
+  const it = (itemId && g) ? (g.items||[]).find(x => x.id === itemId) : null;
+  const formHtml = `
+    <div class="card" style="background:#fff;border:1px solid #e3e7f5;margin-top:10px;padding:12px;">
+      <div class="row">
+        <div>
+          <label>Loại câu</label>
+          <select id="ci-type">
+            <option value="sample" ${it && it.item_type==="sample" ? "selected":""}>📘 Bài mẫu (hiện lời giải luôn, học viên không cần nhập đáp án)</option>
+            <option value="practice" ${!it || it.item_type==="practice" ? "selected":""}>✏️ Bài tập (học viên tự điền đáp án số)</option>
+          </select>
+        </div>
+        <div><label>Thứ tự trong dạng</label><input type="text" id="ci-order" placeholder="1" value="${it ? it.order_index : (((g&&g.items)||[]).length+1)}"></div>
+      </div>
+      <label>Đề bài / câu hỏi</label>
+      <textarea id="ci-question" rows="3" placeholder="VD: Doanh nghiệp X có lợi nhuận sau thuế 10 tỷ, số lượng cổ phiếu lưu hành 2 triệu cổ phiếu. Tính EPS.">${esc(it ? it.question : "")}</textarea>
+      <div class="row">
+        <div><label>Đáp án đúng (số)</label><input type="text" id="ci-value" placeholder="VD: 5000" value="${it ? it.correct_value : ""}"></div>
+        <div><label>Sai số cho phép</label><input type="text" id="ci-tolerance" placeholder="VD: 0 hoặc 0.01" value="${it ? (it.tolerance||0) : "0"}"></div>
+        <div><label>Đơn vị (tuỳ chọn)</label><input type="text" id="ci-unit" placeholder="VD: đồng, %, lần" value="${esc(it ? (it.unit||"") : "")}"></div>
+      </div>
+      <label>Lời giải chi tiết (hiện sau khi học viên nộp đáp án, hoặc hiện luôn nếu là bài mẫu)</label>
+      <textarea id="ci-solution" rows="4" placeholder="VD: EPS = Lợi nhuận sau thuế / Số cổ phiếu lưu hành = 10,000,000,000 / 2,000,000 = 5,000 đồng/cổ phiếu">${esc(it ? (it.solution_steps||"") : "")}</textarea>
+      <div class="row" style="margin-top:10px;">
+        <button class="btn-primary" type="button" onclick="saveCalcItem(${groupId}, ${itemId || "null"})">💾 Lưu câu</button>
+        <button class="btn-secondary" type="button" onclick="closeCalcItemForm(${groupId})">Huỷ</button>
+      </div>
+      <div id="ci-msg"></div>
+    </div>
+  `;
+  const targetEl = itemId ? null : document.getElementById(`calc-item-form-${groupId}`);
+  // Khi sửa 1 câu có sẵn, mở form ngay dưới khu danh sách câu của dạng đó (dùng chung vùng "thêm câu")
+  const area = document.getElementById(`calc-item-form-${groupId}`);
+  if(area) area.innerHTML = formHtml;
+}
+function closeCalcItemForm(groupId){
+  calcItemFormOpenFor = null;
+  const area = document.getElementById(`calc-item-form-${groupId}`);
+  if(area) area.innerHTML = "";
+}
+async function saveCalcItem(groupId, itemId){
+  const type = document.getElementById("ci-type").value;
+  const order = parseInt(document.getElementById("ci-order").value) || 0;
+  const question = document.getElementById("ci-question").value.trim();
+  const value = parseFloat(document.getElementById("ci-value").value);
+  const tolerance = parseFloat(document.getElementById("ci-tolerance").value) || 0;
+  const unit = document.getElementById("ci-unit").value.trim();
+  const solution = document.getElementById("ci-solution").value.trim();
+  const msgEl = document.getElementById("ci-msg");
+  if(!question || isNaN(value)){
+    msgEl.innerHTML = `<div class="msg err">Cần nhập đề bài và đáp án đúng (là 1 số).</div>`;
+    return;
+  }
+  const data = await callRpc("admin_upsert_calc_practice_item", {
+    p_password: PASSWORD, p_group_id: groupId, p_id: itemId || null,
+    p_item_type: type, p_order_index: order, p_question: question,
+    p_unit: unit || null, p_correct_value: value, p_tolerance: tolerance, p_solution_steps: solution || null
+  });
+  if(data && data.status === "ok"){
+    closeCalcItemForm(groupId);
+    loadCalcPractice(currentSubjectSlug);
+  } else {
+    msgEl.innerHTML = `<div class="msg err">Lỗi: ${esc(data && data.status)}</div>`;
+  }
+}
+async function deleteCalcItem(id, groupId){
+  if(!confirm("Xoá câu này?")) return;
+  await callRpc("admin_delete_calc_practice_item", { p_password: PASSWORD, p_id: id });
+  loadCalcPractice(currentSubjectSlug);
+}
+
+/* ---------- Tài khoản học viên (đăng ký SĐT + email) ---------- */
+const STU_PAGE_SIZE = 20;
+let studentsOffset = 0;
+let studentsTotal = 0;
+let studentSearchTimer = null;
+
+function debounceSearchStudents(){
+  clearTimeout(studentSearchTimer);
+  studentSearchTimer = setTimeout(() => loadStudents(0), 350);
+}
+
+function fmtDT(iso){
+  if(!iso) return "—";
+  const d = new Date(iso);
+  return d.toLocaleString("vi-VN");
+}
+
+const STATUS_LABEL = {
+  none: { text: "Chưa yêu cầu", bg: "#eee", fg: "#666" },
+  pending: { text: "⏳ Chờ duyệt", bg: "#fdf1de", fg: "#a07a17" },
+  approved: { text: "✅ Đã duyệt", bg: "#e9f7ec", fg: "var(--green)" },
+  rejected: { text: "❌ Từ chối", bg: "#fbeceb", fg: "var(--red)" }
+};
+
+async function loadStudents(offset){
+  studentsOffset = offset;
+  const search = document.getElementById("stu-search").value.trim();
+  const status = document.getElementById("stu-status").value;
+  const el = document.getElementById("students-table");
+  el.innerHTML = `<span class="muted">Đang tải...</span>`;
+  const data = await callRpc("admin_list_students", { p_password: PASSWORD, p_search: search || null, p_status: status, p_limit: STU_PAGE_SIZE, p_offset: offset });
+  if(!data || data.status !== "ok"){ el.innerHTML = `<p class="muted">Không tải được.</p>`; return; }
+  studentsTotal = data.total;
+  const rows = data.students;
+  if(rows.length === 0){ el.innerHTML = `<p class="muted">Không có học viên nào khớp bộ lọc.</p>`; document.getElementById("students-pager").innerHTML = ""; return; }
+  el.innerHTML = `
+    <table>
+      <tr><th>Họ tên</th><th>SĐT</th><th>Email</th><th>ID môi giới</th><th>Phòng</th><th>Trạng thái</th><th>Đăng ký lúc</th><th></th></tr>
+      ${rows.map(s => {
+        const st = STATUS_LABEL[s.approval_status] || STATUS_LABEL.none;
+        return `
+        <tr>
+          <td><b>${esc(s.full_name)}</b></td>
+          <td>${esc(s.phone)}</td>
+          <td>${esc(s.email)}</td>
+          <td>${esc(s.broker_id||"—")}</td>
+          <td>${esc(s.department||"—")}</td>
+          <td><span class="pill" style="background:${st.bg};color:${st.fg};">${st.text}</span></td>
+          <td>${fmtDT(s.requested_at || s.created_at)}</td>
+          <td style="white-space:nowrap;">
+            ${s.approval_status !== "approved" ? `<button class="btn-secondary" style="color:var(--green);" onclick="approveStudent(${s.id})">Duyệt</button>` : ""}
+            ${s.approval_status !== "rejected" && s.approval_status !== "none" ? `<button class="btn-secondary" style="color:var(--red);" onclick="rejectStudent(${s.id})">Từ chối</button>` : ""}
+            <button class="btn-secondary" onclick="editStudent(${s.id},'${esc(s.full_name).replace(/'/g,"\\'")}','${esc(s.phone).replace(/'/g,"\\'")}','${esc(s.email).replace(/'/g,"\\'")}')">Sửa</button>
+            <button class="btn-danger" onclick="deleteStudent(${s.id})">Xoá</button>
+          </td>
+        </tr>
+      `;}).join("")}
+    </table>
+    <p class="muted" style="margin-top:8px;">Tổng ${studentsTotal} học viên.</p>
+  `;
+  const pager = document.getElementById("students-pager");
+  const hasPrev = offset > 0;
+  const hasNext = offset + STU_PAGE_SIZE < studentsTotal;
+  pager.innerHTML = `
+    <button class="btn-secondary" ${hasPrev ? "" : "disabled"} onclick="loadStudents(${Math.max(0, offset - STU_PAGE_SIZE)})">← Trước</button>
+    <button class="btn-secondary" ${hasNext ? "" : "disabled"} onclick="loadStudents(${offset + STU_PAGE_SIZE})">Sau →</button>
+  `;
+}
+
+async function approveStudent(id){
+  await callRpc("admin_approve_student", { p_password: PASSWORD, p_id: id });
+  loadStudents(studentsOffset);
+}
+async function rejectStudent(id){
+  if(!confirm("Từ chối yêu cầu mở khoá của học viên này?")) return;
+  await callRpc("admin_reject_student", { p_password: PASSWORD, p_id: id });
+  loadStudents(studentsOffset);
+}
+
+async function loadSettings(){
+  const data = await callRpc("get_portal_settings_public", {});
+  if(data && data.status === "ok"){
+    document.getElementById("settings-phone").value = data.support_phone || "";
+    document.getElementById("settings-ctv").value = data.ctv_signup_url || "";
+    const reqTitle = document.getElementById("settings-req-title");
+    const reqDesc = document.getElementById("settings-req-desc");
+    const pendingText = document.getElementById("settings-pending-text");
+    const rejectedText = document.getElementById("settings-rejected-text");
+    if(reqTitle) reqTitle.value = data.access_request_title || "";
+    if(reqDesc) reqDesc.value = data.access_request_desc || "";
+    if(pendingText) pendingText.value = data.access_pending_text || "";
+    if(rejectedText) rejectedText.value = data.access_rejected_text || "";
+  }
+}
+async function saveSettings(){
+  const phone = document.getElementById("settings-phone").value.trim();
+  const ctv = document.getElementById("settings-ctv").value.trim();
+  const reqTitle = document.getElementById("settings-req-title").value.trim();
+  const reqDesc = document.getElementById("settings-req-desc").value.trim();
+  const pendingText = document.getElementById("settings-pending-text").value.trim();
+  const rejectedText = document.getElementById("settings-rejected-text").value.trim();
+  const msgEl = document.getElementById("settings-msg");
+  const data = await callRpc("admin_update_portal_settings", {
+    p_password: PASSWORD, p_support_phone: phone, p_ctv_signup_url: ctv,
+    p_access_request_title: reqTitle, p_access_request_desc: reqDesc,
+    p_access_pending_text: pendingText, p_access_rejected_text: rejectedText
+  });
+  const okMsg = `<div class="msg ok">Đã lưu cấu hình.</div>`;
+  if(data && data.status === "ok"){
+    msgEl.innerHTML = okMsg;
+    document.getElementById("settings-req-msg").innerHTML = okMsg;
+    document.getElementById("settings-reject-msg").innerHTML = okMsg;
+  } else {
+    const errMsg = `<div class="msg err">Lỗi: ${esc(data && data.status)}</div>`;
+    msgEl.innerHTML = errMsg;
+    document.getElementById("settings-req-msg").innerHTML = errMsg;
+    document.getElementById("settings-reject-msg").innerHTML = errMsg;
+  }
+}
+
+async function editStudent(id, curName, curPhone, curEmail){
+  const name = prompt("Họ tên:", curName);
+  if(name === null) return;
+  const phone = prompt("Số điện thoại:", curPhone);
+  if(phone === null) return;
+  const email = prompt("Email:", curEmail);
+  if(email === null) return;
+  const data = await callRpc("admin_update_student", { p_password: PASSWORD, p_id: id, p_full_name: name.trim(), p_phone: phone.trim(), p_email: email.trim() });
+  if(!data || data.status !== "ok"){ alert("Lỗi khi cập nhật: " + (data && data.status)); return; }
+  loadStudents(studentsOffset);
+}
+
+async function deleteStudent(id){
+  if(!confirm("Xoá tài khoản học viên này? Học viên sẽ cần đăng ký lại nếu muốn tiếp tục học.")) return;
+  await callRpc("admin_delete_student", { p_password: PASSWORD, p_id: id });
+  loadStudents(studentsOffset);
+}
+
+/* ---------- Phản hồi / báo lỗi câu hỏi ---------- */
+const FB_PAGE_SIZE = 20;
+let feedbackOffset = 0;
+let feedbackTotal = 0;
+
+async function loadFeedback(offset){
+  feedbackOffset = offset;
+  const statusEl = document.getElementById("fb-status");
+  const status = statusEl ? statusEl.value : "new";
+  const el = document.getElementById("feedback-table");
+  if(!el) return;
+  el.innerHTML = `<span class="muted">Đang tải...</span>`;
+  const data = await callRpc("admin_list_question_feedback", { p_password: PASSWORD, p_status: status, p_limit: FB_PAGE_SIZE, p_offset: offset });
+  if(!data || data.status !== "ok"){ el.innerHTML = `<p class="muted">Không tải được.</p>`; return; }
+  feedbackTotal = data.total;
+  const rows = data.items;
+  if(rows.length === 0){ el.innerHTML = `<p class="muted">Không có phản hồi nào.</p>`; document.getElementById("feedback-pager").innerHTML = ""; return; }
+  el.innerHTML = `
+    <table>
+      <tr><th>Trạng thái</th><th>Bộ đề</th><th>Câu hỏi</th><th>Nội dung phản hồi</th><th>Học viên</th><th>Thời gian</th><th></th></tr>
+      ${rows.map(f => `
+        <tr>
+          <td>${f.status === "new" ? `<span class="pill" style="background:#fdf1de;color:#a07a17;">🆕 Chưa xem</span>` : `<span class="pill" style="background:#e9f7ec;color:var(--green);">✅ Đã xem</span>`}</td>
+          <td>${esc(f.quiz_slug||"—")}</td>
+          <td style="max-width:220px;">${esc(f.question_text||"—")}</td>
+          <td style="max-width:220px;">${esc(f.feedback_text)}</td>
+          <td>${esc(f.taker_name||"—")}</td>
+          <td>${fmtDT(f.created_at)}</td>
+          <td style="white-space:nowrap;">
+            ${f.status !== "reviewed" ? `<button class="btn-secondary" onclick="markFeedback(${f.id},'reviewed')">Đánh dấu đã xem</button>` : `<button class="btn-secondary" onclick="markFeedback(${f.id},'new')">Đánh dấu chưa xem</button>`}
+            <button class="btn-danger" onclick="deleteFeedback(${f.id})">Xoá</button>
+          </td>
+        </tr>
+      `).join("")}
+    </table>
+    <p class="muted" style="margin-top:8px;">Tổng ${feedbackTotal} phản hồi.</p>
+  `;
+  const pager = document.getElementById("feedback-pager");
+  const hasPrev = offset > 0;
+  const hasNext = offset + FB_PAGE_SIZE < feedbackTotal;
+  pager.innerHTML = `
+    <button class="btn-secondary" ${hasPrev ? "" : "disabled"} onclick="loadFeedback(${Math.max(0, offset - FB_PAGE_SIZE)})">← Trước</button>
+    <button class="btn-secondary" ${hasNext ? "" : "disabled"} onclick="loadFeedback(${offset + FB_PAGE_SIZE})">Sau →</button>
+  `;
+}
+
+async function markFeedback(id, status){
+  await callRpc("admin_mark_question_feedback", { p_password: PASSWORD, p_id: id, p_status: status });
+  loadFeedback(feedbackOffset);
+}
+async function deleteFeedback(id){
+  if(!confirm("Xoá phản hồi này?")) return;
+  await callRpc("admin_delete_question_feedback", { p_password: PASSWORD, p_id: id });
+  loadFeedback(feedbackOffset);
+}
+
+let setsViewMode = "grouped"; // "grouped" | "flat"
+let lessonsBySubjectCache = {};
+let selectedGroupSubjectSlug = null;
+
+function setSetsView(mode){
+  setsViewMode = mode;
+  renderSetsTable();
+}
+
+function onSelectGroupSubject(slug){
+  selectedGroupSubjectSlug = slug || null;
+  renderSetsTable();
+}
+
+function renderFlatSetsTable(sets){
+  return `
+    <table>
+      <tr><th>Bộ đề</th><th>Số câu</th><th>Lượt làm</th><th>Trạng thái</th><th></th></tr>
+      ${sets.map(s => `
+        <tr>
+          <td><b>${esc(s.title)}</b><br><span class="muted">${esc(s.slug)}</span></td>
+          <td>${s.question_count}</td>
+          <td>${s.attempt_count}</td>
+          <td><span class="pill" style="background:${s.is_active ? '#CADCFC' : '#eee'};">${s.is_active ? 'Đang mở' : 'Đã ẩn'}</span></td>
+          <td>
+            <button class="btn-secondary" onclick="openDetail('${s.slug.replace(/'/g,"\\'")}')">Quản lý</button>
+          </td>
+        </tr>
+      `).join("")}
+    </table>
+  `;
+}
+
+async function ensureLessonsForGrouping(){
+  if(!lastLoadedSubjects.length){
+    const data = await callRpc("admin_list_subjects", { p_password: PASSWORD });
+    if(data && data.status === "ok") lastLoadedSubjects = data.subjects;
+  }
+  const slugs = lastLoadedSubjects.map(s => s.slug).filter(s => !(s in lessonsBySubjectCache));
+  if(slugs.length){
+    const results = await Promise.all(slugs.map(s => callRpc("admin_list_lessons", { p_password: PASSWORD, p_subject_slug: s }).catch(() => null)));
+    slugs.forEach((s,i) => { lessonsBySubjectCache[s] = (results[i] && results[i].status === "ok") ? results[i].lessons : []; });
+  }
+}
+
+async function renderSetsTable(){
+  const el = document.getElementById("sets-table");
+  if(!el) return;
+  if(quizSets.length === 0){ el.innerHTML = `<p class="muted">Chưa có bộ đề nào.</p>`; return; }
+
+  const toggleHtml = `
+    <div style="margin-bottom:10px;">
+      <button class="btn-secondary" onclick="setSetsView('grouped')" style="${setsViewMode==='grouped'?'background:#CADCFC;':''}">📚 Theo môn học</button>
+      <button class="btn-secondary" onclick="setSetsView('flat')" style="${setsViewMode==='flat'?'background:#CADCFC;':''}">📋 Tất cả (${quizSets.length})</button>
+    </div>
+  `;
+
+  if(setsViewMode === "flat"){
+    el.innerHTML = toggleHtml + renderFlatSetsTable(quizSets);
+    return;
+  }
+
+  el.innerHTML = toggleHtml + `<p class="muted">Đang nhóm theo môn học...</p>`;
+  await ensureLessonsForGrouping();
+  // Nếu khi chờ tải xong mà người dùng đã bấm chuyển view khác thì thôi, không ghi đè.
+  if(setsViewMode !== "grouped") return;
+
+  const usageBySlug = {};
+  function addUsage(slug, subjTitle, subjSlug, label){
+    if(!slug) return;
+    (usageBySlug[slug] = usageBySlug[slug] || []).push({ subjTitle, subjSlug, label });
+  }
+  lastLoadedSubjects.forEach(s => {
+    addUsage(s.mock_exam_quiz_slug, s.title, s.slug, "⭐ Câu hỏi ôn tập");
+    (lessonsBySubjectCache[s.slug] || []).forEach(l => addUsage(l.quiz_slug, s.title, s.slug, `📘 ${esc(l.title)}`));
+  });
+
+  const groups = {};
+  const unassigned = [];
+  quizSets.forEach(set => {
+    const usages = usageBySlug[set.slug];
+    if(!usages || !usages.length){ unassigned.push(set); return; }
+    usages.forEach(u => {
+      groups[u.subjSlug] = groups[u.subjSlug] || { title: u.subjTitle, items: [] };
+      groups[u.subjSlug].items.push({ set, label: u.label });
+    });
+  });
+  const UNASSIGNED_KEY = "__unassigned__";
+
+  // Danh sách môn để chọn, chỉ liệt kê môn có ít nhất 1 bộ đề + mục "chưa gán"
+  const options = lastLoadedSubjects
+    .filter(s => groups[s.slug] && groups[s.slug].items.length)
+    .map(s => ({ slug: s.slug, label: `${s.title} (${groups[s.slug].items.length})` }));
+  if(unassigned.length) options.push({ slug: UNASSIGNED_KEY, label: `⚠️ Chưa gán vào môn học nào (${unassigned.length})` });
+
+  if(!selectedGroupSubjectSlug || !options.some(o => o.slug === selectedGroupSubjectSlug)){
+    selectedGroupSubjectSlug = options.length ? options[0].slug : null;
+  }
+
+  const selectHtml = `
+    <div style="margin-bottom:14px;max-width:420px;">
+      <label style="font-weight:600;font-size:.88rem;display:block;margin-bottom:5px;">Chọn môn học</label>
+      <select onchange="onSelectGroupSubject(this.value)" style="width:100%;padding:10px 12px;border:1px solid #ccd3e8;border-radius:8px;font-size:.95rem;">
+        ${options.map(o => `<option value="${esc(o.slug)}" ${o.slug===selectedGroupSubjectSlug?"selected":""}>${esc(o.label)}</option>`).join("")}
+      </select>
+    </div>
+  `;
+
+  let html = toggleHtml + selectHtml;
+
+  if(!options.length){
+    html += `<p class="muted">Chưa có bộ đề nào.</p>`;
+    el.innerHTML = html;
+    return;
+  }
+
+  if(selectedGroupSubjectSlug === UNASSIGNED_KEY){
+    html += `
+      <div class="card" style="background:#fff7f0;padding:14px;">
+        <h3 style="margin:0 0 8px;">⚠️ Chưa gán vào môn học nào</h3>
+        <p class="muted" style="margin-top:-4px;">Bộ đề này chưa được chọn làm "Câu hỏi ôn tập" hay Quizzi của bài học nào. Vào tab "Môn học &amp; bài học" để gán.</p>
+        ${renderFlatSetsTable(unassigned)}
+      </div>
+    `;
+  } else {
+    const g = groups[selectedGroupSubjectSlug];
+    html += `
+      <div class="card" style="background:#f7f9ff;padding:14px;">
+        <h3 style="margin:0 0 8px;">${esc(g.title)}</h3>
+        <table>
+          <tr><th>Dùng cho</th><th>Bộ đề</th><th>Số câu</th><th>Lượt làm</th><th>Trạng thái</th><th></th></tr>
+          ${g.items.map(({set,label}) => `
+            <tr>
+              <td>${label}</td>
+              <td><b>${esc(set.title)}</b><br><span class="muted">${esc(set.slug)}</span></td>
+              <td>${set.question_count}</td>
+              <td>${set.attempt_count}</td>
+              <td><span class="pill" style="background:${set.is_active ? '#CADCFC' : '#eee'};">${set.is_active ? 'Đang mở' : 'Đã ẩn'}</span></td>
+              <td><button class="btn-secondary" onclick="openDetail('${set.slug.replace(/'/g,"\\'")}')">Quản lý</button></td>
+            </tr>
+          `).join("")}
+        </table>
+      </div>
+    `;
+  }
+  el.innerHTML = html;
+}
+
+async function createSet(){
+  const slug = document.getElementById("new-slug").value.trim();
+  const title = document.getElementById("new-title").value.trim();
+  const desc = document.getElementById("new-desc").value.trim();
+  const msgEl = document.getElementById("create-msg");
+  if(!slug || !title){ msgEl.innerHTML = `<div class="msg err">Cần nhập slug và tên bộ đề.</div>`; return; }
+  const data = await callRpc("admin_create_quiz_set", { p_password: PASSWORD, p_slug: slug, p_title: title, p_description: desc });
+  if(data.status === "ok"){
+    msgEl.innerHTML = `<div class="msg ok">Đã tạo bộ đề "${esc(title)}".</div>`;
+    document.getElementById("new-slug").value = ""; document.getElementById("new-title").value = ""; document.getElementById("new-desc").value = "";
+    await refreshSets();
+  } else if(data.status === "unauthorized"){
+    msgEl.innerHTML = `<div class="msg err">Sai mật khẩu.</div>`;
+  } else if(data.message === "slug_exists"){
+    msgEl.innerHTML = `<div class="msg err">Slug này đã tồn tại, chọn slug khác.</div>`;
+  } else {
+    msgEl.innerHTML = `<div class="msg err">Lỗi: thiếu thông tin.</div>`;
+  }
+}
+
+async function openDetail(slug){
+  currentSlug = slug;
+  const set = quizSets.find(s => s.slug === slug);
+  const panel = document.getElementById("detail-panel");
+  panel.innerHTML = `
+    <div class="card">
+      <h2>${esc(set.title)} <span class="muted">(${esc(slug)})</span></h2>
+      <div class="row">
+        <button class="btn-secondary" onclick="toggleActive('${slug.replace(/'/g,"\\'")}', ${!set.is_active})">${set.is_active ? "Ẩn bộ đề" : "Mở lại bộ đề"}</button>
+        <button class="btn-danger" onclick="deleteSet('${slug.replace(/'/g,"\\'")}')">Xoá bộ đề (và toàn bộ câu hỏi/lượt làm)</button>
+      </div>
+
+      <h2 style="margin-top:18px;">Nhập câu hỏi từ Excel</h2>
+      <p class="muted">File .xlsx cần đúng thứ tự cột (dòng đầu là tiêu đề, sẽ bị bỏ qua): <b>STT, Câu hỏi, Lựa chọn 1, Lựa chọn 2, Lựa chọn 3, Lựa chọn 4, Đáp án đúng, Giải thích, Chương/Chủ đề</b>. Cột "Đáp án đúng" ghi <b>chữ cái A/B/C/D</b> (hoặc số 1-4) tương ứng vị trí lựa chọn đúng — khỏi cần chép lại cả câu nên không sợ gõ sai/thừa khoảng trắng; vẫn chấp nhận chép nguyên văn lựa chọn như trước nếu quen làm vậy. Import lại cùng STT sẽ ghi đè câu cũ (dùng để sửa/cập nhật). Câu nào hệ thống không xác định được đáp án đúng sẽ bị bỏ qua và báo lỗi rõ dòng nào, không nhập vào.</p>
+      <input type="file" id="excel-file" accept=".xlsx,.xls,.csv">
+      <button class="btn-primary" style="margin-top:10px;" onclick="importExcel()">Nhập câu hỏi</button>
+      <div id="import-msg"></div>
+
+      <h2 style="margin-top:18px;">Câu hỏi trong bộ đề</h2>
+      <div id="questions-table"><span class="muted">Đang tải...</span></div>
+
+      <h2 style="margin-top:18px;">Lượt làm bài</h2>
+      <div id="attempts-table"><span class="muted">Đang tải...</span></div>
+    </div>
+  `;
+  loadQuestions(slug);
+  loadAttempts(slug);
+}
+
+async function toggleActive(slug, newState){
+  await callRpc("admin_update_quiz_set", { p_password: PASSWORD, p_slug: slug, p_is_active: newState });
+  await refreshSets();
+  openDetail(slug);
+}
+async function deleteSet(slug){
+  if(!confirm("Xoá vĩnh viễn bộ đề này cùng toàn bộ câu hỏi và lượt làm bài?")) return;
+  await callRpc("admin_delete_quiz_set", { p_password: PASSWORD, p_slug: slug });
+  document.getElementById("detail-panel").innerHTML = "";
+  await refreshSets();
+}
+
+let lastLoadedQuestions = [];
+let editingQuestionId = null;
+
+async function loadQuestions(slug){
+  const data = await callRpc("admin_list_quiz_questions", { p_password: PASSWORD, p_quiz_slug: slug });
+  const el = document.getElementById("questions-table");
+  if(!data || data.status !== "ok"){ el.innerHTML = `<p class="muted">Không tải được.</p>`; return; }
+  const qs = data.questions;
+  lastLoadedQuestions = qs;
+  editingQuestionId = null;
+  if(qs.length === 0){ el.innerHTML = `<p class="muted">Chưa có câu hỏi nào.</p>`; return; }
+  el.innerHTML = `
+    <table>
+      <tr><th>#</th><th>Câu hỏi</th><th>Đáp án đúng</th><th>Chủ đề</th><th></th></tr>
+      ${qs.map((q,i) => `
+        <tr>
+          <td>${q.stt}</td>
+          <td>${esc(q.question)}</td>
+          <td>${esc(q.correct_answer)}</td>
+          <td>${esc(q.topic||"")}</td>
+          <td style="white-space:nowrap;">
+            <button class="btn-secondary" onclick="editQuestion(${i})">Sửa</button>
+            <button class="btn-danger" onclick="deleteQuestion(${q.id},'${slug.replace(/'/g,"\\'")}')">Xoá</button>
+          </td>
+        </tr>
+      `).join("")}
+    </table>
+    <div id="question-edit-area"></div>
+  `;
+}
+async function deleteQuestion(id, slug){
+  if(!confirm("Xoá câu hỏi này?")) return;
+  await callRpc("admin_delete_quiz_question", { p_password: PASSWORD, p_id: id });
+  loadQuestions(slug);
+  refreshSets();
+}
+
+function editQuestion(i){
+  const q = lastLoadedQuestions[i];
+  if(!q) return;
+  editingQuestionId = q.id;
+  const area = document.getElementById("question-edit-area");
+  if(!area) return;
+  const hasOptions = [q.option_a, q.option_b, q.option_c, q.option_d].some(o => o !== undefined && o !== null && o !== "");
+  area.innerHTML = `
+    <div class="card" style="background:#f7f9ff;margin-top:12px;">
+      <h3 style="margin-top:0;">✏️ Sửa câu ${esc(String(q.stt))}</h3>
+      ${!hasOptions ? `<div class="msg err">Không lấy được 4 đáp án gốc của câu này qua danh sách — hãy nhập lại đầy đủ cả 4 lựa chọn bên dưới trước khi lưu để khỏi mất dữ liệu (hoặc sửa trực tiếp qua file Excel rồi nhập lại nếu không chắc nội dung gốc).</div>` : ""}
+      <label>Câu hỏi</label>
+      <textarea id="eq-question" rows="2">${esc(q.question||"")}</textarea>
+      <div class="row">
+        <div><label>Lựa chọn A</label><input type="text" id="eq-a" value="${esc(q.option_a||"")}" oninput="refreshCorrectAnswerOptions()"></div>
+        <div><label>Lựa chọn B</label><input type="text" id="eq-b" value="${esc(q.option_b||"")}" oninput="refreshCorrectAnswerOptions()"></div>
+      </div>
+      <div class="row">
+        <div><label>Lựa chọn C</label><input type="text" id="eq-c" value="${esc(q.option_c||"")}" oninput="refreshCorrectAnswerOptions()"></div>
+        <div><label>Lựa chọn D</label><input type="text" id="eq-d" value="${esc(q.option_d||"")}" oninput="refreshCorrectAnswerOptions()"></div>
+      </div>
+      <label>Đáp án đúng</label>
+      <select id="eq-correct"></select>
+      <label>Giải thích (hiện cho học viên sau khi trả lời, có thể để trống)</label>
+      <textarea id="eq-explain" rows="2">${esc(q.explanation||"")}</textarea>
+      <label>Chủ đề / Chương</label>
+      <input type="text" id="eq-topic" value="${esc(q.topic||"")}">
+      <div class="row" style="margin-top:10px;">
+        <button class="btn-primary" type="button" onclick="saveQuestionEdit('${currentSlug.replace(/'/g,"\\'")}')">💾 Lưu câu hỏi</button>
+        <button class="btn-secondary" type="button" onclick="document.getElementById('question-edit-area').innerHTML=''">Huỷ</button>
+      </div>
+      <div id="eq-msg"></div>
+    </div>
+  `;
+  refreshCorrectAnswerOptions(q.correct_answer);
+  area.scrollIntoView({behavior:"smooth", block:"center"});
+}
+
+function refreshCorrectAnswerOptions(selectedValue){
+  const sel = document.getElementById("eq-correct");
+  if(!sel) return;
+  const prev = selectedValue !== undefined ? selectedValue : sel.value;
+  const opts = [
+    document.getElementById("eq-a").value,
+    document.getElementById("eq-b").value,
+    document.getElementById("eq-c").value,
+    document.getElementById("eq-d").value
+  ];
+  sel.innerHTML = opts.map(o => `<option value="${esc(o)}" ${o===prev ? "selected" : ""}>${esc(o || "(trống)")}</option>`).join("");
+}
+
+async function saveQuestionEdit(slug){
+  const q = lastLoadedQuestions.find(x => x.id === editingQuestionId);
+  const msgEl = document.getElementById("eq-msg");
+  if(!q){ if(msgEl) msgEl.innerHTML = `<div class="msg err">Có lỗi, hãy tải lại trang.</div>`; return; }
+  const question = document.getElementById("eq-question").value.trim();
+  const a = document.getElementById("eq-a").value.trim();
+  const b = document.getElementById("eq-b").value.trim();
+  const c = document.getElementById("eq-c").value.trim();
+  const d = document.getElementById("eq-d").value.trim();
+  const correct = document.getElementById("eq-correct").value;
+  const explain = document.getElementById("eq-explain").value.trim();
+  const topic = document.getElementById("eq-topic").value.trim();
+  if(!question || !a || !b || !c || !d || !correct){
+    msgEl.innerHTML = `<div class="msg err">Cần nhập đủ nội dung câu hỏi, cả 4 lựa chọn và chọn đáp án đúng.</div>`;
+    return;
+  }
+  msgEl.innerHTML = `<div class="msg">Đang lưu...</div>`;
+  const data = await callRpc("admin_bulk_upsert_quiz_questions", {
+    p_password: PASSWORD, p_quiz_slug: slug,
+    p_questions: [{ stt: q.stt, question, option_a: a, option_b: b, option_c: c, option_d: d, correct_answer: correct, explanation: explain, topic }]
+  });
+  if(data && data.status === "ok"){
+    msgEl.innerHTML = `<div class="msg ok">Đã lưu câu hỏi.</div>`;
+    loadQuestions(slug);
+  } else {
+    msgEl.innerHTML = `<div class="msg err">Lỗi khi lưu: ${esc(data && data.status)}</div>`;
+  }
+}
+
+async function loadAttempts(slug){
+  const data = await callRpc("admin_list_quiz_attempts", { p_password: PASSWORD, p_quiz_slug: slug, p_limit: 200, p_offset: 0 });
+  const el = document.getElementById("attempts-table");
+  if(!data || data.status !== "ok"){ el.innerHTML = `<p class="muted">Không tải được.</p>`; return; }
+  const at = data.attempts;
+  if(at.length === 0){ el.innerHTML = `<p class="muted">Chưa có ai làm bài.</p>`; return; }
+  el.innerHTML = `
+    <table>
+      <tr><th>Người làm</th><th>Điểm</th><th>Thời gian nộp</th></tr>
+      ${at.map(a => `
+        <tr><td>${esc(a.taker_name)}</td><td>${a.score}/${a.total}</td><td>${new Date(a.finished_at).toLocaleString("vi-VN")}</td></tr>
+      `).join("")}
+    </table>
+  `;
+}
+
+function readExcelFile(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try{
+        const wb = XLSX.read(e.target.result, { type: "array" });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+        resolve(rows);
+      } catch(err){ reject(err); }
+    };
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+/* Chuẩn hoá chữ để so khớp "Đáp án đúng" với 4 lựa chọn, tránh lỗi do:
+   - thừa khoảng trắng / khoảng trắng không ngắt dòng (dán từ Word/PDF)
+   - chữ hoa/thường khác nhau
+   - 2 cách gõ dấu tiếng Việt khác nhau (Unicode tổ hợp) trông giống hệt nhau nhưng là chuỗi khác nhau */
+function normalizeAnswerText(s){
+  return String(s||"")
+    .normalize("NFC")
+    .replace(/ /g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+function stripLetterPrefix(s){
+  return String(s||"").replace(/^\s*[A-DĐa-dđ]\s*[\.\)\-:]\s*/, "").trim();
+}
+// Khớp "Đáp án đúng" với 1 trong 4 lựa chọn. Trả về { text } nếu khớp được đúng 1 lựa chọn,
+// hoặc { error } nếu không xác định được (đáp án đúng này sẽ bị bỏ qua, không nhập vào).
+function resolveCorrectAnswer(rawAnswer, options){
+  const raw = String(rawAnswer||"").trim();
+  if(!raw) return { error: `cột "Đáp án đúng" đang để trống` };
+
+  // Cho phép gõ tắt chữ cái A/B/C/D (hoặc số 1-4) thay vì chép lại cả câu — tránh hẳn lỗi gõ sai/thừa khoảng trắng.
+  const letterMatch = raw.match(/^([A-Da-d]|[1-4])[\.\)]?$/);
+  if(letterMatch){
+    const map = { "1":"a","2":"b","3":"c","4":"d", a:"a",b:"b",c:"c",d:"d" };
+    const key = map[letterMatch[1].toLowerCase()];
+    const opt = options.find(o => o.key === key);
+    if(opt && opt.text) return { text: opt.text };
+    return { error: `chọn đáp án ${raw.toUpperCase()} nhưng lựa chọn ${key ? key.toUpperCase() : raw.toUpperCase()} đang để trống` };
+  }
+
+  const normAnswer = normalizeAnswerText(stripLetterPrefix(raw));
+  const matches = options.filter(o => o.text && normalizeAnswerText(stripLetterPrefix(o.text)) === normAnswer);
+  if(matches.length === 1) return { text: matches[0].text };
+  if(matches.length > 1) return { error: `nội dung "Đáp án đúng" trùng với ${matches.length} lựa chọn cùng lúc, không xác định được chọn lựa chọn nào` };
+  return { error: `nội dung "Đáp án đúng" không khớp với lựa chọn nào trong 4 lựa chọn (có thể gõ sai chính tả hoặc thừa khoảng trắng). Mẹo: có thể gõ luôn chữ cái A/B/C/D thay vì chép lại cả câu` };
+}
+
+async function auditAllAnswers(){
+  const btn = document.getElementById("audit-answers-btn");
+  const resultEl = document.getElementById("audit-answers-result");
+  if(!quizSets.length){ resultEl.innerHTML = `<p class="muted">Chưa có bộ đề nào.</p>`; return; }
+  btn.disabled = true; btn.innerText = `Đang quét ${quizSets.length} bộ đề...`;
+  resultEl.innerHTML = "";
+
+  const results = await Promise.all(quizSets.map(s => callRpc("admin_list_quiz_questions", { p_password: PASSWORD, p_quiz_slug: s.slug }).catch(() => null)));
+
+  const problems = [];
+  quizSets.forEach((s,i) => {
+    const data = results[i];
+    if(!data || data.status !== "ok") return;
+    (data.questions || []).forEach(q => {
+      const options = [
+        { text: (q.option_a||"").trim() }, { text: (q.option_b||"").trim() },
+        { text: (q.option_c||"").trim() }, { text: (q.option_d||"").trim() }
+      ];
+      const norm = normalizeAnswerText(q.correct_answer);
+      const matches = options.filter(o => o.text && normalizeAnswerText(o.text) === norm);
+      if(matches.length !== 1){
+        problems.push({
+          setTitle: s.title, setSlug: s.slug, stt: q.stt, question: q.question || "",
+          reason: matches.length === 0 ? "đáp án đúng không khớp với lựa chọn nào" : `đáp án đúng trùng ${matches.length} lựa chọn cùng lúc`
+        });
+      }
+    });
+  });
+
+  btn.disabled = false; btn.innerText = "Quét toàn bộ";
+
+  if(!problems.length){
+    resultEl.innerHTML = `<div class="msg ok">✅ Không phát hiện câu nào bị lỗi đáp án trong toàn bộ ${quizSets.length} bộ đề. Các file đã nhập trước đây không cần sửa lại.</div>`;
+    return;
+  }
+  resultEl.innerHTML = `
+    <div class="msg err">⚠️ Phát hiện ${problems.length} câu có đáp án đúng không khớp chuẩn — những câu này đang chấm sai hoặc không chấm được điểm cho học viên, cần sửa lại:</div>
+    <table style="margin-top:8px;">
+      <tr><th>Bộ đề</th><th>STT</th><th>Câu hỏi</th><th>Lỗi</th><th></th></tr>
+      ${problems.map(p => `
+        <tr>
+          <td><b>${esc(p.setTitle)}</b><br><span class="muted">${esc(p.setSlug)}</span></td>
+          <td>${p.stt != null ? p.stt : "—"}</td>
+          <td>${esc(p.question.length > 90 ? p.question.slice(0,90)+"..." : p.question)}</td>
+          <td>${esc(p.reason)}</td>
+          <td><button class="btn-secondary" onclick="setSetsView('flat');openDetail('${p.setSlug.replace(/'/g,"\\'")}')">Mở bộ đề</button></td>
+        </tr>
+      `).join("")}
+    </table>
+  `;
+}
+
+async function importExcel(){
+  const fileInput = document.getElementById("excel-file");
+  const msgEl = document.getElementById("import-msg");
+  if(!fileInput.files.length){ msgEl.innerHTML = `<div class="msg err">Chọn file Excel trước.</div>`; return; }
+  msgEl.innerHTML = `<div class="msg">Đang đọc file...</div>`;
+  let rows;
+  try{ rows = await readExcelFile(fileInput.files[0]); }
+  catch(err){ msgEl.innerHTML = `<div class="msg err">Không đọc được file: ${esc(err.message)}</div>`; return; }
+
+  // Bỏ hàng tiêu đề (dò hàng đầu tiên có cột 1 không phải số => tiêu đề)
+  let startRow = 0;
+  if(rows.length && isNaN(parseInt(rows[0][0]))) startRow = 1;
+
+  const questions = [];
+  const rowErrors = [];
+  for(let i = startRow; i < rows.length; i++){
+    const r = rows[i];
+    if(!r || r.length === 0 || (!r[1] && !r[1+0])) continue;
+    const stt = parseInt(r[0]);
+    const question = String(r[1]||"").trim();
+    if(!question) continue;
+
+    const options = [
+      { key: "a", text: String(r[2]||"").trim() },
+      { key: "b", text: String(r[3]||"").trim() },
+      { key: "c", text: String(r[4]||"").trim() },
+      { key: "d", text: String(r[5]||"").trim() }
+    ];
+    const resolved = resolveCorrectAnswer(r[6], options);
+    if(resolved.error){
+      rowErrors.push(`Dòng ${i+1}${isNaN(stt)?"":" (STT "+stt+")"}: ${resolved.error}`);
+      continue; // bỏ qua câu này, không nhập, để tránh lưu 1 câu không chấm được điểm
+    }
+
+    questions.push({
+      stt: isNaN(stt) ? undefined : stt,
+      question,
+      option_a: options[0].text,
+      option_b: options[1].text,
+      option_c: options[2].text,
+      option_d: options[3].text,
+      correct_answer: resolved.text, // luôn lưu đúng nguyên văn lựa chọn đã khớp, đảm bảo khớp tuyệt đối khi chấm điểm
+      explanation: String(r[7]||"").trim(),
+      topic: String(r[8]||"").trim()
+    });
+  }
+
+  if(questions.length === 0 && rowErrors.length === 0){ msgEl.innerHTML = `<div class="msg err">Không tìm thấy câu hỏi hợp lệ trong file.</div>`; return; }
+
+  let upsertedCount = 0;
+  if(questions.length){
+    msgEl.innerHTML = `<div class="msg">Đang nhập ${questions.length} câu hỏi...</div>`;
+    const data = await callRpc("admin_bulk_upsert_quiz_questions", { p_password: PASSWORD, p_quiz_slug: currentSlug, p_questions: questions });
+    if(!data || data.status !== "ok"){
+      msgEl.innerHTML = `<div class="msg err">Lỗi khi nhập: ${esc(data && data.status)}</div>`;
+      return;
+    }
+    upsertedCount = data.upserted;
+  }
+
+  const okPart = upsertedCount ? `<div class="msg ok">Đã nhập/cập nhật ${upsertedCount} câu hỏi.</div>` : "";
+  const errPart = rowErrors.length ? `
+    <div class="msg err">
+      ⚠️ ${rowErrors.length} câu bị <b>bỏ qua</b> do không xác định được đáp án đúng — sửa lại trong Excel rồi nhập lại riêng các câu đó:
+      <ul style="margin:6px 0 0 18px;padding:0;">${rowErrors.map(e => `<li>${esc(e)}</li>`).join("")}</ul>
+    </div>` : "";
+  msgEl.innerHTML = okPart + errPart;
+  if(upsertedCount){
+    fileInput.value = "";
+    loadQuestions(currentSlug);
+    refreshSets();
+  }
+}
+
+// tự đăng nhập nếu đã có mật khẩu lưu trong session
+if(PASSWORD){
+  callRpc("admin_list_quiz_sets", { p_password: PASSWORD }).then(data => {
+    if(data && data.status === "ok") renderMain(data.quiz_sets);
+  });
+}
+</script>
+</body>
+</html>
