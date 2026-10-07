@@ -376,52 +376,83 @@ tbody tr:hover .row-actions{opacity:1;}
 
 
 
-/* ===== MÀU SẮC TRẠNG THÁI (nổi bật, dễ nhìn) ===== */
-#loanStatusPills,#loanDatePills,#mcStatusPills,#mcDatePills{background:#F7F9FC;border:1px solid var(--border);border-radius:12px;padding:8px 8px 2px;}
-.loan-filter-group-title{display:flex;align-items:center;gap:6px;}
-.loan-pill{--pc-bg:#fff;--pc-bd:var(--border);--pc-tx:var(--text);--pc-solid:var(--accent);border-radius:10px;padding:9px 12px;font-size:13px;background:var(--pc-bg);border:1.5px solid var(--pc-bd);color:var(--pc-tx);transition:transform .08s,box-shadow .12s;}
-.loan-pill::before{content:'';margin-right:7px;font-size:14px;}
-.loan-pill > .cnt{margin-left:auto;background:rgba(255,255,255,.75);border:1px solid var(--pc-bd);border-radius:20px;padding:0 9px;min-width:30px;text-align:center;}
-.loan-pill{gap:0;}
-.loan-pill:hover{background:var(--pc-bg);box-shadow:0 2px 8px rgba(15,23,42,.1);transform:translateY(-1px);}
-.loan-pill.active{background:var(--pc-solid);border-color:var(--pc-solid);color:#fff;box-shadow:0 3px 10px rgba(15,23,42,.18);}
-.loan-pill.active:hover{background:var(--pc-solid);}
-.loan-pill.active > .cnt{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.5);color:#fff;}
-.loan-pill.lp-chua{--pc-bg:#FFF6E0;--pc-bd:#F2CF86;--pc-tx:#8A5A00;--pc-solid:#D97706;}
-.loan-pill.lp-chua::before{content:'📋';}
-.loan-pill.lp-check{--pc-bg:#E4F6F3;--pc-bd:#8FD5CC;--pc-tx:#0C6B61;--pc-solid:#0F9488;}
-.loan-pill.lp-check::before{content:'✅';}
-.loan-pill.lp-lienhe{--pc-bg:#E8EFFE;--pc-bd:#A8BEF5;--pc-tx:#1A44BD;--pc-solid:#2358E8;}
-.loan-pill.lp-lienhe::before{content:'📞';}
-.loan-pill.lp-today{--pc-bg:#FFEFE0;--pc-bd:#F6B887;--pc-tx:#A34A00;--pc-solid:#EA6A0A;}
-.loan-pill.lp-today::before{content:'📅';}
-.loan-pill.lp-overdue{--pc-bg:#FDE9E9;--pc-bd:#F0A3A3;--pc-tx:#B42318;--pc-solid:#DC2626;}
-.loan-pill.lp-overdue::before{content:'⚠️';}
-.loan-pill.lp-soon{--pc-bg:#FFF9DB;--pc-bd:#E8D56E;--pc-tx:#7A6200;--pc-solid:#CA9A04;}
-.loan-pill.lp-soon::before{content:'⏰';}
 
-/* Nhãn "Trạng thái chung" */
-.badge.overall-badge-overdue,.badge.overall-badge-soon,.badge.overall-badge-ok{padding:4px 9px;font-size:10.5px;border:1px solid transparent;letter-spacing:.02em;}
-.overall-badge-overdue{background:#FDE3E3;color:#B42318;border-color:#F3A6A6 !important;}
-.overall-badge-overdue::before{content:'⚠️ ';margin-right:3px;}
-.overall-badge-soon{background:#FFF1CC;color:#8A5A00;border-color:#F2CF86 !important;}
-.overall-badge-soon::before{content:'⏰ ';margin-right:3px;}
-.overall-badge-ok{background:#DDF5E9;color:#0A7A52;border-color:#9ADBBD !important;}
-.overall-badge-ok::before{content:'✔ ';margin-right:3px;}
-/* Nền dòng khách hàng theo mức độ + vạch màu bên trái */
-.loan-summary-row.row-overall-badge-overdue{background:#FFF6F6;box-shadow:inset 4px 0 0 var(--red);}
-.loan-summary-row.row-overall-badge-soon{background:#FFFBEF;box-shadow:inset 4px 0 0 #E09A0B;}
-.loan-summary-row.row-overall-badge-ok{box-shadow:inset 4px 0 0 #34C38F;}
-.loan-summary-row.row-overall-badge-overdue:hover{background:#FFEDED;}
-.loan-summary-row.row-overall-badge-soon:hover{background:#FFF5DB;}
+/* ===== GIAO DIỆN TƯƠNG PHẢN (nền / khung / tiêu đề / nút tách bạch rõ) ===== */
+:root{
+  --bg:#E6EBF3;
+  --border:#CFD7E5;
+  --ink:#1B2A47;
+  --head-bg:#E3EBF8;
+  --band-bg:#F1F5FC;
+  --btn-bd:#AEBBD2;
+  --shadow-sm:0 1px 2px rgba(20,35,70,.08),0 1px 3px rgba(20,35,70,.06);
+  --shadow-md:0 2px 6px rgba(20,35,70,.10),0 6px 16px rgba(20,35,70,.06);
+}
+body{background:var(--bg);color:var(--ink);}
+.topbar{background:#fff;border-bottom:1px solid var(--border);box-shadow:0 2px 8px rgba(20,35,70,.07);}
+.page-title{color:var(--ink);font-weight:800;}
+.page-subtitle{color:#5B6B88;}
 
-/* Ô chọn trạng thái từng khoản */
-.status-select{font-weight:700;border-width:1.5px;border-radius:20px;padding:6px 10px;cursor:pointer;}
-.status-select[data-status="Chưa xử lý"]{background:#FFF6E0;border-color:#F2CF86;color:#8A5A00;}
-.status-select[data-status="Đã check"]{background:#E4F6F3;border-color:#8FD5CC;color:#0C6B61;}
-.status-select[data-status="Đã liên hệ"]{background:#E8EFFE;border-color:#A8BEF5;color:#1A44BD;}
-.status-select[data-status="KH xử lý xong"]{background:#DDF5E9;border-color:#9ADBBD;color:#0A7A52;}
-.status-select[data-status="Công ty đã xử lý"]{background:#EEE8FB;border-color:#C7B6F0;color:#5B34B5;}
+/* Khung nội dung nổi hẳn lên khỏi nền */
+.panel,.stat-card,.room-card,.loan-sidebar{background:#fff;border:1px solid var(--border);box-shadow:var(--shadow-md);border-radius:12px;}
+.panel{overflow:clip;}
+.panel-header{background:var(--band-bg);border-bottom:1px solid var(--border);}
+.panel-title{color:var(--ink);font-weight:800;display:flex;align-items:center;gap:8px;}
+.panel-title::before{content:'';width:4px;height:16px;border-radius:2px;background:var(--accent);flex-shrink:0;}
+.stat-card{border-top:3px solid var(--accent);}
+.stat-card .stat-value{color:var(--ink);}
+
+/* Thanh công cụ thành một khung riêng */
+.toolbar{background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 12px;box-shadow:var(--shadow-sm);}
+.search-box input,select.filter-select,.filter-value-input,.form-field input,.form-field select,.form-field textarea{border:1.5px solid var(--btn-bd);background:#fff;}
+.search-box input:focus,select.filter-select:focus,.form-field input:focus,.form-field select:focus,.form-field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(35,88,232,.15);}
+
+/* Nút */
+.btn{font-weight:700;}
+.btn-secondary{background:#fff;border:1.5px solid var(--btn-bd);color:var(--ink);box-shadow:var(--shadow-sm);}
+.btn-secondary:hover{background:#EAF0FE;border-color:var(--accent);color:var(--accent-dark);}
+.btn-primary{box-shadow:0 2px 6px rgba(35,88,232,.35);}
+.btn-ghost{color:#3A4C70;}
+.btn-ghost:hover{background:#E3EBF8;}
+.icon-btn{border:1.5px solid var(--btn-bd);color:#3A4C70;background:#fff;}
+.icon-btn:hover{background:#EAF0FE;border-color:var(--accent);color:var(--accent-dark);}
+
+/* Bảng: tiêu đề cột rõ, dòng có đường kẻ, rê chuột sáng lên */
+thead th{background:var(--head-bg);color:#2A3B5C;font-weight:800;border-bottom:2px solid #BCCBE6;}
+tbody td{border-bottom:1px solid #E1E7F1;}
+tbody tr:hover{background:#EEF3FF;}
+.loan-summary-table{border:1.5px solid #C2CDE0;border-radius:12px;box-shadow:var(--shadow-md);}
+.loan-summary-table thead th{background:var(--head-bg);color:#2A3B5C;}
+.loan-summary-row{background:#fff;}
+.loan-summary-row td{border-bottom:1px solid #D8E0EE;}
+.loan-detail-table thead th{background:#F0F4FB;color:#3A4C70;border-bottom:1.5px solid #D2DBEA;}
+.loan-detail-row > td{background:#F7F9FD;box-shadow:inset 4px 0 0 #9DB6F2;}
+.loan-card-footer{background:#EEF3FB;border-top:1px solid #D2DBEA;color:#3A4C70;}
+.loan-group-header{background:#F1F5FC;}
+
+/* Bộ lọc bên trái trang khoản vay / RRUB */
+.loan-sidebar-title{color:var(--ink);font-weight:800;}
+.loan-filter-group-title{background:var(--head-bg);color:#2A3B5C;border-radius:7px;padding:6px 10px;margin:16px 0 8px;font-weight:800;}
+.loan-pill{border:1.5px solid #BCC8DD;background:#fff;color:var(--ink);box-shadow:var(--shadow-sm);}
+.loan-pill:hover{background:#EAF0FE;border-color:var(--accent);}
+.loan-pill.active{background:var(--accent);border-color:var(--accent-dark);color:#fff;box-shadow:0 2px 8px rgba(35,88,232,.4);}
+.loan-pill.active .cnt{color:#fff;}
+.loan-sidebar-total{color:#3A4C70;font-weight:600;}
+.tag-chip{background:#D9E3F5;color:#2A3B5C;font-weight:700;}
+
+/* Nhãn trạng thái đậm hơn một chút */
+.badge{font-weight:800;border:1px solid rgba(0,0,0,.06);}
+.badge-gray{background:#E3E8F1;color:#3A4C70;}
+
+/* Hộp thoại / khung chi tiết */
+.modal{box-shadow:0 24px 60px rgba(15,23,42,.35);border:1px solid var(--border);}
+.modal-header{background:var(--band-bg);}
+.modal-footer{background:var(--band-bg);}
+.so-header{background:var(--band-bg);}
+.pronoun-manager{border:1.5px solid var(--btn-bd);box-shadow:var(--shadow-md);}
+.notice{background:#E6EEFF;border-color:#B5C8F5;}
+.period-toggle{background:#DCE5F4;}
+.period-toggle button{color:#3A4C70;font-weight:700;}
 
 /* Màn hình hẹp / chia đôi màn hình: cột ID không bị cắt "...", tiêu đề không đè nhau */
 .loan-summary-row td{word-break:normal;}
@@ -566,7 +597,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v07.10-mau-sac</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v07.10-giao-dien</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -588,7 +619,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v07.10-mau-sac</div>
+        <div class="brand-sub">Chứng khoán · v07.10-giao-dien</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
