@@ -454,6 +454,32 @@ tbody tr:hover{background:#EEF3FF;}
 .period-toggle{background:#DCE5F4;}
 .period-toggle button{color:#3A4C70;font-weight:700;}
 
+
+/* Menu chọn xưng hô: có thanh cuộn, tiêu đề đứng yên khi cuộn */
+#loanPronounMenu,#marginCallPronounMenu{scrollbar-width:thin;scrollbar-color:#9AA9C4 #EEF2F8;}
+#loanPronounMenu::-webkit-scrollbar,#marginCallPronounMenu::-webkit-scrollbar{width:10px;}
+#loanPronounMenu::-webkit-scrollbar-track,#marginCallPronounMenu::-webkit-scrollbar-track{background:#EEF2F8;}
+#loanPronounMenu::-webkit-scrollbar-thumb,#marginCallPronounMenu::-webkit-scrollbar-thumb{background:#9AA9C4;border-radius:6px;border:2px solid #EEF2F8;}
+#loanPronounMenu > div:first-child,#marginCallPronounMenu > div:first-child{position:sticky;top:0;z-index:1;}
+
+
+/* ===== TIÊU ĐỀ TRANG NỔI BẬT (biết ngay đang ở mục nào) ===== */
+.topbar{height:68px;background:linear-gradient(100deg,#13233F 0%,#1D3F8F 55%,#2358E8 100%);border-bottom:none;box-shadow:0 3px 12px rgba(19,35,63,.28);}
+.show-sm{display:none;}
+.page-icon{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;}
+.page-title{color:#fff;font-size:22px;font-weight:800;letter-spacing:.005em;line-height:1.2;}
+.page-subtitle{color:#C6D6F8;font-size:12.5px;margin-top:2px;}
+.topbar #sidebarToggleBtn{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);color:#fff;}
+.topbar #sidebarToggleBtn:hover{background:rgba(255,255,255,.26);}
+.topbar #notifBellBtn{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);}
+.topbar .btn-primary{background:#fff;color:#1A44BD;box-shadow:0 2px 8px rgba(0,0,0,.25);}
+.topbar .btn-primary:hover{background:#EAF0FE;}
+.topbar .btn-secondary{background:rgba(255,255,255,.14);border:1.5px solid rgba(255,255,255,.4);color:#fff;box-shadow:none;}
+.topbar .btn-secondary:hover{background:rgba(255,255,255,.26);color:#fff;border-color:#fff;}
+thead th{top:68px;}
+/* Mục đang chọn ở menu trái nổi hơn */
+.nav-item.active{background:linear-gradient(90deg,#2358E8,#3B73F5);box-shadow:0 3px 10px rgba(35,88,232,.45);font-weight:700;}
+
 /* Màn hình hẹp / chia đôi màn hình: cột ID không bị cắt "...", tiêu đề không đè nhau */
 .loan-summary-row td{word-break:normal;}
 .loan-summary-row td.td-mgr{overflow:visible;text-overflow:clip;white-space:nowrap;}
@@ -486,6 +512,11 @@ body{-webkit-text-size-adjust:100%;}
   .topbar > div:first-child > div{min-width:0;}
   .page-title{font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .page-subtitle{display:none;}
+  .hide-sm{display:none;}
+  .show-sm{display:inline !important;}
+  .topbar{height:56px;}
+  .page-icon{width:34px;height:34px;font-size:17px;border-radius:10px;}
+  .page-title{font-size:16.5px;}
   .topbar > div:last-child{gap:6px !important;flex-shrink:0;}
   .topbar .btn-secondary{display:none;}
   .topbar .btn-primary{padding:8px 10px;font-size:12.5px;}
@@ -597,7 +628,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v07.10-giao-dien</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v07.10-tieu-de</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -619,7 +650,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v07.10-giao-dien</div>
+        <div class="brand-sub">Chứng khoán · v07.10-tieu-de</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -676,6 +707,7 @@ body{-webkit-text-size-adjust:100%;}
     <div class="topbar">
       <div style="display:flex;align-items:center;gap:12px;">
         <button class="icon-btn" id="sidebarToggleBtn" title="Ẩn/hiện thanh menu" onclick="toggleSidebar()" style="width:34px;height:34px;">☰</button>
+        <div class="page-icon" id="pageIcon">📊</div>
         <div>
           <div class="page-title" id="pageTitle">Dashboard</div>
           <div class="page-subtitle" id="pageSubtitle">Tổng quan hoạt động quản lý khách hàng</div>
@@ -692,7 +724,7 @@ body{-webkit-text-size-adjust:100%;}
           </div>
         </div>
         <button class="btn btn-secondary btn-sm" onclick="openImport()">Import dữ liệu</button>
-        <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Thêm khách hàng</button>
+        <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Thêm <span class="hide-sm">khách hàng</span><span class="show-sm">KH</span></button>
       </div>
     </div>
 
@@ -2208,6 +2240,9 @@ function switchView(name){
     import:["Import dữ liệu Excel","Cập nhật NAV, phí hàng loạt từ file Excel"],
     accounts:["Quản lý tài khoản","Tài khoản đăng nhập, sao lưu và bảo mật dữ liệu — chỉ Owner"],
   };
+  const icons = {dashboard:'📊',customers:'👥',rooms:'🏠',loans:'💰',margincalls:'⚠️',rights:'📈',import:'📥',accounts:'🔐'};
+  const pi = document.getElementById('pageIcon'); if(pi) pi.textContent = icons[name] || '📄';
+  document.title = titles[name][0] + ' — QLKH';
   document.getElementById('pageTitle').textContent = titles[name][0];
   document.getElementById('pageSubtitle').textContent = titles[name][1];
   if(name === 'accounts') renderAccounts();
@@ -3894,7 +3929,8 @@ function loanPronounOptionsHtml(){
 // ---------------- MENU NỔI CHỌN XƯNG HÔ (icon ⋮ đầu thẻ KH) ----------------
 // Đặt menu nổi sao cho luôn nằm trọn trong màn hình; nếu cao quá thì có thanh cuộn.
 function placeFloatingMenu(menu, rect){
-  menu.style.maxHeight = ''; menu.style.overflowY = 'auto';
+  const CAP = 270; // ~5 dòng, các dòng còn lại kéo bằng thanh cuộn
+  menu.style.maxHeight = CAP + 'px'; menu.style.overflowY = 'scroll';
   menu.style.display = 'block';
   const margin = 8, vh = window.innerHeight, vw = window.innerWidth;
   const h = menu.offsetHeight, w = menu.offsetWidth;
@@ -3904,7 +3940,7 @@ function placeFloatingMenu(menu, rect){
   else if(h <= spaceAbove){ top = rect.top - h - 4; maxH = spaceAbove; }
   else if(spaceBelow >= spaceAbove){ top = rect.bottom + 4; maxH = spaceBelow; }
   else { maxH = spaceAbove; top = margin; }
-  menu.style.maxHeight = Math.max(120, maxH) + 'px';
+  menu.style.maxHeight = Math.max(120, Math.min(CAP, maxH)) + 'px';
   if(h > maxH && top !== rect.bottom + 4) top = margin;
   menu.style.top = Math.max(margin, top) + 'px';
   menu.style.left = Math.max(margin, Math.min(rect.right - w, vw - w - margin)) + 'px';
