@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, viewport-fit=cover">
 <title>QLKH — Quản lý khách hàng chứng khoán</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -323,11 +323,11 @@ tbody tr:hover .row-actions{opacity:1;}
 
 .loan-summary-table{border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff;table-layout:fixed;width:100%;min-width:640px;}
 .loan-table-scroll{overflow-x:auto;}
-.loan-summary-table col.col-kh{width:16%;}
-.loan-summary-table col.col-id{width:8%;}
-.loan-summary-table col.col-sokhoan{width:6%;}
-.loan-summary-table col.col-hanmoi{width:22%;}
-.loan-summary-table col.col-nav{width:18%;}
+.loan-summary-table col.col-kh{width:20%;}
+.loan-summary-table col.col-id{width:10%;}
+.loan-summary-table col.col-sokhoan{width:9%;}
+.loan-summary-table col.col-hanmoi{width:15%;}
+.loan-summary-table col.col-nav{width:16%;}
 .loan-summary-table col.col-status{width:18%;}
 .loan-summary-table col.col-actions{width:12%;}
 .loan-summary-table thead th{white-space:normal;font-size:11px;font-weight:700;position:static !important;top:auto !important;line-height:1.3;}
@@ -373,13 +373,185 @@ tbody tr:hover .row-actions{opacity:1;}
 
 ::-webkit-scrollbar{width:9px;height:9px;}
 ::-webkit-scrollbar-thumb{background:#D3D9E2;border-radius:5px;}
+
+
+
+/* ===== MÀU SẮC TRẠNG THÁI (nổi bật, dễ nhìn) ===== */
+#loanStatusPills,#loanDatePills,#mcStatusPills,#mcDatePills{background:#F7F9FC;border:1px solid var(--border);border-radius:12px;padding:8px 8px 2px;}
+.loan-filter-group-title{display:flex;align-items:center;gap:6px;}
+.loan-pill{--pc-bg:#fff;--pc-bd:var(--border);--pc-tx:var(--text);--pc-solid:var(--accent);border-radius:10px;padding:9px 12px;font-size:13px;background:var(--pc-bg);border:1.5px solid var(--pc-bd);color:var(--pc-tx);transition:transform .08s,box-shadow .12s;}
+.loan-pill::before{content:'';margin-right:7px;font-size:14px;}
+.loan-pill > .cnt{margin-left:auto;background:rgba(255,255,255,.75);border:1px solid var(--pc-bd);border-radius:20px;padding:0 9px;min-width:30px;text-align:center;}
+.loan-pill{gap:0;}
+.loan-pill:hover{background:var(--pc-bg);box-shadow:0 2px 8px rgba(15,23,42,.1);transform:translateY(-1px);}
+.loan-pill.active{background:var(--pc-solid);border-color:var(--pc-solid);color:#fff;box-shadow:0 3px 10px rgba(15,23,42,.18);}
+.loan-pill.active:hover{background:var(--pc-solid);}
+.loan-pill.active > .cnt{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.5);color:#fff;}
+.loan-pill.lp-chua{--pc-bg:#FFF6E0;--pc-bd:#F2CF86;--pc-tx:#8A5A00;--pc-solid:#D97706;}
+.loan-pill.lp-chua::before{content:'📋';}
+.loan-pill.lp-check{--pc-bg:#E4F6F3;--pc-bd:#8FD5CC;--pc-tx:#0C6B61;--pc-solid:#0F9488;}
+.loan-pill.lp-check::before{content:'✅';}
+.loan-pill.lp-lienhe{--pc-bg:#E8EFFE;--pc-bd:#A8BEF5;--pc-tx:#1A44BD;--pc-solid:#2358E8;}
+.loan-pill.lp-lienhe::before{content:'📞';}
+.loan-pill.lp-today{--pc-bg:#FFEFE0;--pc-bd:#F6B887;--pc-tx:#A34A00;--pc-solid:#EA6A0A;}
+.loan-pill.lp-today::before{content:'📅';}
+.loan-pill.lp-overdue{--pc-bg:#FDE9E9;--pc-bd:#F0A3A3;--pc-tx:#B42318;--pc-solid:#DC2626;}
+.loan-pill.lp-overdue::before{content:'⚠️';}
+.loan-pill.lp-soon{--pc-bg:#FFF9DB;--pc-bd:#E8D56E;--pc-tx:#7A6200;--pc-solid:#CA9A04;}
+.loan-pill.lp-soon::before{content:'⏰';}
+
+/* Nhãn "Trạng thái chung" */
+.badge.overall-badge-overdue,.badge.overall-badge-soon,.badge.overall-badge-ok{padding:4px 9px;font-size:10.5px;border:1px solid transparent;letter-spacing:.02em;}
+.overall-badge-overdue{background:#FDE3E3;color:#B42318;border-color:#F3A6A6 !important;}
+.overall-badge-overdue::before{content:'⚠️ ';margin-right:3px;}
+.overall-badge-soon{background:#FFF1CC;color:#8A5A00;border-color:#F2CF86 !important;}
+.overall-badge-soon::before{content:'⏰ ';margin-right:3px;}
+.overall-badge-ok{background:#DDF5E9;color:#0A7A52;border-color:#9ADBBD !important;}
+.overall-badge-ok::before{content:'✔ ';margin-right:3px;}
+/* Nền dòng khách hàng theo mức độ + vạch màu bên trái */
+.loan-summary-row.row-overall-badge-overdue{background:#FFF6F6;box-shadow:inset 4px 0 0 var(--red);}
+.loan-summary-row.row-overall-badge-soon{background:#FFFBEF;box-shadow:inset 4px 0 0 #E09A0B;}
+.loan-summary-row.row-overall-badge-ok{box-shadow:inset 4px 0 0 #34C38F;}
+.loan-summary-row.row-overall-badge-overdue:hover{background:#FFEDED;}
+.loan-summary-row.row-overall-badge-soon:hover{background:#FFF5DB;}
+
+/* Ô chọn trạng thái từng khoản */
+.status-select{font-weight:700;border-width:1.5px;border-radius:20px;padding:6px 10px;cursor:pointer;}
+.status-select[data-status="Chưa xử lý"]{background:#FFF6E0;border-color:#F2CF86;color:#8A5A00;}
+.status-select[data-status="Đã check"]{background:#E4F6F3;border-color:#8FD5CC;color:#0C6B61;}
+.status-select[data-status="Đã liên hệ"]{background:#E8EFFE;border-color:#A8BEF5;color:#1A44BD;}
+.status-select[data-status="KH xử lý xong"]{background:#DDF5E9;border-color:#9ADBBD;color:#0A7A52;}
+.status-select[data-status="Công ty đã xử lý"]{background:#EEE8FB;border-color:#C7B6F0;color:#5B34B5;}
+
+/* Màn hình hẹp / chia đôi màn hình: cột ID không bị cắt "...", tiêu đề không đè nhau */
+.loan-summary-row td{word-break:normal;}
+.loan-summary-row td.td-mgr{overflow:visible;text-overflow:clip;white-space:nowrap;}
+.loan-summary-table thead th{word-break:keep-all;overflow-wrap:break-word;hyphens:none;}
+@media (max-width:1100px){
+  .loan-summary-table{min-width:600px;}
+  .loan-summary-table thead th{font-size:10.5px;padding:10px 6px;}
+  .loan-summary-row td{padding:11px 6px;font-size:13px;}
+  .loan-stk-pill{padding:3px 7px;font-size:12px;}
+}
+/* ================= MOBILE (điện thoại) ================= */
+body{-webkit-text-size-adjust:100%;}
+.sidebar-scrim{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;z-index:110;}
+.sidebar-scrim.active{display:block;}
+@media (hover:none){
+  .row-actions{opacity:1 !important;}
+}
+@media (max-width:768px), (max-device-width:820px) and (pointer:coarse){
+  .main,.content{max-width:100vw;overflow-x:clip;}
+  /* Menu trái -> ngăn kéo trượt ra */
+  .sidebar,.sidebar.collapsed{position:fixed;left:0;top:0;width:262px;height:100vh;height:100dvh;padding:18px 12px !important;z-index:120;transform:translateX(-100%);transition:transform .2s ease;overflow-y:auto;}
+  .sidebar.collapsed *{opacity:1 !important;pointer-events:auto !important;}
+  .sidebar.mobile-open{transform:translateX(0);box-shadow:8px 0 30px rgba(0,0,0,.3);}
+  #sidebarEdgeToggle{display:none !important;}
+  .nav-item{padding:12px 12px;font-size:14.5px;}
+
+  /* Thanh trên */
+  .topbar{height:54px;padding:0 10px;}
+  .topbar > div:first-child{min-width:0;flex:1;gap:8px !important;}
+  .topbar > div:first-child > div{min-width:0;}
+  .page-title{font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .page-subtitle{display:none;}
+  .topbar > div:last-child{gap:6px !important;flex-shrink:0;}
+  .topbar .btn-secondary{display:none;}
+  .topbar .btn-primary{padding:8px 10px;font-size:12.5px;}
+  .icon-btn{width:34px;height:34px;}
+
+  .content{padding:12px;}
+
+  /* Thẻ thống kê / lưới */
+  .stat-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+  .stat-value{font-size:15px;}
+  .two-col,.transfer-layout{grid-template-columns:1fr;}
+  .transfer-summary{flex-wrap:wrap;gap:14px;}
+  .donut-layout{flex-direction:column;align-items:stretch;}
+  .donut-wrap{align-self:center;}
+  .room-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .room-comp-row{grid-template-columns:86px 1fr 70px;gap:8px;}
+  .summary-grid{grid-template-columns:repeat(2,1fr);}
+
+  .panel-header{flex-wrap:wrap;gap:8px;padding:12px 14px;}
+  .panel-body{padding:12px 14px;}
+  .period-toggle{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .period-toggle button{white-space:nowrap;flex-shrink:0;}
+
+  /* Bảng: cuộn ngang trong khung */
+  .panel{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .panel table{min-width:620px;}
+  thead th{position:static !important;padding:9px 10px;}
+  tbody td{padding:10px 10px;font-size:13px;}
+  .cust-name{max-width:150px;}
+  .mini-table,.transfer-table,.loan-detail-table{min-width:0;}
+  .panel .mini-table,.panel .transfer-table{min-width:0;}
+  .loan-detail-table{min-width:520px;}
+  .loan-table-scroll{-webkit-overflow-scrolling:touch;}
+
+  /* Thanh công cụ / bộ lọc */
+  .toolbar{gap:8px;}
+  .search-box{min-width:0;max-width:none;flex:1 1 100%;}
+  .search-box input,select.filter-select,.filter-value-input{font-size:16px;padding-top:10px;padding-bottom:10px;}
+  select.filter-select{flex:1 1 calc(50% - 8px);min-width:0;}
+  .toolbar .spacer{display:none;}
+  .toolbar .btn{padding:9px 12px;}
+  .filter-value-input{width:100%;}
+  .filter-row{gap:6px;}
+
+  /* Trang khoản vay / RRUB: bộ lọc nằm trên, pill xếp ngang */
+  .loan-page-layout{grid-template-columns:1fr;gap:12px;}
+  .loan-sidebar{padding:12px;}
+  #loanStatusPills,#loanDatePills,#mcStatusPills,#mcDatePills{display:flex;flex-wrap:wrap;gap:6px;}
+  #loanStatusPills .loan-pill,#loanDatePills .loan-pill,#mcStatusPills .loan-pill,#mcDatePills .loan-pill{width:auto;margin:0;padding:8px 10px;}
+
+  /* Hộp thoại: gần như toàn màn hình */
+  .overlay{align-items:flex-end;}
+  .modal{width:100% !important;max-width:100vw !important;max-height:94vh;max-height:94dvh;border-radius:16px 16px 0 0;}
+  .modal-header{padding:14px 16px;position:sticky;top:0;background:#fff;z-index:2;}
+  .modal-body{padding:14px 16px;}
+  .modal-footer{padding:12px 16px;position:sticky;bottom:0;background:#fff;flex-wrap:wrap;}
+  .modal-footer .btn{flex:1 1 auto;justify-content:center;padding:11px 14px;}
+  .form-grid{grid-template-columns:1fr;gap:12px;}
+  .form-field input,.form-field select,.form-field textarea,.pronoun-add-row input,.status-select,.loan-note-input{font-size:16px;}
+  .form-field input,.form-field select{padding:10px 11px;}
+  .close-x{width:34px;height:34px;}
+
+  /* Khung chi tiết trượt từ phải */
+  .slideover{width:100vw;max-width:100vw;}
+  .slideover:not(.active){box-shadow:none;visibility:hidden;}
+  .so-header{padding:16px 16px 12px;}
+  .so-body{padding:14px 16px;}
+
+  /* Các hộp thả xuống -> dạng bảng trượt từ dưới lên */
+  .pronoun-manager{position:fixed !important;left:0 !important;right:0 !important;top:auto !important;bottom:0;width:auto !important;border-radius:16px 16px 0 0;max-height:75vh;overflow-y:auto;z-index:150;padding:16px;box-shadow:0 -10px 40px rgba(15,23,42,.25);}
+  #notifList{max-height:60vh !important;}
+  #columnManagerList{max-height:50vh !important;}
+  .col-check-row{padding:10px 6px;font-size:14px;}
+
+  /* Wizard import */
+  .steps{flex-wrap:wrap;gap:8px 0;}
+  .step-line{width:14px;margin:0 4px;}
+  .step-label{font-size:12px;}
+  .upload-box{padding:22px 14px;}
+  .mapping-row{grid-template-columns:1fr;gap:6px;}
+  .mapping-row > :nth-child(2){display:none;}
+
+  .btn{min-height:36px;}
+  .login-card{width:100% !important;padding:28px 20px !important;}
+}
+@media (max-width:420px){
+  .room-grid{grid-template-columns:1fr;}
+  .stat-label{font-size:10.5px;}
+  .btn-sm{padding:7px 10px;}
+}
 </style>
 </head>
 <body>
 
 <!-- LOGIN SCREEN -->
 <div id="loginScreen" style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#F5F7FA;">
-  <div style="background:#fff;border:1px solid #E4E8EE;border-radius:14px;padding:40px 36px;width:360px;text-align:center;box-shadow:0 10px 30px rgba(15,23,42,.06);">
+  <div class="login-card" style="background:#fff;border:1px solid #E4E8EE;border-radius:14px;padding:40px 36px;width:360px;max-width:92vw;text-align:center;box-shadow:0 10px 30px rgba(15,23,42,.06);">
     <div style="width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,#2358E8,#5B8DEF);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:19px;margin:0 auto 16px;">QL</div>
     <div style="font-size:18px;font-weight:700;margin-bottom:4px;">Quản lý khách hàng</div>
     <div style="font-size:12.5px;color:#6B7280;margin-bottom:22px;">Đăng nhập bằng tài khoản đã được cấp quyền</div>
@@ -394,6 +566,7 @@ tbody tr:hover .row-actions{opacity:1;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v07.10-mau-sac</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -406,6 +579,8 @@ tbody tr:hover .row-actions{opacity:1;}
 
 <div class="app" id="appRoot" style="display:none;">
 
+  <div class="sidebar-scrim" id="sidebarScrim" onclick="closeMobileSidebar()"></div>
+
   <!-- SIDEBAR -->
   <div class="sidebar" id="mainSidebar">
     <button id="sidebarEdgeToggle" title="Ẩn/hiện thanh menu" onclick="toggleSidebar()">‹</button>
@@ -413,7 +588,7 @@ tbody tr:hover .row-actions{opacity:1;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · Mockup</div>
+        <div class="brand-sub">Chứng khoán · v07.10-mau-sac</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -1911,8 +2086,18 @@ function formatMoneyInput(el){
 }
 
 // ---------------- ẨN/HIỆN THANH MENU (SIDEBAR) ----------------
+function isMobileView(){ return window.matchMedia('(max-width:768px), (max-device-width:820px) and (pointer:coarse)').matches; }
+function closeMobileSidebar(){
+  document.getElementById('mainSidebar').classList.remove('mobile-open');
+  const sc = document.getElementById('sidebarScrim'); if(sc) sc.classList.remove('active');
+}
 function toggleSidebar(){
   const sidebar = document.getElementById('mainSidebar');
+  if(isMobileView()){
+    const open = sidebar.classList.toggle('mobile-open');
+    document.getElementById('sidebarScrim').classList.toggle('active', open);
+    return;
+  }
   const collapsed = sidebar.classList.toggle('collapsed');
   document.getElementById('sidebarEdgeToggle').textContent = collapsed ? '›' : '‹';
   try { localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0'); } catch(e){}
@@ -1925,6 +2110,7 @@ function toggleSidebar(){
     }
   } catch(e){}
 })();
+window.addEventListener('resize', ()=>{ if(!isMobileView()) closeMobileSidebar(); });
 function copyToClipboard(text, el){
   navigator.clipboard.writeText(text).then(()=>{
     if(!el) return;
@@ -1997,7 +2183,7 @@ function switchView(name){
   if(name === 'import') resetImportWizard();
 }
 document.querySelectorAll('.nav-item').forEach(el=>{
-  el.addEventListener('click', ()=>switchView(el.dataset.view));
+  el.addEventListener('click', ()=>{ switchView(el.dataset.view); closeMobileSidebar(); });
 });
 function openImport(){ switchView('import'); goImportStep(1); }
 
@@ -3436,6 +3622,9 @@ function toggleLoanGroup(stk){
   renderLoans();
 }
 
+function statusPillClass(s){
+  return ({'Chưa xử lý':'lp-chua','Đã check':'lp-check','Đã liên hệ':'lp-lienhe','KH xử lý xong':'lp-xong','Công ty đã xử lý':'lp-cty'})[s] || '';
+}
 function overallLoanStatus(custLoans){
   const nearest = Math.min(...custLoans.map(l=>daysUntil(l.dueDate)));
   if(nearest < 0) return {label:'QUÁ HẠN', cls:'overall-badge-overdue'};
@@ -3672,18 +3861,33 @@ function loanPronounOptionsHtml(){
 }
 
 // ---------------- MENU NỔI CHỌN XƯNG HÔ (icon ⋮ đầu thẻ KH) ----------------
+// Đặt menu nổi sao cho luôn nằm trọn trong màn hình; nếu cao quá thì có thanh cuộn.
+function placeFloatingMenu(menu, rect){
+  menu.style.maxHeight = ''; menu.style.overflowY = 'auto';
+  menu.style.display = 'block';
+  const margin = 8, vh = window.innerHeight, vw = window.innerWidth;
+  const h = menu.offsetHeight, w = menu.offsetWidth;
+  const spaceBelow = vh - rect.bottom - margin, spaceAbove = rect.top - margin;
+  let top, maxH;
+  if(h <= spaceBelow){ top = rect.bottom + 4; maxH = spaceBelow; }
+  else if(h <= spaceAbove){ top = rect.top - h - 4; maxH = spaceAbove; }
+  else if(spaceBelow >= spaceAbove){ top = rect.bottom + 4; maxH = spaceBelow; }
+  else { maxH = spaceAbove; top = margin; }
+  menu.style.maxHeight = Math.max(120, maxH) + 'px';
+  if(h > maxH && top !== rect.bottom + 4) top = margin;
+  menu.style.top = Math.max(margin, top) + 'px';
+  menu.style.left = Math.max(margin, Math.min(rect.right - w, vw - w - margin)) + 'px';
+}
 function openLoanPronounMenu(evt, stk){
   evt.stopPropagation();
   const menu = document.getElementById('loanPronounMenu');
   const btn = evt.currentTarget;
   const rect = btn.getBoundingClientRect();
-  menu.style.top = (rect.bottom + 4) + 'px';
-  menu.style.left = Math.max(8, rect.right - 200) + 'px';
   document.getElementById('loanPronounMenuList').innerHTML = LOAN_PRONOUN_PAIRS.map(p=>`
     <div class="loan-pronoun-row" style="padding:9px 14px;font-size:13px;cursor:pointer;" onmouseover="this.style.background='#F5F7FA'" onmouseout="this.style.background=''" onclick="quickComposeLoanMessage('${stk}','${p.goi}|${p.tu}',this); setTimeout(closeLoanPronounMenu, 500);">
       ${p.goi} <span style="color:var(--text-muted);">(xưng: ${p.tu})</span>
     </div>`).join('');
-  menu.style.display = 'block';
+  placeFloatingMenu(menu, rect);
   setTimeout(()=>{ document.addEventListener('click', closeLoanPronounMenuOnOutsideClick); }, 0);
 }
 function closeLoanPronounMenu(){
@@ -3813,12 +4017,12 @@ function renderLoans(){
   const soonCount = loans.filter(l=>{const d=daysUntil(l.dueDate);return d>0 && d<=7;}).length;
 
   document.getElementById('loanStatusPills').innerHTML = ['Chưa xử lý','Đã check','Đã liên hệ'].map(s=>`
-    <div class="loan-pill ${loanStatusPillFilter===s?'active':''}" onclick="setLoanStatusPill('${s}')">${s} <span class="cnt">${statusCounts[s]}</span></div>
+    <div class="loan-pill ${statusPillClass(s)} ${loanStatusPillFilter===s?'active':''}" onclick="setLoanStatusPill('${s}')">${s} <span class="cnt">${statusCounts[s]}</span></div>
   `).join('');
   document.getElementById('loanDatePills').innerHTML = `
-    <div class="loan-pill ${loanDatePillFilter==='today'?'active':''}" onclick="setLoanDatePill('today')">Đến hạn hôm nay <span class="cnt">${todayCount}</span></div>
-    <div class="loan-pill ${loanDatePillFilter==='overdue'?'active':''}" onclick="setLoanDatePill('overdue')">Quá hạn <span class="cnt">${overdueCount}</span></div>
-    <div class="loan-pill ${loanDatePillFilter==='soon'?'active':''}" onclick="setLoanDatePill('soon')">Sắp đến hạn (7 ngày) <span class="cnt">${soonCount}</span></div>
+    <div class="loan-pill lp-today ${loanDatePillFilter==='today'?'active':''}" onclick="setLoanDatePill('today')">Đến hạn hôm nay <span class="cnt">${todayCount}</span></div>
+    <div class="loan-pill lp-overdue ${loanDatePillFilter==='overdue'?'active':''}" onclick="setLoanDatePill('overdue')">Quá hạn <span class="cnt">${overdueCount}</span></div>
+    <div class="loan-pill lp-soon ${loanDatePillFilter==='soon'?'active':''}" onclick="setLoanDatePill('soon')">Sắp đến hạn (7 ngày) <span class="cnt">${soonCount}</span></div>
   `;
 
   const showAll = document.getElementById('loanShowAll').checked;
@@ -3856,7 +4060,11 @@ function renderLoans(){
       <th>Khách hàng</th><th>ID phụ trách</th><th>Số khoản</th><th>Khoản sắp đến hạn nhất</th><th class="num-col">Tổng dư nợ</th><th>Trạng thái chung</th><th></th>
     </tr></thead>
     <tbody>`;
-  Object.entries(byCustomer).forEach(([stk, custLoans])=>{
+  // Sắp xếp: KH có khoản đến hạn gần nhất (kể cả quá hạn) lên đầu; trong mỗi KH, khoản nào đến hạn trước xếp trước.
+  Object.values(byCustomer).forEach(arr=>arr.sort((a,b)=>daysUntil(a.dueDate)-daysUntil(b.dueDate)));
+  const sortedLoanGroups = Object.entries(byCustomer).sort((a,b)=>
+    daysUntil(a[1][0].dueDate) - daysUntil(b[1][0].dueDate) || a[0].localeCompare(b[0]));
+  sortedLoanGroups.forEach(([stk, custLoans])=>{
     const isOpen = bulkSelectMode || expandedLoanGroups.has(stk);
     const nearest = Math.min(...custLoans.map(l=>daysUntil(l.dueDate)));
     const nearestLoan = custLoans.find(l=>daysUntil(l.dueDate)===nearest);
@@ -3868,7 +4076,7 @@ function renderLoans(){
     const managerIdForGroup = custLoans.find(l=>l.managerId)?.managerId || '—';
     const colspan = bulkSelectMode ? 8 : 7;
 
-    html += `<tr class="loan-summary-row" onclick="toggleLoanGroup('${stk}')" style="cursor:pointer;">
+    html += `<tr class="loan-summary-row row-${overall.cls}" onclick="toggleLoanGroup('${stk}')" style="cursor:pointer;">
       ${bulkSelectMode ? `<td onclick="event.stopPropagation();"><input type="checkbox" class="bulk-checkbox" ${allSelected?'checked':''} ${!allSelected&&someSelected?'data-indeterminate="1"':''} title="Chọn tất cả khoản của KH này" onclick="toggleBulkSelectGroup('${stk}', this.checked)"></td>` : ''}
       <td>
         <div style="display:flex;align-items:center;gap:5px;">
@@ -3877,7 +4085,7 @@ function renderLoans(){
           <span class="loan-stk-pill" style="cursor:pointer;white-space:nowrap;" title="Bấm để copy STK" onclick="event.stopPropagation();copyToClipboard('${stk}', this)">${stk}</span>
         </div>
       </td>
-      <td>${managerIdForGroup}</td>
+      <td class="td-mgr">${managerIdForGroup}</td>
       <td>${custLoans.length}</td>
       <td style="color:${nearest<0?'var(--red)':nearest<=3?'var(--amber)':'var(--text)'};">${nearest<0?'⚠️ ':nearest<=3?'⚠️ ':''}${nearestLoan.dueDate}</td>
       <td class="num-col num">${fmt(totalAmount)}</td>
@@ -3915,7 +4123,7 @@ function renderLoans(){
                 onchange="updateLoanAmount(${l.id}, this.value)">
             </td>
             <td>
-              <select class="status-select" onchange="updateLoanStatus(${l.id}, this.value)">
+              <select class="status-select" data-status="${l.status}" onchange="this.dataset.status=this.value;updateLoanStatus(${l.id}, this.value)">
                 ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${s===l.status?'selected':''}>${s}</option>`).join('')}
               </select>
             </td>
@@ -4236,13 +4444,11 @@ function openMarginCallPronounMenu(evt, stk){
   const menu = document.getElementById('marginCallPronounMenu');
   const btn = evt.currentTarget;
   const rect = btn.getBoundingClientRect();
-  menu.style.top = (rect.bottom + 4) + 'px';
-  menu.style.left = Math.max(8, rect.right - 200) + 'px';
   document.getElementById('marginCallPronounMenuList').innerHTML = LOAN_PRONOUN_PAIRS.map(p=>`
     <div class="loan-pronoun-row" style="padding:9px 14px;font-size:13px;cursor:pointer;" onmouseover="this.style.background='#F5F7FA'" onmouseout="this.style.background=''" onclick="quickComposeMarginCallMessage('${stk}','${p.goi}|${p.tu}',this); setTimeout(closeMarginCallPronounMenu, 500);">
       ${p.goi} <span style="color:var(--text-muted);">(xưng: ${p.tu})</span>
     </div>`).join('');
-  menu.style.display = 'block';
+  placeFloatingMenu(menu, rect);
   setTimeout(()=>{ document.addEventListener('click', closeMarginCallPronounMenuOnOutsideClick); }, 0);
 }
 function closeMarginCallPronounMenu(){
@@ -4372,12 +4578,12 @@ function renderMarginCalls(){
   const soonCount = marginCalls.filter(m=>{const d=daysUntil(m.dueDate);return d>0 && d<=7;}).length;
 
   document.getElementById('mcStatusPills').innerHTML = ['Chưa xử lý','Đã check','Đã liên hệ'].map(s=>`
-    <div class="loan-pill ${mcStatusPillFilter===s?'active':''}" onclick="setMarginCallStatusPill('${s}')">${s} <span class="cnt">${statusCounts[s]}</span></div>
+    <div class="loan-pill ${statusPillClass(s)} ${mcStatusPillFilter===s?'active':''}" onclick="setMarginCallStatusPill('${s}')">${s} <span class="cnt">${statusCounts[s]}</span></div>
   `).join('');
   document.getElementById('mcDatePills').innerHTML = `
-    <div class="loan-pill ${mcDatePillFilter==='today'?'active':''}" onclick="setMarginCallDatePill('today')">Đến hạn hôm nay <span class="cnt">${todayCount}</span></div>
-    <div class="loan-pill ${mcDatePillFilter==='overdue'?'active':''}" onclick="setMarginCallDatePill('overdue')">Quá hạn <span class="cnt">${overdueCount}</span></div>
-    <div class="loan-pill ${mcDatePillFilter==='soon'?'active':''}" onclick="setMarginCallDatePill('soon')">Sắp đến hạn (7 ngày) <span class="cnt">${soonCount}</span></div>
+    <div class="loan-pill lp-today ${mcDatePillFilter==='today'?'active':''}" onclick="setMarginCallDatePill('today')">Đến hạn hôm nay <span class="cnt">${todayCount}</span></div>
+    <div class="loan-pill lp-overdue ${mcDatePillFilter==='overdue'?'active':''}" onclick="setMarginCallDatePill('overdue')">Quá hạn <span class="cnt">${overdueCount}</span></div>
+    <div class="loan-pill lp-soon ${mcDatePillFilter==='soon'?'active':''}" onclick="setMarginCallDatePill('soon')">Sắp đến hạn (7 ngày) <span class="cnt">${soonCount}</span></div>
   `;
 
   const filtered = getFilteredMarginCallsList();
@@ -4425,7 +4631,7 @@ function renderMarginCalls(){
     const managerIdForGroup = custCalls.find(m=>m.managerId)?.managerId || '—';
     const colspan = mcBulkSelectMode ? 8 : 7;
 
-    html += `<tr class="loan-summary-row" onclick="toggleMarginCallGroup('${stk}')" style="cursor:pointer;">
+    html += `<tr class="loan-summary-row row-${overall.cls}" onclick="toggleMarginCallGroup('${stk}')" style="cursor:pointer;">
       ${mcBulkSelectMode ? `<td onclick="event.stopPropagation();"><input type="checkbox" class="bulk-checkbox" ${allSelected?'checked':''} ${!allSelected&&someSelected?'data-indeterminate="1"':''} title="Chọn tất cả khoản của KH này" onclick="toggleBulkSelectMarginCallGroup('${stk}', this.checked)"></td>` : ''}
       <td>
         <div style="display:flex;align-items:center;gap:5px;">
@@ -4434,7 +4640,7 @@ function renderMarginCalls(){
           <span class="loan-stk-pill" style="cursor:pointer;white-space:nowrap;" title="Bấm để copy STK" onclick="event.stopPropagation();copyToClipboard('${stk}', this)">${stk}</span>
         </div>
       </td>
-      <td>${managerIdForGroup}</td>
+      <td class="td-mgr">${managerIdForGroup}</td>
       <td>${custCalls.length}</td>
       <td style="color:${nearest<0?'var(--red)':nearest<=3?'var(--amber)':'var(--text)'};">${nearest<0?'⚠️ ':nearest<=3?'⚠️ ':''}${nearestCall.dueDate}</td>
       <td class="num-col num">${fmt(totalAmount)}</td>
@@ -4472,7 +4678,7 @@ function renderMarginCalls(){
                 onchange="updateMarginCallAmount(${m.id}, this.value)">
             </td>
             <td>
-              <select class="status-select" onchange="updateMarginCallStatus(${m.id}, this.value)">
+              <select class="status-select" data-status="${m.status}" onchange="this.dataset.status=this.value;updateMarginCallStatus(${m.id}, this.value)">
                 ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${s===m.status?'selected':''}>${s}</option>`).join('')}
               </select>
             </td>
