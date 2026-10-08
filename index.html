@@ -648,7 +648,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.25-form-910</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.26-import-id-dac-biet</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -670,7 +670,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.25-form-910</div>
+        <div class="brand-sub">Chứng khoán · v08.26-import-id-dac-biet</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -1059,6 +1059,7 @@ body{-webkit-text-size-adjust:100%;}
               <button class="btn btn-secondary btn-sm" id="btnTypeLoan" onclick="setImportType('loan')">📅 Import Khoản vay đến hạn</button>
               <button class="btn btn-secondary btn-sm" id="btnTypeMarginCall" onclick="setImportType('margincall')">⚠️ Import RRUB/Call Margin</button>
               <button class="btn btn-secondary btn-sm" id="btnTypeRight" onclick="setImportType('right')">📈 Import Quyền mua</button>
+              <button class="btn btn-secondary btn-sm" id="btnTypeSpecialId" onclick="setImportType('specialid')">⭐ Import ID đặc biệt</button>
             </div>
           </div>
 
@@ -5151,6 +5152,12 @@ const FIELD_SPECS = {
     {key:'amount', label:'Số tiền cần nộp bổ sung', required:false, guesses:['so tien','so tien can nop','call margin','rrub']},
     {key:'managerId', label:'MKT ID', required:false, guesses:['mkt id','id']},
   ],
+  specialid: [
+    {key:'id', label:'ID (MKT ID)', required:true, guesses:['mkt id','id','ma id','id ql','id quan ly']},
+    {key:'name', label:'Tên', required:false, guesses:['ten','ho ten','ten nguoi quan ly','ten moi gioi']},
+    {key:'room', label:'Phòng', required:false, guesses:['phong','phong ban','ten phong']},
+    {key:'head', label:'Trưởng phòng', required:false, guesses:['truong phong','ten truong phong','tp']},
+  ],
   right: [
     {key:'stk', label:'Số tài khoản', required:true, guesses:['so tai khoan','stk','so tk','sotk']},
     {key:'symbol', label:'Mã CP', required:true, guesses:['ma cp']},
@@ -5169,6 +5176,7 @@ const IMPORT_TYPE_META = {
   loan: {hint:'Kéo thả file khoản vay đến hạn vào đây, hoặc bấm để chọn file', note:'Nếu file không có cột số tiền vay, khoản vay sẽ được tạo với số tiền = 0 — bổ sung tay sau. Nếu 1 ô Số tài khoản có nhiều STK cách nhau bằng dấu phẩy, hệ thống tự tách thành từng khoản vay riêng.'},
   margincall: {hint:'Kéo thả file RRUB/Call Margin vào đây, hoặc bấm để chọn file', note:'Nếu file không có cột Số tiền, khoản sẽ được tạo với số tiền = 0 — bổ sung tay sau. Nếu 1 ô Số tài khoản có nhiều STK cách nhau bằng dấu phẩy, hệ thống tự tách thành từng khoản riêng.'},
   right: {hint:'Kéo thả file quyền mua vào đây, hoặc bấm để chọn file'},
+  specialid: {hint:'Kéo thả file danh sách ID đặc biệt vào đây, hoặc bấm để chọn file', note:'ID chưa có thì thêm mới; ID đã có thì KHÔNG thêm lại mà chỉ cập nhật các cột bạn map và có dữ liệu trong file (Tên, Phòng, Trưởng phòng). Cột không map hoặc ô để trống thì giữ nguyên dữ liệu cũ.'},
 };
 
 let currentImportType = 'nav';
@@ -5188,7 +5196,7 @@ function goImportStep(step){
 
 function setImportType(type){
   currentImportType = type;
-  const map = {customerlist:'btnTypeCustomerList', nav:'btnTypeNav', bc12:'btnTypeBc12', loan:'btnTypeLoan', margincall:'btnTypeMarginCall', right:'btnTypeRight'};
+  const map = {customerlist:'btnTypeCustomerList', nav:'btnTypeNav', bc12:'btnTypeBc12', loan:'btnTypeLoan', margincall:'btnTypeMarginCall', right:'btnTypeRight', specialid:'btnTypeSpecialId'};
   Object.entries(map).forEach(([t,id])=>{
     document.getElementById(id).className = 'btn btn-sm ' + (t===type ? 'btn-primary' : 'btn-secondary');
   });
@@ -5213,7 +5221,7 @@ function resetImportWizard(){
 }
 
 const IMPORT_TYPE_LABELS = {
-  customerlist: '👥 Danh sách KH', nav: '📊 NAV', bc12: '💰 BC12 (Phí)', loan: '📅 Khoản vay', margincall: '⚠️ RRUB/Call Margin', right: '📈 Quyền mua',
+  customerlist: '👥 Danh sách KH', nav: '📊 NAV', bc12: '💰 BC12 (Phí)', loan: '📅 Khoản vay', margincall: '⚠️ RRUB/Call Margin', right: '📈 Quyền mua', specialid: '⭐ ID đặc biệt',
 };
 // ---------------- DỌN DỮ LIỆU CŨ (chỉ Owner) ----------------
 let pendingCleanupLoanIds = null;
@@ -5531,6 +5539,7 @@ function analyzeImportRows(type, rows, mapping){
   const seenLoanKeys = new Set(); // chặn trùng (account+ngày đến hạn) trong cùng 1 file
   const seenMarginCallKeys = new Set(); // chặn trùng (account+hạn xử lý) trong cùng 1 file
   const seenRightKeys = new Set(); // chặn trùng (stk+mã CP+ngày chốt) trong cùng 1 file
+  const seenSpecialKeys = new Set(); // chặn trùng ID trong cùng 1 file (ID đặc biệt)
   rows.forEach((row, idx)=>{
     const lineNo = idx+2;
 
@@ -5703,6 +5712,20 @@ function analyzeImportRows(type, rows, mapping){
         plan.valid.push(item);
       });
     }
+    else if(type==='specialid'){
+      const id = normId(getMapped(row,mapping,'id'));
+      if(!id){ plan.errors.push({line:lineNo, content:'ID: (trống)', error:'Thiếu ID'}); return; }
+      if(seenSpecialKeys.has(id)){ plan.errors.push({line:lineNo, content:`ID ${id}`, error:'Trùng ID trong file — bỏ qua dòng này, giữ dòng đầu tiên'}); return; }
+      seenSpecialKeys.add(id);
+      const val = k => mapping[k] ? String(getMapped(row,mapping,k)==null?'':getMapped(row,mapping,k)).trim() : '';
+      const nv = {name:val('name'), room:val('room'), head:val('head')}; // rỗng = không cập nhật
+      const existing = findSpecialId(id);
+      let changed = false;
+      if(existing){ changed = (nv.name && nv.name!==existing.name) || (nv.room && nv.room!==existing.room) || (nv.head && nv.head!==existing.head); }
+      const item = {id, name:nv.name, room:nv.room, head:nv.head, existing, isNew:!existing, changed:!!changed};
+      if(!existing) plan.newCount++; else if(changed) plan.changedCount++; else plan.unchangedCount++;
+      plan.valid.push(item);
+    }
     else if(type==='right'){
       const stk = String(getMapped(row,mapping,'stk')).trim();
       const symbol = String(getMapped(row,mapping,'symbol')).trim().toUpperCase();
@@ -5861,6 +5884,14 @@ function goToImportStep4(){
         : '<span class="badge badge-blue">Mới</span>';
       return `<tr${rowStyle}><td>${it.account}</td><td>${it.dueDate}</td><td class="num-col num">${it.amount?fmt(it.amount):'—'}</td><td>${it.managerId||'—'}</td><td>${tag}</td></tr>`;
     }).join('');
+  } else if(plan.type==='specialid'){
+    head.innerHTML = `<tr><th>ID</th><th>Tên</th><th>Phòng</th><th>Trưởng phòng</th><th>Trạng thái</th></tr>`;
+    const cell = (nw, old) => nw ? (old && old!==nw ? `<span style="color:var(--text-muted);text-decoration:line-through;">${escHtml(old)}</span> → <b>${escHtml(nw)}</b>` : escHtml(nw)) : (old ? escHtml(old) : '—');
+    body.innerHTML = plan.valid.slice(0,300).map(it=>{
+      const e = it.existing || {};
+      const tag = it.isNew ? '<span class="badge badge-blue">Mới</span>' : it.changed ? '<span class="badge badge-amber">Cập nhật</span>' : '<span class="badge badge-gray">Không đổi</span>';
+      return `<tr><td><b>${escHtml(it.id)}</b></td><td>${cell(it.name,e.name)}</td><td>${cell(it.room,e.room)}</td><td>${cell(it.head,e.head)}</td><td>${tag}</td></tr>`;
+    }).join('');
   } else if(plan.type==='right'){
     head.innerHTML = `<tr><th>STK</th><th>Mã CP</th><th>Tỷ lệ</th><th class="num-col">Giá</th><th class="num-col">SL được mua</th><th>Ngày chốt</th><th>Hạn ĐK</th><th>Trạng thái</th></tr>`;
     body.innerHTML = plan.valid.slice(0,300).map(it=>{
@@ -6011,6 +6042,26 @@ async function confirmImportToDatabase(){
       document.getElementById('importResultTitle').textContent = `Đã import ${toInsert.length} khoản RRUB/Call Margin mới`; showToast(`Đã import ${toInsert.length} khoản RRUB/Call Margin mới`);
       document.getElementById('importResultSub').textContent = `${plan.valid.length-toInsert.length} dòng trùng với dữ liệu đã có, đã bỏ qua${managerIdBackfilledCount?` (trong đó ${managerIdBackfilledCount} khoản được vá lại ID quản lý)`:''}.`;
     }
+    else if(plan.type==='specialid'){
+      const now = new Date().toISOString();
+      const toInsert = plan.valid.filter(it=>it.isNew).map(it=>({ manager_id: it.id, manager_name: it.name||null, room_name: it.room||null, head_name: it.head||null, updated_at: now }));
+      if(toInsert.length){ const { error } = await sb.from('special_ids').insert(toInsert); if(error) throw error; }
+      // ID đã có: chỉ cập nhật các trường có dữ liệu mới trong file, trường còn lại giữ nguyên
+      const toUpdate = plan.valid.filter(it=>it.changed);
+      for(let i=0;i<toUpdate.length;i+=20){
+        const results = await Promise.all(toUpdate.slice(i,i+20).map(it=>{
+          const payload = { updated_at: now };
+          if(it.name) payload.manager_name = it.name;
+          if(it.room) payload.room_name = it.room;
+          if(it.head) payload.head_name = it.head;
+          return sb.from('special_ids').update(payload).eq('manager_id', it.id);
+        }));
+        const bad = results.find(r=>r.error); if(bad) throw bad.error;
+      }
+      await sb.from('import_batches').insert({ import_type: 'specialid', file_name: document.getElementById('fileInput').files[0]?.name, imported_by: currentUserEmail, total_rows: plan.valid.length+plan.errors.length, new_customers: toInsert.length, updated_rows: toUpdate.length, error_rows: plan.errors.length });
+      document.getElementById('importResultTitle').textContent = `Đã import ID đặc biệt: ${toInsert.length} mới, ${toUpdate.length} cập nhật`; showToast(`Đã import ID đặc biệt: ${toInsert.length} mới, ${toUpdate.length} cập nhật`);
+      document.getElementById('importResultSub').textContent = `${plan.unchangedCount} ID đã có và không thay đổi gì. ID đã có không bị thêm lại; cột không map hoặc ô để trống thì giữ nguyên dữ liệu cũ.`;
+    }
     else if(plan.type==='right'){
       const toInsert = plan.valid.filter(it=>it.isNew).map(it=>({ account_number: it.stk, symbol: it.symbol, ratio_num: it.ratioNum, ratio_denom: it.ratioDenom, price: it.price, holdings: it.holdings, qty: it.qty, record_date: toDbDate(it.recordDate), deadline: toDbDate(it.deadline), status:'Chưa đăng ký' }));
       if(toInsert.length){ const { error } = await sb.from('rights_offerings').insert(toInsert); if(error) throw error; }
@@ -6020,7 +6071,7 @@ async function confirmImportToDatabase(){
     }
 
     await loadAllData();
-    renderCustomers(); renderDashboard(); renderRooms(); renderLoans(); renderMarginCalls(); renderRights();
+    renderCustomers(); renderDashboard(); renderRooms(); renderLoans(); renderMarginCalls(); renderRights(); renderSpecialIds();
     goImportStep(5);
   } catch(err){
     alert('Lỗi khi cập nhật dữ liệu: ' + err.message);
