@@ -447,7 +447,7 @@ tbody tr:hover{background:#EEF3FF;}
 /* Hộp thoại / khung chi tiết */
 .modal{box-shadow:0 24px 60px rgba(15,23,42,.35);border:1px solid var(--border);}
 /* Form khách hàng rộng hơn, không bị tràn ngang */
-#modalOverlay .modal{width:950px;max-width:96vw;}
+#modalOverlay .modal{width:910px;max-width:96vw;}
 .modal{overflow-x:hidden;}
 .modal .form-field input,.modal .form-field select,.modal .form-field textarea{max-width:100%;box-sizing:border-box;}
 .modal-header{background:var(--band-bg);}
@@ -648,7 +648,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.23-fix-thieu-kh</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.25-form-910</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -670,7 +670,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.23-fix-thieu-kh</div>
+        <div class="brand-sub">Chứng khoán · v08.25-form-910</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -2587,7 +2587,7 @@ function getFilteredSortedList(){
   const roomF = document.getElementById('filterRoom').value;
   const statusF = document.getElementById('filterStatus').value;
   let list = customers.filter(c=>{
-    const matchQ = !q || c.code.toLowerCase().includes(q) || c.stk.includes(q) || c.name.toLowerCase().includes(q) || (c.telegram||'').toLowerCase().includes(q);
+    const matchQ = !q || c.code.toLowerCase().includes(q) || c.stk.toLowerCase().includes(q) || c.name.toLowerCase().includes(q) || (c.telegram||'').toLowerCase().includes(q);
     const matchRoom = !roomF || String(c.room)===roomF;
     const matchStatus = !statusF || c.status===statusF;
     return matchQ && matchRoom && matchStatus && matchesAdvancedFilters(c);
@@ -4256,7 +4256,7 @@ function getFilteredLoansList(){
   return loans.filter(l=>{
     const c = findCustomerByAccountNumber(l.account);
     const name = c ? c.name : '';
-    const matchQ = !q || name.toLowerCase().includes(q) || l.account.includes(q) || (c && c.stk.includes(q));
+    const matchQ = !q || name.toLowerCase().includes(q) || l.account.toLowerCase().includes(q) || (c && c.stk.toLowerCase().includes(q));
     const matchResolved = showAll || !RESOLVED.includes(l.status);
     const matchStatusPill = !loanStatusPillFilter || l.status===loanStatusPillFilter;
     const d = daysUntil(l.dueDate);
@@ -4835,7 +4835,7 @@ function getFilteredMarginCallsList(){
   return marginCalls.filter(m=>{
     const c = findCustomerByAccountNumber(m.account);
     const name = c ? c.name : '';
-    const matchQ = !q || name.toLowerCase().includes(q) || m.account.includes(q) || (c && c.stk.includes(q));
+    const matchQ = !q || name.toLowerCase().includes(q) || m.account.toLowerCase().includes(q) || (c && c.stk.toLowerCase().includes(q));
     const matchResolved = showAll || !RESOLVED.includes(m.status);
     const matchStatusPill = !mcStatusPillFilter || m.status===mcStatusPillFilter;
     const d = daysUntil(m.dueDate);
@@ -5082,7 +5082,7 @@ function renderRights(){
   const q = (document.getElementById('rightSearchInput').value||'').toLowerCase();
   const statusF = document.getElementById('rightFilterStatus').value;
   const list = rights.filter(r=>{
-    const matchQ = !q || r.name.toLowerCase().includes(q) || r.stk.includes(q) || r.symbol.toLowerCase().includes(q);
+    const matchQ = !q || r.name.toLowerCase().includes(q) || r.stk.toLowerCase().includes(q) || r.symbol.toLowerCase().includes(q);
     const matchStatus = !statusF || r.status===statusF;
     return matchQ && matchStatus;
   });
