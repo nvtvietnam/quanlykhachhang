@@ -644,7 +644,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.10-an-nut-xoa</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.12-ngay-that</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -666,7 +666,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.10-an-nut-xoa</div>
+        <div class="brand-sub">Chứng khoán · v08.12-ngay-that</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -3004,6 +3004,7 @@ async function saveRoom(){
     closeRoomModal();
     renderRooms();
     renderCustomers();
+    showToast('Đã lưu Room thành công.');
   } catch(err){ alert('Lỗi khi lưu Room: ' + err.message); }
 }
 async function deleteRoom(){
@@ -3016,7 +3017,10 @@ async function deleteRoom(){
   }
   if(!confirm('Xóa Room này? Thao tác không thể hoàn tác.')) return;
   try {
-    const { error } = await sb.from('rooms').delete().eq('room_id', editingRoomId);
+    const { data: _del, error } = await sb.from('rooms').delete().eq('room_id', editingRoomId).select();
+    if(error) throw error;
+    if(!_del || !_del.length) throw new Error('Không xóa được bản ghi nào (bạn không có quyền xóa hoặc dữ liệu đã không còn).');
+    showToast('Đã xóa Room thành công.');
     if(error) throw error;
     await loadAllData();
     closeRoomModal();
@@ -3151,6 +3155,7 @@ async function saveLinkAsSecondary(){
     openDetail(c.code);
     openLinkModal();
     renderCustomers(); renderDashboard(); renderRooms();
+    showToast('Đã lưu liên kết thành công.');
   } catch(err){ alert('Lỗi khi lưu liên kết: ' + err.message); }
 }
 async function unlinkSelf(){
@@ -3163,6 +3168,7 @@ async function unlinkSelf(){
     openDetail(c.code);
     openLinkModal();
     renderCustomers(); renderDashboard(); renderRooms();
+    showToast('Đã bỏ liên kết thành công.');
   } catch(err){ alert('Lỗi khi bỏ liên kết: ' + err.message); }
 }
 async function addSecondaryToThis(){
@@ -3177,6 +3183,7 @@ async function addSecondaryToThis(){
     openDetail(primary.code);
     openLinkModal();
     renderCustomers(); renderDashboard(); renderRooms();
+    showToast('Đã thêm tài khoản phụ thành công.');
   } catch(err){ alert('Lỗi khi thêm tài khoản phụ: ' + err.message); }
 }
 async function removeSecondary(secStk){
@@ -3189,6 +3196,7 @@ async function removeSecondary(secStk){
     openDetail(currentDetailStk);
     openLinkModal();
     renderCustomers(); renderDashboard(); renderRooms();
+    showToast('Đã bỏ liên kết thành công.');
   } catch(err){ alert('Lỗi khi bỏ liên kết: ' + err.message); }
 }
 
@@ -3349,11 +3357,13 @@ async function saveCustomer(){
         reason: 'Tạo khách hàng'
       });
     }
+    const _wasEdit = !!editingCustomerStk;
     await loadAllData();
     closeModal();
     renderCustomers();
     renderDashboard();
     renderRooms();
+    showToast(_wasEdit ? 'Đã cập nhật khách hàng thành công.' : 'Đã thêm khách hàng thành công.');
   } catch(err){
     alert('Lỗi khi lưu khách hàng: ' + err.message);
   } finally {
@@ -3518,7 +3528,7 @@ async function saveTelegramTemplate(){
     if(error) throw error;
     telegramNameTemplate = text;
     updateTelegramPreview();
-    alert('Đã lưu cấu trúc tên Telegram — áp dụng ngay cho các khách hàng thêm/sửa sau này.');
+    showToast('Đã lưu cấu trúc tên Telegram — áp dụng ngay cho các khách hàng thêm/sửa sau này.');
     toggleTelegramTemplateEditor();
   } catch(err){ alert('Lỗi khi lưu cấu trúc: ' + err.message); }
 }
@@ -3661,7 +3671,7 @@ function loanStatusBadge(s){
 function daysUntil(dateStr){
   const [d,m,y] = dateStr.split('/').map(Number);
   const target = new Date(y, m-1, d);
-  const today = new Date(2026, 7, 28); // 28/08/2026 — ngày hiện tại của hệ thống
+  const today = new Date(); today.setHours(0,0,0,0); // ngày thật của hôm nay
   const diff = Math.round((target - today) / (1000*60*60*24));
   return diff;
 }
@@ -3680,6 +3690,24 @@ function openLoanModal(preselectStk){
   document.getElementById('loanModalOverlay').classList.add('active');
 }
 function closeLoanModal(){ document.getElementById('loanModalOverlay').classList.remove('active'); }
+// Thông báo nổi (popup nhỏ ở giữa phía trên, tự tắt sau vài giây)
+function showToast(msg, type){
+  let box = document.getElementById('toastBox');
+  if(!box){
+    box = document.createElement('div'); box.id = 'toastBox';
+    box.style.cssText = 'position:fixed;top:78px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;max-width:92vw;';
+    document.body.appendChild(box);
+  }
+  const t = document.createElement('div');
+  const ok = type !== 'error';
+  t.style.cssText = 'pointer-events:auto;background:'+(ok?'#0E9F6E':'#DC2626')+';color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:700;box-shadow:0 8px 24px rgba(15,23,42,.3);display:flex;align-items:center;gap:9px;opacity:0;transform:translateY(-8px);transition:all .2s;';
+  t.innerHTML = '<span style="font-size:18px;">'+(ok?'✅':'⚠️')+'</span><span></span>';
+  t.lastChild.textContent = msg;
+  box.appendChild(t);
+  requestAnimationFrame(()=>{ t.style.opacity='1'; t.style.transform='translateY(0)'; });
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(-8px)'; setTimeout(()=>t.remove(), 250); }, 3200);
+}
+
 async function saveLoan(){
   const stk = document.getElementById('loan_stk').value;
   const tk = document.getElementById('loan_tk').value;
@@ -3703,6 +3731,7 @@ async function saveLoan(){
     closeLoanModal();
     renderLoans();
     renderDashboard();
+    showToast(`Đã thêm khoản vay thành công — TK ${account}, đến hạn ${due}`);
   } catch(err){ alert('Lỗi khi lưu khoản vay: ' + err.message); }
 }
 
@@ -3741,8 +3770,8 @@ async function updateLoanNote(id, newNote){
   const oldNote = l ? (l.note||'') : '';
   if(l) l.note = newNote;
   const { error } = await sb.from('loans').update({ note: newNote, updated_at: new Date().toISOString() }).eq('loan_id', id);
-  if(error) alert('Lỗi khi lưu ghi chú: ' + error.message);
-  else if(oldNote !== newNote) logLoanHistory(id, 'sua_ghi_chu', `"${oldNote||'(trống)'}" → "${newNote||'(trống)'}"`);
+  if(error){ alert('Lỗi khi lưu ghi chú: ' + error.message); if(l) l.note = oldNote; }
+  else { showToast('Đã lưu ghi chú thành công.'); if(oldNote !== newNote) logLoanHistory(id, 'sua_ghi_chu', `"${oldNote||'(trống)'}" → "${newNote||'(trống)'}"`); }
 }
 async function updateLoanAmount(id, newValue){
   const num = parseFloat(String(newValue).replace(/[^\d]/g,'')) || 0;
@@ -3754,6 +3783,7 @@ async function updateLoanAmount(id, newValue){
   try {
     const { error } = await sb.from('loans').update({ amount: num, updated_at: new Date().toISOString() }).eq('loan_id', id);
     if(error) throw error;
+    showToast('Đã cập nhật số tiền thành công.');
     if(oldAmount !== num) logLoanHistory(id, 'sua_so_tien', `${fmt(oldAmount||0)} → ${fmt(num)}`);
   } catch(err){
     alert('Lỗi khi lưu số tiền: ' + err.message);
@@ -3783,6 +3813,7 @@ async function updateLoanDueDate(id, newValue, stk){
   try {
     const { error } = await sb.from('loans').update({ due_date: toDbDate(newDate), updated_at: new Date().toISOString() }).eq('loan_id', id);
     if(error) throw error;
+    showToast('Đã cập nhật ngày đến hạn thành công.');
     if(oldDate !== newDate) logLoanHistory(id, 'sua_ngay_den_han', `${oldDate} → ${newDate}`);
   } catch(err){
     alert('Lỗi khi lưu ngày đến hạn: ' + err.message);
@@ -3799,7 +3830,7 @@ async function updateLoanStatus(id, newStatus){
   renderDashboard();
   const { error } = await sb.from('loans').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('loan_id', id);
   if(error){ alert('Lỗi khi cập nhật trạng thái: ' + error.message); await loadAllData(); renderLoans(); renderDashboard(); }
-  else if(oldStatus !== newStatus) logLoanHistory(id, 'doi_trang_thai', `${oldStatus} → ${newStatus}`);
+  else { showToast('Đã cập nhật trạng thái: ' + newStatus); if(oldStatus !== newStatus) logLoanHistory(id, 'doi_trang_thai', `${oldStatus} → ${newStatus}`); }
 }
 async function deleteLoanEntry(id){
   if(currentRole !== 'owner'){ alert('Chỉ tài khoản Owner mới có quyền xóa. Tài khoản Editor chỉ được sửa, không xóa được.'); return; }
@@ -3807,7 +3838,10 @@ async function deleteLoanEntry(id){
   if(idx===-1) return;
   if(!confirm('Xóa khoản vay này? Thao tác này không thể hoàn tác.')) return;
   try {
-    const { error } = await sb.from('loans').delete().eq('loan_id', id);
+    const { data: _del, error } = await sb.from('loans').delete().eq('loan_id', id).select();
+    if(error) throw error;
+    if(!_del || !_del.length) throw new Error('Không xóa được bản ghi nào (bạn không có quyền xóa hoặc dữ liệu đã không còn).');
+    showToast('Đã xóa khoản vay thành công.');
     if(error) throw error;
     loans.splice(idx,1);
     renderLoans();
@@ -3820,7 +3854,10 @@ async function deleteAllLoansForCustomer(stk){
   if(!ids.length) return;
   if(!confirm(`Xóa toàn bộ ${ids.length} khoản vay của STK ${stk}? Thao tác này không thể hoàn tác.`)) return;
   try {
-    const { error } = await sb.from('loans').delete().in('loan_id', ids);
+    const { data: _del, error } = await sb.from('loans').delete().in('loan_id', ids).select();
+    if(error) throw error;
+    if(!_del || !_del.length) throw new Error('Không xóa được bản ghi nào (bạn không có quyền xóa hoặc dữ liệu đã không còn).');
+    showToast('Đã xóa toàn bộ khoản vay của khách hàng thành công.');
     if(error) throw error;
     loans = loans.filter(l=>!ids.includes(l.id));
     renderLoans();
@@ -3882,7 +3919,10 @@ async function deleteBulkSelected(){
   if(!confirm(`Xóa ${bulkSelectedLoanIds.size} khoản vay đã chọn? Không thể hoàn tác.`)) return;
   try {
     const ids = [...bulkSelectedLoanIds];
-    const { error } = await sb.from('loans').delete().in('loan_id', ids);
+    const { data: _del, error } = await sb.from('loans').delete().in('loan_id', ids).select();
+    if(error) throw error;
+    if(!_del || !_del.length) throw new Error('Không xóa được bản ghi nào (bạn không có quyền xóa hoặc dữ liệu đã không còn).');
+    showToast('Đã xóa các khoản vay đã chọn thành công.');
     if(error) throw error;
     for(let i=loans.length-1;i>=0;i--){
       if(bulkSelectedLoanIds.has(loans[i].id)) loans.splice(i,1);
@@ -3923,7 +3963,9 @@ async function confirmDeleteFilteredLoans(){
     let done = 0;
     for(let i=0;i<ids.length;i+=CHUNK){
       const chunk = ids.slice(i, i+CHUNK);
-      const { error } = await sb.from('loans').delete().in('loan_id', chunk);
+      const { data: _del, error } = await sb.from('loans').delete().in('loan_id', chunk).select();
+    if(error) throw error;
+    if(!_del || !_del.length) throw new Error('Không xóa được bản ghi nào (bạn không có quyền xóa hoặc dữ liệu đã không còn).');
       if(error) throw error;
       done += chunk.length;
       resultEl.textContent = `Đang xóa ${done}/${ids.length}...`;
@@ -3935,7 +3977,7 @@ async function confirmDeleteFilteredLoans(){
     closeDeleteFilteredLoansModal();
     renderLoans();
     renderDashboard();
-    alert(`Đã xóa ${ids.length} khoản vay khớp bộ lọc hiện tại.`);
+    showToast(`Đã xóa ${ids.length} khoản vay khớp bộ lọc hiện tại.`);
   } catch(err){
     resultEl.textContent = '';
     alert('Lỗi khi xóa khoản vay: ' + err.message);
@@ -4025,7 +4067,7 @@ async function saveLoanTemplate(){
     const { error } = await sb.from('app_settings').upsert({ key:'loan_reminder_template', value:text, updated_at:new Date().toISOString() });
     if(error) throw error;
     loanMessageTemplate = text;
-    alert('Đã lưu mẫu tin nhắn — áp dụng ngay cho toàn bộ Quản lý khoản vay.');
+    showToast('Đã lưu mẫu tin nhắn — áp dụng ngay cho toàn bộ Quản lý khoản vay.');
     toggleLoanTemplateEditor();
   } catch(err){ alert('Lỗi khi lưu mẫu: ' + err.message); }
 }
@@ -4303,6 +4345,7 @@ async function saveMarginCall(){
     closeMarginCallModal();
     renderMarginCalls();
     renderDashboard();
+    showToast(`Đã thêm khoản RRUB/Call Margin thành công — TK ${account}, hạn xử lý ${due}`);
   } catch(err){ alert('Lỗi khi lưu khoản RRUB/Call Margin: ' + err.message); }
 }
 
@@ -4337,8 +4380,8 @@ async function updateMarginCallNote(id, newNote){
   const oldNote = m ? (m.note||'') : '';
   if(m) m.note = newNote;
   const { error } = await sb.from('margin_calls').update({ note: newNote, updated_at: new Date().toISOString() }).eq('margin_call_id', id);
-  if(error) alert('Lỗi khi lưu ghi chú: ' + error.message);
-  else if(oldNote !== newNote) logMarginCallHistory(id, 'sua_ghi_chu', `"${oldNote||'(trống)'}" → "${newNote||'(trống)'}"`);
+  if(error){ alert('Lỗi khi lưu ghi chú: ' + error.message); if(m) m.note = oldNote; }
+  else { showToast('Đã lưu ghi chú thành công.'); if(oldNote !== newNote) logMarginCallHistory(id, 'sua_ghi_chu', `"${oldNote||'(trống)'}" → "${newNote||'(trống)'}"`); }
 }
 async function updateMarginCallAmount(id, newValue){
   const num = parseFloat(String(newValue).replace(/[^\d]/g,'')) || 0;
@@ -4350,6 +4393,7 @@ async function updateMarginCallAmount(id, newValue){
   try {
     const { error } = await sb.from('margin_calls').update({ amount: num, updated_at: new Date().toISOString() }).eq('margin_call_id', id);
     if(error) throw error;
+    showToast('Đã cập nhật số tiền thành công.');
     if(oldAmount !== num) logMarginCallHistory(id, 'sua_so_tien', `${fmt(oldAmount||0)} → ${fmt(num)}`);
   } catch(err){
     alert('Lỗi khi lưu số tiền: ' + err.message);
@@ -4379,6 +4423,7 @@ async function updateMarginCallDueDate(id, newValue, stk){
   try {
     const { error } = await sb.from('margin_calls').update({ due_date: toDbDate(newDate), updated_at: new Date().toISOString() }).eq('margin_call_id', id);
     if(error) throw error;
+    showToast('Đã cập nhật hạn xử lý thành công.');
     if(oldDate !== newDate) logMarginCallHistory(id, 'sua_han_xu_ly', `${oldDate} → ${newDate}`);
   } catch(err){
     alert('Lỗi khi lưu hạn xử lý: ' + err.message);
@@ -4395,7 +4440,7 @@ async function updateMarginCallStatus(id, newStatus){
   renderDashboard();
   const { error } = await sb.from('margin_calls').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('margin_call_id', id);
   if(error){ alert('Lỗi khi cập nhật trạng thái: ' + error.message); await loadAllData(); renderMarginCalls(); renderDashboard(); }
-  else if(oldStatus !== newStatus) logMarginCallHistory(id, 'doi_trang_thai', `${oldStatus} → ${newStatus}`);
+  else { showToast('Đã cập nhật trạng thái: ' + newStatus); if(oldStatus !== newStatus) logMarginCallHistory(id, 'doi_trang_thai', `${oldStatus} → ${newStatus}`); }
 }
 async function deleteMarginCallEntry(id){
   if(currentRole !== 'owner'){ alert('Chỉ tài khoản Owner mới có quyền xóa. Tài khoản Editor chỉ được sửa, không xóa được.'); return; }
@@ -4403,7 +4448,10 @@ async function deleteMarginCallEntry(id){
   if(idx===-1) return;
   if(!confirm('Xóa khoản RRUB/Call Margin này? Thao tác này không thể hoàn tác.')) return;
   try {
-    const { error } = await sb.from('margin_calls').delete().eq('margin_call_id', id);
+    const { data: _del, error } = await sb.from('margin_calls').delete().eq('margin_call_id', id).select();
+    if(error) throw error;
+    if(!_del || !_del.length) throw new Error('Không xóa được bản ghi nào (bạn không có quyền xóa hoặc dữ liệu đã không còn).');
+    showToast('Đã xóa khoản RRUB/Call Margin thành công.');
     if(error) throw error;
     marginCalls.splice(idx,1);
     renderMarginCalls();
@@ -4416,7 +4464,10 @@ async function deleteAllMarginCallsForCustomer(stk){
   if(!ids.length) return;
   if(!confirm(`Xóa toàn bộ ${ids.length} khoản RRUB/Call Margin của STK ${stk}? Thao tác này không thể hoàn tác.`)) return;
   try {
-    const { error } = await sb.from('margin_calls').delete().in('margin_call_id', ids);
+    const { data: _del, error } = await sb.from('margin_calls').delete().in('margin_call_id', ids).select();
+    if(error) throw error;
+    if(!_del || !_del.length) throw new Error('Không xóa được bản ghi nào (bạn không có quyền xóa hoặc dữ liệu đã không còn).');
+    showToast('Đã xóa toàn bộ RRUB/Call Margin của khách hàng thành công.');
     if(error) throw error;
     marginCalls = marginCalls.filter(m=>!ids.includes(m.id));
     renderMarginCalls();
@@ -4478,7 +4529,10 @@ async function deleteBulkSelectedMarginCalls(){
   if(!confirm(`Xóa ${bulkSelectedMarginCallIds.size} khoản RRUB/Call Margin đã chọn? Không thể hoàn tác.`)) return;
   try {
     const ids = [...bulkSelectedMarginCallIds];
-    const { error } = await sb.from('margin_calls').delete().in('margin_call_id', ids);
+    const { data: _del, error } = await sb.from('margin_calls').delete().in('margin_call_id', ids).select();
+    if(error) throw error;
+    if(!_del || !_del.length) throw new Error('Không xóa được bản ghi nào (bạn không có quyền xóa hoặc dữ liệu đã không còn).');
+    showToast('Đã xóa các khoản RRUB/Call Margin đã chọn thành công.');
     if(error) throw error;
     for(let i=marginCalls.length-1;i>=0;i--){
       if(bulkSelectedMarginCallIds.has(marginCalls[i].id)) marginCalls.splice(i,1);
@@ -4519,7 +4573,9 @@ async function confirmDeleteFilteredMarginCalls(){
     let done = 0;
     for(let i=0;i<ids.length;i+=CHUNK){
       const chunk = ids.slice(i, i+CHUNK);
-      const { error } = await sb.from('margin_calls').delete().in('margin_call_id', chunk);
+      const { data: _del, error } = await sb.from('margin_calls').delete().in('margin_call_id', chunk).select();
+    if(error) throw error;
+    if(!_del || !_del.length) throw new Error('Không xóa được bản ghi nào (bạn không có quyền xóa hoặc dữ liệu đã không còn).');
       if(error) throw error;
       done += chunk.length;
       resultEl.textContent = `Đang xóa ${done}/${ids.length}...`;
@@ -4531,7 +4587,7 @@ async function confirmDeleteFilteredMarginCalls(){
     closeDeleteFilteredMarginCallsModal();
     renderMarginCalls();
     renderDashboard();
-    alert(`Đã xóa ${ids.length} khoản RRUB/Call Margin khớp bộ lọc hiện tại.`);
+    showToast(`Đã xóa ${ids.length} khoản RRUB/Call Margin khớp bộ lọc hiện tại.`);
   } catch(err){
     resultEl.textContent = '';
     alert('Lỗi khi xóa khoản RRUB/Call Margin: ' + err.message);
@@ -4591,7 +4647,7 @@ async function saveMarginCallTemplate(){
     const { error } = await sb.from('app_settings').upsert({ key:'margincall_reminder_template', value:text, updated_at:new Date().toISOString() });
     if(error) throw error;
     marginCallMessageTemplate = text;
-    alert('Đã lưu mẫu tin nhắn — áp dụng ngay cho toàn bộ Quản lý RRUB/Call Margin.');
+    showToast('Đã lưu mẫu tin nhắn — áp dụng ngay cho toàn bộ Quản lý RRUB/Call Margin.');
     toggleMarginCallTemplateEditor();
   } catch(err){ alert('Lỗi khi lưu mẫu: ' + err.message); }
 }
@@ -4874,6 +4930,7 @@ async function saveRight(){
     closeRightModal();
     renderRights();
     renderDashboard();
+    showToast('Đã thêm quyền mua thành công.');
   } catch(err){ alert('Lỗi khi lưu quyền mua: ' + err.message); }
 }
 
@@ -4884,6 +4941,7 @@ async function updateRightStatus(id, newStatus){
   renderDashboard();
   const { error } = await sb.from('rights_offerings').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('right_id', id);
   if(error){ alert('Lỗi khi cập nhật trạng thái: ' + error.message); await loadAllData(); renderRights(); renderDashboard(); }
+  else showToast('Đã cập nhật trạng thái quyền mua: ' + newStatus);
 }
 
 const RIGHT_STATUS_OPTIONS = ["Chưa đăng ký","Đã đăng ký","Đã nộp tiền","Hết hạn","Đã hủy"];
@@ -5057,7 +5115,10 @@ async function confirmCleanupLoans(){
   if(!pendingCleanupLoanIds || !pendingCleanupLoanIds.length) return;
   if(!confirm(`Xoá vĩnh viễn ${pendingCleanupLoanIds.length} khoản vay đã xử lý xong lâu ngày? Không thể hoàn tác.`)) return;
   try {
-    const { error } = await sb.from('loans').delete().in('loan_id', pendingCleanupLoanIds);
+    const { data: _del, error } = await sb.from('loans').delete().in('loan_id', pendingCleanupLoanIds).select();
+    if(error) throw error;
+    if(!_del || !_del.length) throw new Error('Không xóa được bản ghi nào (bạn không có quyền xóa hoặc dữ liệu đã không còn).');
+    showToast('Đã dọn dẹp khoản vay thành công.');
     if(error) throw error;
     document.getElementById('cleanupLoanResult').innerHTML = `<span style="color:var(--green);">✓ Đã xoá ${pendingCleanupLoanIds.length} khoản vay.</span>`;
     document.getElementById('btnConfirmCleanupLoans').style.display = 'none';
@@ -5093,7 +5154,10 @@ async function confirmCleanupMarginCalls(){
   if(!pendingCleanupMarginCallIds || !pendingCleanupMarginCallIds.length) return;
   if(!confirm(`Xoá vĩnh viễn ${pendingCleanupMarginCallIds.length} khoản RRUB/Call Margin đã xử lý xong lâu ngày? Không thể hoàn tác.`)) return;
   try {
-    const { error } = await sb.from('margin_calls').delete().in('margin_call_id', pendingCleanupMarginCallIds);
+    const { data: _del, error } = await sb.from('margin_calls').delete().in('margin_call_id', pendingCleanupMarginCallIds).select();
+    if(error) throw error;
+    if(!_del || !_del.length) throw new Error('Không xóa được bản ghi nào (bạn không có quyền xóa hoặc dữ liệu đã không còn).');
+    showToast('Đã dọn dẹp RRUB/Call Margin thành công.');
     if(error) throw error;
     document.getElementById('cleanupMarginCallResult').innerHTML = `<span style="color:var(--green);">✓ Đã xoá ${pendingCleanupMarginCallIds.length} khoản.</span>`;
     document.getElementById('btnConfirmCleanupMarginCalls').style.display = 'none';
@@ -5127,7 +5191,10 @@ async function confirmCleanupHistory(){
   if(!pendingCleanupHistoryIds || !pendingCleanupHistoryIds.length) return;
   if(!confirm(`Xoá vĩnh viễn ${pendingCleanupHistoryIds.length} bản ghi lịch sử import cũ? Không thể hoàn tác.`)) return;
   try {
-    const { error } = await sb.from('import_batches').delete().in('batch_id', pendingCleanupHistoryIds);
+    const { data: _del, error } = await sb.from('import_batches').delete().in('batch_id', pendingCleanupHistoryIds).select();
+    if(error) throw error;
+    if(!_del || !_del.length) throw new Error('Không xóa được bản ghi nào (bạn không có quyền xóa hoặc dữ liệu đã không còn).');
+    showToast('Đã xóa lịch sử import thành công.');
     if(error) throw error;
     document.getElementById('cleanupHistoryResult').innerHTML = `<span style="color:var(--green);">✓ Đã xoá ${pendingCleanupHistoryIds.length} bản ghi.</span>`;
     document.getElementById('btnConfirmCleanupHistory').style.display = 'none';
@@ -5771,7 +5838,7 @@ async function confirmImportToDatabase(){
         } catch(e){ errCount++; }
       }
       await sb.from('import_batches').insert({ import_type: plan.type, file_name: document.getElementById('fileInput').files[0]?.name, imported_by: currentUserEmail, total_rows: plan.valid.length+plan.errors.length+(plan.unmatchedCount||0), new_customers:newCount, updated_rows:updatedCount, error_rows: plan.errors.length+errCount });
-      document.getElementById('importResultTitle').textContent = 'Đã cập nhật thành công';
+      document.getElementById('importResultTitle').textContent = 'Đã cập nhật thành công'; showToast('Đã cập nhật thành công');
       document.getElementById('importResultSub').textContent = `${newCount} khách mới được thêm · ${updatedCount} khách được cập nhật theo cột đã map (NAV/phí, Tên KH, Tên Telegram, ID QL, giới tính, năm sinh, trạng thái, ghi chú — ghi đè bằng dữ liệu mới nhất trong file kể cả khi để trống)${assignedStkCount?` (trong đó ${assignedStkCount} khách được gán STK thật, chuyển khỏi "KH ưu tiên")`:''}${roomSyncedCount?` (trong đó ${roomSyncedCount} khách được đồng bộ lại Room)`:''}${plan.unmatchedCount?` · ${plan.unmatchedCount} STK trong file không tìm thấy trong hệ thống (xem lại ở bước Kiểm tra dữ liệu)`:''}${plan.skippedHasStkCount?` · ${plan.skippedHasStkCount} dòng khớp Tên Telegram nhưng KH đã có STK thật — đã bỏ qua, không sửa gì`:''}${errCount?` · ${errCount} dòng lỗi khi ghi`:''}${roomUnmatchedCount?` · ${roomUnmatchedCount} dòng có tên Room không khớp, đã tự gán theo ngưỡng NAV`:''}${priorityFallbackCount?` · ${priorityFallbackCount} dòng thiếu STK đã lưu tạm dạng "KH ưu tiên" — vào Danh sách khách hàng lọc trạng thái này để rà soát và xóa dòng không đúng`:''} · Cột nào bạn KHÔNG map ở file lần này thì dữ liệu cũ vẫn giữ nguyên.`;
     }
     else if(plan.type==='loan'){
@@ -5787,7 +5854,7 @@ async function confirmImportToDatabase(){
         } catch(e){ /* bỏ qua từng lỗi nhỏ, không chặn cả batch */ }
       }
       await sb.from('import_batches').insert({ import_type: 'loan', file_name: document.getElementById('fileInput').files[0]?.name, imported_by: currentUserEmail, total_rows: plan.valid.length+plan.errors.length, new_customers: toInsert.length, updated_rows: managerIdBackfilledCount, error_rows: plan.errors.length });
-      document.getElementById('importResultTitle').textContent = `Đã import ${toInsert.length} khoản vay mới`;
+      document.getElementById('importResultTitle').textContent = `Đã import ${toInsert.length} khoản vay mới`; showToast(`Đã import ${toInsert.length} khoản vay mới`);
       document.getElementById('importResultSub').textContent = `${plan.valid.length-toInsert.length} dòng trùng với dữ liệu đã có, đã bỏ qua${managerIdBackfilledCount?` (trong đó ${managerIdBackfilledCount} khoản được vá lại ID quản lý)`:''}. Số tiền vay = 0, cần bổ sung tay cho từng khoản.`;
     }
     else if(plan.type==='margincall'){
@@ -5803,14 +5870,14 @@ async function confirmImportToDatabase(){
         } catch(e){ /* bỏ qua từng lỗi nhỏ, không chặn cả batch */ }
       }
       await sb.from('import_batches').insert({ import_type: 'margincall', file_name: document.getElementById('fileInput').files[0]?.name, imported_by: currentUserEmail, total_rows: plan.valid.length+plan.errors.length, new_customers: toInsert.length, updated_rows: managerIdBackfilledCount, error_rows: plan.errors.length });
-      document.getElementById('importResultTitle').textContent = `Đã import ${toInsert.length} khoản RRUB/Call Margin mới`;
+      document.getElementById('importResultTitle').textContent = `Đã import ${toInsert.length} khoản RRUB/Call Margin mới`; showToast(`Đã import ${toInsert.length} khoản RRUB/Call Margin mới`);
       document.getElementById('importResultSub').textContent = `${plan.valid.length-toInsert.length} dòng trùng với dữ liệu đã có, đã bỏ qua${managerIdBackfilledCount?` (trong đó ${managerIdBackfilledCount} khoản được vá lại ID quản lý)`:''}.`;
     }
     else if(plan.type==='right'){
       const toInsert = plan.valid.filter(it=>it.isNew).map(it=>({ account_number: it.stk, symbol: it.symbol, ratio_num: it.ratioNum, ratio_denom: it.ratioDenom, price: it.price, holdings: it.holdings, qty: it.qty, record_date: toDbDate(it.recordDate), deadline: toDbDate(it.deadline), status:'Chưa đăng ký' }));
       if(toInsert.length){ const { error } = await sb.from('rights_offerings').insert(toInsert); if(error) throw error; }
       await sb.from('import_batches').insert({ import_type: 'right', file_name: document.getElementById('fileInput').files[0]?.name, imported_by: currentUserEmail, total_rows: plan.valid.length+plan.errors.length, new_customers: toInsert.length, updated_rows: 0, error_rows: plan.errors.length });
-      document.getElementById('importResultTitle').textContent = `Đã import ${toInsert.length} quyền mua mới`;
+      document.getElementById('importResultTitle').textContent = `Đã import ${toInsert.length} quyền mua mới`; showToast(`Đã import ${toInsert.length} quyền mua mới`);
       document.getElementById('importResultSub').textContent = `${plan.valid.length-toInsert.length} dòng trùng với dữ liệu đã có, đã bỏ qua.`;
     }
 
@@ -6080,6 +6147,7 @@ async function saveAccount(){
     await loadAllData();
     closeAccountModal();
     renderAccounts();
+    showToast('Đã lưu tài khoản thành công.');
   } catch(err){ alert('Lỗi khi lưu tài khoản (chỉ Owner được thêm/sửa): ' + err.message); }
 }
 async function deleteAccount(id){
@@ -6091,7 +6159,10 @@ async function deleteAccount(id){
   }
   if(!confirm(`Xóa tài khoản ${a.email}? Người này sẽ không đăng nhập được nữa.`)) return;
   try {
-    const { error } = await sb.from('user_roles').delete().eq('email', a.email);
+    const { data: _del, error } = await sb.from('user_roles').delete().eq('email', a.email).select();
+    if(error) throw error;
+    if(!_del || !_del.length) throw new Error('Không xóa được bản ghi nào (bạn không có quyền xóa hoặc dữ liệu đã không còn).');
+    showToast('Đã xóa tài khoản thành công.');
     if(error) throw error;
     accounts.splice(accounts.indexOf(a),1);
     renderAccounts();
@@ -6175,7 +6246,7 @@ async function confirmWipeData(){
     renderRights();
     renderDashboard();
     renderRooms();
-    alert('Đã xóa toàn bộ dữ liệu Khách hàng, Khoản vay, RRUB/Call Margin, Quyền mua khỏi hệ thống.');
+    showToast('Đã xóa toàn bộ dữ liệu Khách hàng, Khoản vay, RRUB/Call Margin, Quyền mua khỏi hệ thống.');
   } catch(err){
     alert('Lỗi khi xóa dữ liệu: ' + err.message);
   }
@@ -6225,7 +6296,9 @@ async function confirmDeleteFiltered(){
     for(let i=0;i<ids.length;i+=CHUNK){
       const chunk = ids.slice(i, i+CHUNK);
       // Xóa customers sẽ tự động cascade xóa nav_history/fee_history/change_log/room_history liên quan
-      const { error } = await sb.from('customers').delete().in('customer_id', chunk);
+      const { data: _del, error } = await sb.from('customers').delete().in('customer_id', chunk).select();
+    if(error) throw error;
+    if(!_del || !_del.length) throw new Error('Không xóa được bản ghi nào (bạn không có quyền xóa hoặc dữ liệu đã không còn).');
       if(error) throw error;
       done += chunk.length;
       resultEl.textContent = `Đang xóa ${done}/${ids.length}...`;
@@ -6235,7 +6308,7 @@ async function confirmDeleteFiltered(){
     renderCustomers();
     renderDashboard();
     renderRooms();
-    alert(`Đã xóa ${ids.length} khách hàng khớp bộ lọc hiện tại.`);
+    showToast(`Đã xóa ${ids.length} khách hàng khớp bộ lọc hiện tại.`);
   } catch(err){
     resultEl.textContent = '';
     alert('Lỗi khi xóa khách hàng: ' + err.message);
@@ -6252,7 +6325,10 @@ async function deleteSingleCustomer(stk){
   const label = c.name || c.telegram || c.stk;
   if(!confirm(`Xóa vĩnh viễn khách hàng "${label}" (STK ${c.stk})? Dữ liệu liên quan (lịch sử NAV/phí/phòng, khoản vay, RRUB/Call Margin, quyền mua...) cũng sẽ bị xóa theo. Thao tác này không thể hoàn tác.`)) return;
   try {
-    const { error } = await sb.from('customers').delete().eq('customer_id', c.id);
+    const { data: _del, error } = await sb.from('customers').delete().eq('customer_id', c.id).select();
+    if(error) throw error;
+    if(!_del || !_del.length) throw new Error('Không xóa được bản ghi nào (bạn không có quyền xóa hoặc dữ liệu đã không còn).');
+    showToast('Đã xóa khách hàng thành công.');
     if(error) throw error;
     await loadAllData();
     renderCustomers();
