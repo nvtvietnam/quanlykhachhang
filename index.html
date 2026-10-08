@@ -480,6 +480,22 @@ thead th{top:68px;}
 /* Mục đang chọn ở menu trái nổi hơn */
 .nav-item.active{background:linear-gradient(90deg,#2358E8,#3B73F5);box-shadow:0 3px 10px rgba(35,88,232,.45);font-weight:700;}
 
+
+/* ===== Phần chi tiết từng khoản (STT / Số tài khoản / Ngày đến hạn / Tổng số khoản) nổi bật hơn dòng KH ===== */
+.loan-detail-row > td{background:#FFF9E6 !important;box-shadow:inset 5px 0 0 #F59E0B !important;padding-left:8px;}
+.loan-detail-table thead th{background:#1D3F8F !important;color:#fff !important;border-bottom:none !important;font-weight:800;letter-spacing:.03em;}
+.loan-detail-table tbody td{background:#FFFDF2;border-bottom:1px solid #F1E2B0;color:#2B2410;font-weight:600;}
+.loan-detail-table tbody tr:hover td{background:#FFF3C9;}
+.loan-detail-table tbody td:nth-child(1){color:#B45309;font-weight:800;}
+.loan-card-footer{background:#FCE9B0 !important;color:#5C3D00 !important;font-weight:800;border-top:1px solid #EBCF7A !important;}
+.loan-card-footer b{color:#92400E;font-size:1.05em;}
+
+
+/* Editor không có quyền xóa khoản vay / RRUB: ẩn các nút xóa */
+body.is-editor #btnBulkSelect,body.is-editor #btnBulkSelectMC,body.is-editor #btnDeleteFiltered,body.is-editor #roomDeleteBtn,
+body.is-editor button[onclick^="openDeleteFilteredLoansModal"],body.is-editor button[onclick^="openDeleteFilteredMarginCallsModal"],
+body.is-editor .icon-btn[title^="Xóa khoản"],body.is-editor .icon-btn[title^="Xóa toàn bộ khoản"]{display:none !important;}
+
 /* Màn hình hẹp / chia đôi màn hình: cột ID không bị cắt "...", tiêu đề không đè nhau */
 .loan-summary-row td{word-break:normal;}
 .loan-summary-row td.td-mgr{overflow:visible;text-overflow:clip;white-space:nowrap;}
@@ -628,7 +644,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v07.10-tieu-de</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.10-an-nut-xoa</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -650,7 +666,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v07.10-tieu-de</div>
+        <div class="brand-sub">Chứng khoán · v08.10-an-nut-xoa</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -1929,6 +1945,7 @@ async function checkAuthAndInit(){
   document.getElementById('loadingScreen').style.display = 'none';
   document.getElementById('appRoot').style.display = 'flex';
   document.getElementById('currentUserRoleLabel').textContent = currentRole === 'owner' ? 'Owner' : 'Editor';
+  document.body.classList.toggle('is-editor', currentRole !== 'owner');
   document.getElementById('currentUserAvatar').textContent = (roleRow.display_name||currentUserEmail)[0].toUpperCase();
   document.querySelector('.uname').textContent = roleRow.display_name || currentUserEmail;
   applyRoleVisibility();
@@ -2990,6 +3007,7 @@ async function saveRoom(){
   } catch(err){ alert('Lỗi khi lưu Room: ' + err.message); }
 }
 async function deleteRoom(){
+  if(currentRole !== 'owner'){ alert('Chỉ tài khoản Owner mới có quyền xóa.'); return; }
   if(!editingRoomId) return;
   const memberCount = customers.filter(c=>c.room===editingRoomId).length;
   if(memberCount > 0){
@@ -3215,6 +3233,18 @@ function editFromDetail(){
   openEditModal(currentDetailStk);
 }
 
+// Bảng managers có khóa ngoại với customers.manager_id: ID quản lý phải tồn tại trong bảng managers
+// thì mới lưu được khách hàng. Hàm này tự thêm ID mới (nếu chưa có) trước khi lưu.
+const knownManagerIds = new Set();
+async function ensureManagersExist(ids){
+  const list = [...new Set((ids||[]).map(x=>(x||'').toString().trim()).filter(Boolean))].filter(x=>!knownManagerIds.has(x));
+  if(!list.length) return;
+  const rows = list.map(id=>({ manager_id:id, manager_name:id }));
+  const { error } = await sb.from('managers').upsert(rows, { onConflict:'manager_id', ignoreDuplicates:true });
+  if(error) throw new Error('Không thêm được ID người quản lý "'+list.join(', ')+'": '+error.message);
+  list.forEach(x=>knownManagerIds.add(x));
+}
+
 async function saveCustomer(){
   let stk = document.getElementById('f_stk').value.trim();
   let name = document.getElementById('f_name').value.trim();
@@ -3264,6 +3294,7 @@ async function saveCustomer(){
   document.getElementById('modalSaveBtn').textContent = 'Đang lưu…';
 
   try {
+    await ensureManagersExist([managerId]);
     if(editingCustomerStk){
       const c = customers.find(x=>x.stk===editingCustomerStk);
       const wasActive = c.status !== 'Đã chuyển đi';
@@ -3656,6 +3687,8 @@ async function saveLoan(){
   const amount = parseFloat(document.getElementById('loan_amount').value.replace(/[^\d]/g,'')) || 0;
   const due = document.getElementById('loan_due').value.trim();
   if(!due){ alert('Vui lòng nhập ngày đến hạn (dd/mm/yyyy).'); return; }
+  const dupLoan = loans.find(l=>l.account===account && toDbDate(l.dueDate)===toDbDate(due));
+  if(dupLoan){ alert(`Tài khoản ${account} đã có khoản vay đến hạn ngày ${dupLoan.dueDate} (trạng thái: ${dupLoan.status}).\n\nKhông thể thêm trùng. Nếu cần, hãy sửa khoản đã có (số tiền, trạng thái, ghi chú) thay vì tạo mới.`); return; }
   try {
     const { data: ins, error } = await sb.from('loans').insert({
       account_number: account, amount, due_date: toDbDate(due),
@@ -3769,6 +3802,7 @@ async function updateLoanStatus(id, newStatus){
   else if(oldStatus !== newStatus) logLoanHistory(id, 'doi_trang_thai', `${oldStatus} → ${newStatus}`);
 }
 async function deleteLoanEntry(id){
+  if(currentRole !== 'owner'){ alert('Chỉ tài khoản Owner mới có quyền xóa. Tài khoản Editor chỉ được sửa, không xóa được.'); return; }
   const idx = loans.findIndex(x=>x.id===id);
   if(idx===-1) return;
   if(!confirm('Xóa khoản vay này? Thao tác này không thể hoàn tác.')) return;
@@ -3781,6 +3815,7 @@ async function deleteLoanEntry(id){
   } catch(err){ alert('Lỗi khi xóa (có thể do bạn không phải Owner): ' + err.message); }
 }
 async function deleteAllLoansForCustomer(stk){
+  if(currentRole !== 'owner'){ alert('Chỉ tài khoản Owner mới có quyền xóa. Tài khoản Editor chỉ được sửa, không xóa được.'); return; }
   const ids = loans.filter(l=>l.account.slice(0,6)===stk).map(l=>l.id);
   if(!ids.length) return;
   if(!confirm(`Xóa toàn bộ ${ids.length} khoản vay của STK ${stk}? Thao tác này không thể hoàn tác.`)) return;
@@ -3842,6 +3877,7 @@ function quickSelectResolved(){
   renderLoans();
 }
 async function deleteBulkSelected(){
+  if(currentRole !== 'owner'){ alert('Chỉ tài khoản Owner mới có quyền xóa. Tài khoản Editor chỉ được sửa, không xóa được.'); return; }
   if(bulkSelectedLoanIds.size===0) return;
   if(!confirm(`Xóa ${bulkSelectedLoanIds.size} khoản vay đã chọn? Không thể hoàn tác.`)) return;
   try {
@@ -4251,6 +4287,8 @@ async function saveMarginCall(){
   const amount = parseFloat(document.getElementById('mc_amount').value.replace(/[^\d]/g,'')) || 0;
   const due = document.getElementById('mc_due').value.trim();
   if(!due){ alert('Vui lòng nhập hạn xử lý (dd/mm/yyyy).'); return; }
+  const dupMc = marginCalls.find(m=>m.account===account && toDbDate(m.dueDate)===toDbDate(due));
+  if(dupMc){ alert(`Tài khoản ${account} đã có khoản RRUB/Call Margin hạn xử lý ngày ${dupMc.dueDate} (trạng thái: ${dupMc.status}).\n\nKhông thể thêm trùng. Nếu cần, hãy sửa khoản đã có thay vì tạo mới.`); return; }
   try {
     const { data: ins, error } = await sb.from('margin_calls').insert({
       account_number: account, amount, due_date: toDbDate(due),
@@ -4360,6 +4398,7 @@ async function updateMarginCallStatus(id, newStatus){
   else if(oldStatus !== newStatus) logMarginCallHistory(id, 'doi_trang_thai', `${oldStatus} → ${newStatus}`);
 }
 async function deleteMarginCallEntry(id){
+  if(currentRole !== 'owner'){ alert('Chỉ tài khoản Owner mới có quyền xóa. Tài khoản Editor chỉ được sửa, không xóa được.'); return; }
   const idx = marginCalls.findIndex(x=>x.id===id);
   if(idx===-1) return;
   if(!confirm('Xóa khoản RRUB/Call Margin này? Thao tác này không thể hoàn tác.')) return;
@@ -4372,6 +4411,7 @@ async function deleteMarginCallEntry(id){
   } catch(err){ alert('Lỗi khi xóa (có thể do bạn không phải Owner): ' + err.message); }
 }
 async function deleteAllMarginCallsForCustomer(stk){
+  if(currentRole !== 'owner'){ alert('Chỉ tài khoản Owner mới có quyền xóa. Tài khoản Editor chỉ được sửa, không xóa được.'); return; }
   const ids = marginCalls.filter(m=>m.account.slice(0,6)===stk).map(m=>m.id);
   if(!ids.length) return;
   if(!confirm(`Xóa toàn bộ ${ids.length} khoản RRUB/Call Margin của STK ${stk}? Thao tác này không thể hoàn tác.`)) return;
@@ -4433,6 +4473,7 @@ function quickSelectResolvedMarginCalls(){
   renderMarginCalls();
 }
 async function deleteBulkSelectedMarginCalls(){
+  if(currentRole !== 'owner'){ alert('Chỉ tài khoản Owner mới có quyền xóa. Tài khoản Editor chỉ được sửa, không xóa được.'); return; }
   if(bulkSelectedMarginCallIds.size===0) return;
   if(!confirm(`Xóa ${bulkSelectedMarginCallIds.size} khoản RRUB/Call Margin đã chọn? Không thể hoàn tác.`)) return;
   try {
@@ -5012,6 +5053,7 @@ async function previewCleanupLoans(){
   } catch(err){ alert('Lỗi khi xem trước: ' + err.message); }
 }
 async function confirmCleanupLoans(){
+  if(currentRole !== 'owner'){ alert('Chỉ tài khoản Owner mới có quyền xóa. Tài khoản Editor chỉ được sửa, không xóa được.'); return; }
   if(!pendingCleanupLoanIds || !pendingCleanupLoanIds.length) return;
   if(!confirm(`Xoá vĩnh viễn ${pendingCleanupLoanIds.length} khoản vay đã xử lý xong lâu ngày? Không thể hoàn tác.`)) return;
   try {
@@ -5047,6 +5089,7 @@ async function previewCleanupMarginCalls(){
   } catch(err){ alert('Lỗi khi xem trước: ' + err.message); }
 }
 async function confirmCleanupMarginCalls(){
+  if(currentRole !== 'owner'){ alert('Chỉ tài khoản Owner mới có quyền xóa. Tài khoản Editor chỉ được sửa, không xóa được.'); return; }
   if(!pendingCleanupMarginCallIds || !pendingCleanupMarginCallIds.length) return;
   if(!confirm(`Xoá vĩnh viễn ${pendingCleanupMarginCallIds.length} khoản RRUB/Call Margin đã xử lý xong lâu ngày? Không thể hoàn tác.`)) return;
   try {
@@ -5638,6 +5681,7 @@ async function confirmImportToDatabase(){
       const syncRoomEl = document.getElementById('syncRoomOnUpdate');
       const syncRoom = plan.type==='customerlist' && syncRoomEl && syncRoomEl.checked;
       let roomSyncedCount = 0;
+      await ensureManagersExist(plan.valid.map(it=>it.managerId));
       for(const it of plan.valid){
         if(it.isDupInFile) continue; // trùng STK trong file — không ghi gì cả, chỉ hiện đỏ để rà soát
         if(it.isSkippedHasStk) continue; // KH khớp Tên Telegram nhưng đã có STK thật — không sửa gì theo yêu cầu
