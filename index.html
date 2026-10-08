@@ -644,7 +644,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.13-ngay-sinh</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.15-goi-y-ten</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -666,7 +666,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.13-ngay-sinh</div>
+        <div class="brand-sub">Chứng khoán · v08.15-goi-y-ten</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -1792,6 +1792,7 @@ body{-webkit-text-size-adjust:100%;}
               </div>
             </div>
           </div>
+          <div id="f_telegram_full" style="margin:8px 0 2px;padding:8px 10px;border:1px dashed #D9822B;border-radius:8px;background:#FFFBF5;font-size:13px;font-weight:600;color:#7A4A12;word-break:break-word;"></div>
           <div class="field-hint">Đây là trường dữ liệu lưu riêng, bạn gõ tay hoặc bấm ✓ để lấy gợi ý. Gợi ý (chữ mờ) ghép theo cấu trúc: Xưng hô + Tên gọi (từ cuối trong họ tên, VD "Nguyễn Văn An" → "An") - STK - NAV quy ước (100.000.000 = 0.10T) - ID người quản lý. Bấm ⚙ để thêm/bớt lựa chọn xưng hô, bấm ✎ để tự chỉnh cấu trúc gợi ý.</div>
         </div>
         <div class="form-field full">
@@ -3211,7 +3212,7 @@ function openEditModal(stk){
   renderPronounSelect();
 
   document.getElementById('f_stk').value = c.stk;
-  document.getElementById('f_stk').disabled = true; // không đổi STK khi sửa
+  document.getElementById('f_stk').disabled = false; // cho phép sửa STK (tự cập nhật theo các khoản vay/RRUB/quyền mua)
   document.getElementById('f_managerid').value = c.managerId || '';
   document.getElementById('f_name').value = c.name;
   document.getElementById('f_gender').value = c.gender || 'Nam';
@@ -3267,6 +3268,16 @@ async function saveCustomer(){
   // STK có thể để trống (KH chưa mở TK — hệ thống tự gán STK tạm). Nếu CÓ nhập thì bắt buộc đủ 6 ký tự.
   if(stk && stk.length !== 6){ alert('Số tài khoản phải đúng 6 ký tự (hoặc để trống nếu KH chưa mở tài khoản).'); return; }
   if(!editingCustomerStk && !stk) stk = generateTempStk();
+  if(editingCustomerStk && !stk){ alert('Khi sửa khách hàng, Số tài khoản không được để trống.'); return; }
+  const stkChanged = !!editingCustomerStk && stk !== editingCustomerStk;
+  if(stkChanged){
+    const dupStk = customers.find(x=>x.stk===stk);
+    if(dupStk){ alert(`Số tài khoản ${stk} đã thuộc về khách hàng "${dupStk.name || dupStk.telegram || dupStk.stk}". Không thể đổi trùng.`); return; }
+    const nLoans = loans.filter(l=>l.account.slice(0,6)===editingCustomerStk).length;
+    const nMc = marginCalls.filter(m=>m.account.slice(0,6)===editingCustomerStk).length;
+    const nRt = rights.filter(r=>r.stk===editingCustomerStk).length;
+    if(!confirm(`Đổi số tài khoản từ ${editingCustomerStk} sang ${stk}?\n\nHệ thống sẽ tự cập nhật theo: ${nLoans} khoản vay, ${nMc} khoản RRUB/Call Margin, ${nRt} quyền mua của khách này.`)) return;
+  }
 
   const nav = parseFloat(document.getElementById('f_nav').value.replace(/[^\d]/g,'')) || 0;
   const fee = parseFloat(document.getElementById('f_fee').value.replace(/[^\d]/g,'')) || 0;
@@ -3319,6 +3330,19 @@ async function saveCustomer(){
       }
       const { error } = await sb.from('customers').update(dbPayload).eq('customer_id', c.id);
       if(error) throw error;
+      if(stkChanged){
+        const oldStk = editingCustomerStk;
+        for(const l of loans.filter(x=>x.account.slice(0,6)===oldStk)){
+          const { error: e1 } = await sb.from('loans').update({ account_number: stk + l.account.slice(6) }).eq('loan_id', l.id);
+          if(e1) throw new Error('Đã đổi STK khách hàng nhưng lỗi khi cập nhật khoản vay: ' + e1.message);
+        }
+        for(const m of marginCalls.filter(x=>x.account.slice(0,6)===oldStk)){
+          const { error: e2 } = await sb.from('margin_calls').update({ account_number: stk + m.account.slice(6) }).eq('margin_call_id', m.id);
+          if(e2) throw new Error('Đã đổi STK khách hàng nhưng lỗi khi cập nhật RRUB/Call Margin: ' + e2.message);
+        }
+        const { error: e3 } = await sb.from('rights_offerings').update({ account_number: stk }).eq('account_number', oldStk);
+        if(e3) throw new Error('Đã đổi STK khách hàng nhưng lỗi khi cập nhật quyền mua: ' + e3.message);
+      }
 
       // Ghi lịch sử NAV/phí nếu có thay đổi
       if(nav !== c.nav) await sb.from('nav_history').insert({ customer_id: c.id, update_date: toDbDate(today), nav, source: 'manual' });
@@ -3588,7 +3612,10 @@ function buildTelegramSuggestion(){
 // Tên Telegram là trường dữ liệu riêng (gõ tay, lưu thẳng) — hàm này CHỈ cập nhật placeholder
 // (chữ mờ gợi ý), không bao giờ ghi đè giá trị thật đang có trong ô.
 function updateTelegramPreview(){
-  document.getElementById('f_telegram_preview').placeholder = buildTelegramSuggestion();
+  const _sg = buildTelegramSuggestion();
+  document.getElementById('f_telegram_preview').placeholder = _sg;
+  const _full = document.getElementById('f_telegram_full');
+  if(_full) _full.textContent = 'Gợi ý đầy đủ: ' + _sg;
 }
 // Bấm nút ✓ để lấy gợi ý hiện tại điền thẳng vào ô — vẫn sửa lại được bình thường sau đó.
 function applyTelegramSuggestion(){
