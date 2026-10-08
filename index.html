@@ -446,6 +446,10 @@ tbody tr:hover{background:#EEF3FF;}
 
 /* Hộp thoại / khung chi tiết */
 .modal{box-shadow:0 24px 60px rgba(15,23,42,.35);border:1px solid var(--border);}
+/* Form khách hàng rộng hơn, không bị tràn ngang */
+#modalOverlay .modal{width:1100px;max-width:96vw;}
+.modal{overflow-x:hidden;}
+.modal .form-field input,.modal .form-field select,.modal .form-field textarea{max-width:100%;box-sizing:border-box;}
 .modal-header{background:var(--band-bg);}
 .modal-footer{background:var(--band-bg);}
 .so-header{background:var(--band-bg);}
@@ -492,7 +496,7 @@ thead th{top:68px;}
 
 
 /* Editor không có quyền xóa khoản vay / RRUB: ẩn các nút xóa */
-body.is-editor #btnBulkSelect,body.is-editor #btnBulkSelectMC,body.is-editor #btnDeleteFiltered,body.is-editor #roomDeleteBtn,
+body.is-editor .sp-del,body.is-editor #btnBulkSelect,body.is-editor #btnBulkSelectMC,body.is-editor #btnDeleteFiltered,body.is-editor #roomDeleteBtn,
 body.is-editor button[onclick^="openDeleteFilteredLoansModal"],body.is-editor button[onclick^="openDeleteFilteredMarginCallsModal"],
 body.is-editor .icon-btn[title^="Xóa khoản"],body.is-editor .icon-btn[title^="Xóa toàn bộ khoản"]{display:none !important;}
 
@@ -644,7 +648,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.15-goi-y-ten</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.20-form-rong</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -666,7 +670,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.15-goi-y-ten</div>
+        <div class="brand-sub">Chứng khoán · v08.20-form-rong</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -698,6 +702,10 @@ body{-webkit-text-size-adjust:100%;}
     <div class="nav-item" data-view="import">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       Import Excel
+    </div>
+    <div class="nav-item" data-view="specialids">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 6.5 7 .9-5.1 4.8 1.3 7-6.2-3.5L5.8 21l1.3-7L2 9.4l7-.9z"/></svg>
+      Quản lý ID đặc biệt
     </div>
     <div class="nav-group-label" id="ownerGroupLabel">Owner</div>
     <div class="nav-item" data-view="accounts" id="navAccounts">
@@ -1197,6 +1205,24 @@ body{-webkit-text-size-adjust:100%;}
       </div>
 
       <!-- ============ ACCOUNTS (OWNER ONLY) ============ -->
+      <div class="view" id="view-specialids">
+        <div class="notice">
+          ⭐ Danh sách ID đặc biệt dùng cho 2 việc: <b>(1)</b> khi Import <b>Khoản vay đến hạn</b> và <b>RRUB/Call Margin</b> có cột ID quản lý, chỉ các tài khoản thuộc ID trong danh sách này được đưa vào, còn lại bị bỏ qua (nếu danh sách trống thì không lọc); <b>(2)</b> khi lưu khách hàng, phần cuối Tên Telegram tự là <b>tên trưởng phòng</b> của ID quản lý đó.
+        </div>
+        <div class="toolbar">
+          <input type="text" id="specialIdSearch" placeholder="Tìm ID, tên, phòng, trưởng phòng…" oninput="renderSpecialIds()" style="max-width:300px;">
+          <div class="spacer"></div>
+          <button class="btn btn-secondary btn-sm" onclick="openSpecialIdBulk()">📋 Dán nhiều ID</button>
+          <button class="btn btn-primary btn-sm" onclick="openSpecialIdModal()">+ Thêm ID</button>
+        </div>
+        <div class="panel">
+          <table>
+            <thead><tr><th>ID</th><th>Tên</th><th>Phòng</th><th>Trưởng phòng</th><th></th></tr></thead>
+            <tbody id="specialIdsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="view" id="view-accounts">
         <div class="notice" id="accountsAccessNotice">
           🔒 Mục này chỉ Owner truy cập được. Trong bản build thật, Editor sẽ không thấy mục "Quản lý tài khoản" trong sidebar và bị chặn ở tầng Row Level Security nếu cố truy cập trực tiếp.
@@ -1326,6 +1352,44 @@ body{-webkit-text-size-adjust:100%;}
 </div>
 
 <!-- ADD/EDIT ACCOUNT MODAL -->
+<div class="overlay" id="specialIdModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="specialIdModalTitle">Thêm ID đặc biệt</div>
+      <button class="close-x" onclick="closeSpecialIdModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-field full"><label>ID *</label><input type="text" id="sp_id" placeholder="VD: BBY3"></div>
+        <div class="form-field full"><label>Tên</label><input type="text" id="sp_name" placeholder="Tên người quản lý ID này"></div>
+        <div class="form-field full"><label>Phòng</label><input type="text" id="sp_room" placeholder="VD: Phòng Môi giới 1"></div>
+        <div class="form-field full"><label>Trưởng phòng</label><input type="text" id="sp_head" placeholder="Tên trưởng phòng — sẽ nối vào cuối Tên Telegram"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeSpecialIdModal()">Hủy</button>
+      <button class="btn btn-primary" onclick="saveSpecialId()">Lưu ID</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="specialIdBulkOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Dán nhiều ID đặc biệt</div>
+      <button class="close-x" onclick="closeSpecialIdBulk()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-hint" style="margin-bottom:8px;">Mỗi dòng 1 ID, các cột cách nhau bằng Tab (copy từ Excel) hoặc dấu phẩy: <b>ID, Tên, Phòng, Trưởng phòng</b>. ID đã có sẽ được cập nhật.</div>
+      <textarea id="sp_bulk" rows="10" style="width:100%;" placeholder="BBY3	Nguyễn Văn A	Phòng 1	Trần Văn B"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeSpecialIdBulk()">Hủy</button>
+      <button class="btn btn-primary" onclick="saveSpecialIdBulk()">Lưu danh sách</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="accountModalOverlay">
   <div class="modal">
     <div class="modal-header">
@@ -1510,7 +1574,8 @@ body{-webkit-text-size-adjust:100%;}
         <code>{ten_kh}</code> — họ và tên đầy đủ &nbsp;·&nbsp;
         <code>{stk}</code> — số tài khoản &nbsp;·&nbsp;
         <code>{nav}</code> — NAV quy ước (100.000.000 = 0.10T) &nbsp;·&nbsp;
-        <code>{id_ql}</code> — ID người quản lý
+        <code>{id_ql}</code> — ID người quản lý<br>
+        <code>{truong_phong}</code> — tên trưởng phòng của ID quản lý (lấy từ mục Quản lý ID đặc biệt)
       </div>
       <div class="form-field full">
         <label>Mẫu cấu trúc (dùng dấu cách, dấu gạch ngang... tùy ý giữa các token)</label>
@@ -1998,7 +2063,7 @@ function renderCurrentView(){
 function subscribeRealtime(){
   if(realtimeChannel) return; // tránh đăng ký trùng nếu gọi lại
   realtimeChannel = sb.channel('app-realtime-changes');
-  ['customers','loans','margin_calls','rights_offerings','rooms','user_roles'].forEach(table=>{
+  ['customers','loans','margin_calls','rights_offerings','rooms','user_roles','special_ids'].forEach(table=>{
     realtimeChannel.on('postgres_changes', { event:'*', schema:'public', table }, ()=>{
       scheduleRealtimeRefresh();
     });
@@ -2126,6 +2191,13 @@ async function loadAllData(){
   // --- Accounts (user_roles) ---
   const { data: accRows } = await sb.from('user_roles').select('*').order('created_at');
   accounts = (accRows||[]).map(a=>({ id:a.email, email:a.email, name:a.display_name||a.email, role:a.role, createdAt: a.created_at ? fromDbDate(a.created_at.slice(0,10)) : '' }));
+
+  // --- ID đặc biệt ---
+  try {
+    const { data: spRows } = await sb.from('special_ids').select('*').order('manager_id');
+    specialIds = (spRows||[]).map(r=>({ id:r.manager_id, name:r.manager_name||'', room:r.room_name||'', head:r.head_name||'' }));
+  } catch(e){ specialIds = []; }
+  if(typeof renderSpecialIds === 'function') renderSpecialIds();
 
   loansGroupsInitialized = false;
   expandedLoanGroups = new Set();
@@ -2258,13 +2330,15 @@ function switchView(name){
     rights:["Quản lý quyền mua","Theo dõi quyền mua cổ phiếu phát hành thêm"],
     import:["Import dữ liệu Excel","Cập nhật NAV, phí hàng loạt từ file Excel"],
     accounts:["Quản lý tài khoản","Tài khoản đăng nhập, sao lưu và bảo mật dữ liệu — chỉ Owner"],
+    specialids:["Quản lý ID đặc biệt","ID được ưu tiên khi import và trưởng phòng gắn vào Tên Telegram"],
   };
-  const icons = {dashboard:'📊',customers:'👥',rooms:'🏠',loans:'💰',margincalls:'⚠️',rights:'📈',import:'📥',accounts:'🔐'};
+  const icons = {dashboard:'📊',customers:'👥',rooms:'🏠',loans:'💰',margincalls:'⚠️',rights:'📈',import:'📥',accounts:'🔐',specialids:'⭐'};
   const pi = document.getElementById('pageIcon'); if(pi) pi.textContent = icons[name] || '📄';
   document.title = titles[name][0] + ' — QLKH';
   document.getElementById('pageTitle').textContent = titles[name][0];
   document.getElementById('pageSubtitle').textContent = titles[name][1];
   if(name === 'accounts') renderAccounts();
+  if(name === 'specialids') renderSpecialIds();
   if(name === 'import') resetImportWizard();
 }
 document.querySelectorAll('.nav-item').forEach(el=>{
@@ -3216,7 +3290,7 @@ function openEditModal(stk){
   document.getElementById('f_managerid').value = c.managerId || '';
   document.getElementById('f_name').value = c.name;
   document.getElementById('f_gender').value = c.gender || 'Nam';
-  document.getElementById('f_birthyear').value = c.birthDate || c.birthYear || '';
+  document.getElementById('f_birthyear').value = c.birthDate || (c.birthYear ? '01/01/'+c.birthYear : '');
   document.getElementById('f_nav').value = c.nav ? Number(c.nav).toLocaleString('vi-VN') : '';
   document.getElementById('f_fee').value = c.fee ? Number(c.fee).toLocaleString('vi-VN') : '';
   document.getElementById('f_mgmtstart').value = c.mgmtStart || '';
@@ -3290,7 +3364,7 @@ async function saveCustomer(){
 
   const gender = document.getElementById('f_gender').value;
   const _bi = parseBirthInput(document.getElementById('f_birthyear').value);
-  if(_bi.invalid){ alert('Ngày sinh không hợp lệ. Vui lòng nhập dd/mm/yyyy (VD: 15/03/1991) hoặc chỉ nhập năm sinh (VD: 1991), hoặc để trống.'); return; }
+  if(_bi.invalid){ alert('Ngày sinh không hợp lệ. Vui lòng nhập dd/mm/yyyy (VD: 15/03/1991) hoặc chỉ nhập năm sinh (VD: 1991, hệ thống tự lấy 01/01/1991), hoặc để trống.'); return; }
   const birthYear = _bi.year;
   const managerId = document.getElementById('f_managerid').value.trim() || null;
   const note = document.getElementById('f_note').value.trim();
@@ -3489,7 +3563,7 @@ function parseBirthInput(str){
   const t = String(str||'').trim();
   if(!t) return {year:null, dbDate:null, invalid:false};
   let m = t.match(/^(\d{4})$/);
-  if(m){ const y=+m[1]; return (y>=1900 && y<=new Date().getFullYear()) ? {year:y, dbDate:null, invalid:false} : {year:null,dbDate:null,invalid:true}; }
+  if(m){ const y=+m[1]; return (y>=1900 && y<=new Date().getFullYear()) ? {year:y, dbDate:`${y}-01-01`, invalid:false} : {year:null,dbDate:null,invalid:true}; }
   m = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if(m){
     const d=+m[1], mo=+m[2], y=+m[3];
@@ -3601,13 +3675,17 @@ function buildTelegramSuggestion(){
   const stk = document.getElementById('f_stk').value.trim() || 'STK';
   const nav = navToTyUoc(document.getElementById('f_nav').value);
   const managerId = document.getElementById('f_managerid').value.trim() || 'ID quản lý';
+  const sp = findSpecialId(document.getElementById('f_managerid').value);
+  const headName = sp && sp.head ? sp.head : '';
   return telegramNameTemplate
+    .replace(/\{truong_phong\}/g, headName)
     .replace(/\{xung_ho\}/g, pronoun)
     .replace(/\{ten_kh\}/g, name)
     .replace(/\{ten_goi\}/g, givenName)
     .replace(/\{stk\}/g, stk)
     .replace(/\{nav\}/g, nav)
-    .replace(/\{id_ql\}/g, managerId);
+    .replace(/\{id_ql\}/g, managerId)
+    .replace(/[\s\-–]+$/,'').replace(/\s+-\s+-\s+/g,' - ');
 }
 // Tên Telegram là trường dữ liệu riêng (gõ tay, lưu thẳng) — hàm này CHỈ cập nhật placeholder
 // (chữ mờ gợi ý), không bao giờ ghi đè giá trị thật đang có trong ô.
@@ -3759,7 +3837,7 @@ function showToast(msg, type){
   t.lastChild.textContent = msg;
   box.appendChild(t);
   requestAnimationFrame(()=>{ t.style.opacity='1'; t.style.transform='translateY(0)'; });
-  setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(-8px)'; setTimeout(()=>t.remove(), 250); }, 3200);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(-8px)'; setTimeout(()=>t.remove(), 250); }, 2000);
 }
 
 async function saveLoan(){
@@ -5448,7 +5526,7 @@ function proceedFromMapping(){
 }
 
 function analyzeImportRows(type, rows, mapping){
-  const plan = { type, valid:[], errors:[], unmatched:[], newCount:0, changedCount:0, unchangedCount:0, unmatchedCount:0, skippedHasStkCount:0, assignedStkCount:0 };
+  const plan = { type, valid:[], errors:[], skippedSpecial:[], unmatched:[], newCount:0, changedCount:0, unchangedCount:0, unmatchedCount:0, skippedHasStkCount:0, assignedStkCount:0 };
   const seenStks = new Set(); // chặn trùng STK trong cùng 1 file — CHỈ áp dụng cho Danh sách KH (tạo mới)
   const seenLoanKeys = new Set(); // chặn trùng (account+ngày đến hạn) trong cùng 1 file
   const seenMarginCallKeys = new Set(); // chặn trùng (account+hạn xử lý) trong cùng 1 file
@@ -5584,6 +5662,7 @@ function analyzeImportRows(type, rows, mapping){
       const accRawCell = String(getMapped(row,mapping,'account')).trim();
       const due = parseDateCell(getMapped(row,mapping,'dueDate'));
       const managerId = String(getMapped(row,mapping,'managerId')).trim();
+      if(specialFilterActive(mapping) && !isSpecialId(managerId)){ plan.skippedSpecial.push({line:lineNo, content:`TK ${accRawCell} — ID ${managerId||'(trống)'}`}); return; }
       // 1 ô có nhiều số tài khoản cách nhau bằng dấu phẩy -> tách thành nhiều khoản vay riêng
       const accList = accRawCell.split(',').map(s=>s.trim()).filter(Boolean);
       if(accList.length===0){ plan.errors.push({line:lineNo, content:'STK: (trống)', error:'Thiếu số tài khoản'}); return; }
@@ -5606,6 +5685,7 @@ function analyzeImportRows(type, rows, mapping){
       const due = parseDateCell(getMapped(row,mapping,'dueDate'));
       const amount = parseNum(getMapped(row,mapping,'amount')) || 0;
       const managerId = String(getMapped(row,mapping,'managerId')).trim();
+      if(specialFilterActive(mapping) && !isSpecialId(managerId)){ plan.skippedSpecial.push({line:lineNo, content:`TK ${accRawCell} — ID ${managerId||'(trống)'}`}); return; }
       // 1 ô có nhiều số tài khoản cách nhau bằng dấu phẩy -> tách thành nhiều khoản riêng
       const accList = accRawCell.split(',').map(s=>s.trim()).filter(Boolean);
       if(accList.length===0){ plan.errors.push({line:lineNo, content:'STK: (trống)', error:'Thiếu số tài khoản'}); return; }
@@ -5673,10 +5753,14 @@ function renderImportStep3Summary(plan){
   document.getElementById('sumError').textContent = plan.errors.length;
 
   const errPanel = document.getElementById('errorPanel');
-  if(plan.errors.length){
+  const _sk = plan.skippedSpecial || [];
+  if(plan.errors.length || _sk.length){
     errPanel.style.display = 'block';
-    document.getElementById('importErrorBody').innerHTML = plan.errors.slice(0,200).map(e=>`<tr><td>${e.line}</td><td>${e.content}</td><td><span class="badge badge-red">${e.error}</span></td></tr>`).join('');
+    document.getElementById('importErrorBody').innerHTML = plan.errors.slice(0,200).map(e=>`<tr><td>${e.line}</td><td>${e.content}</td><td><span class="badge badge-red">${e.error}</span></td></tr>`).join('')
+      + _sk.slice(0,200).map(e=>`<tr><td>${e.line}</td><td>${e.content}</td><td><span class="badge badge-gray">Không thuộc ID đặc biệt — bỏ qua</span></td></tr>`).join('');
   } else { errPanel.style.display = 'none'; }
+  if(_sk.length) showToast(`Đã bỏ qua ${_sk.length} dòng không thuộc ID đặc biệt.`);
+  else if((plan.type==='loan'||plan.type==='margincall') && specialIds.length && !currentColumnMapping.managerId) showToast('Chưa map cột ID quản lý nên không lọc được theo ID đặc biệt.','error');
 
   const unmatchedPanel = document.getElementById('unmatchedPanel');
   if(isReconcileType && plan.unmatched.length){
@@ -5837,7 +5921,7 @@ async function confirmImportToDatabase(){
             }
             const { data: ins, error } = await sb.from('customers').insert({
               account_number: it.isPriorityFallback ? generateTempStk() : it.stk, customer_name: it.name || '',
-              gender: it.gender||null, birth_year: it.birthYear||null,
+              gender: it.gender||null, birth_year: it.birthYear||null, birth_date: it.birthYear ? `${it.birthYear}-01-01` : null,
               manager_id: it.managerId||null,
               telegram_name: it.telegram||null,
               current_room_id: roomId, special_room: specialRoom,
@@ -5864,7 +5948,7 @@ async function confirmImportToDatabase(){
             if(it.telegramChanged) payload.telegram_name = it.telegram || null;
             if(it.managerIdChanged) payload.manager_id = it.managerId || null;
             if(it.genderChanged) payload.gender = it.gender;
-            if(it.birthYearChanged) payload.birth_year = it.birthYear || null;
+            if(it.birthYearChanged){ payload.birth_year = it.birthYear || null; payload.birth_date = it.birthYear ? `${it.birthYear}-01-01` : null; }
             if(it.statusChanged) payload.status = it.status;
             if(it.noteChanged) payload.note = it.note || null;
             let didSyncRoom = false;
@@ -6146,6 +6230,91 @@ function copyMessagePreview(silent){
 
 // ---------------- QUẢN LÝ TÀI KHOẢN ĐĂNG NHẬP ----------------
 let accounts = []; // nạp từ Supabase (bảng user_roles) lúc khởi động
+
+// ---------------- ID ĐẶC BIỆT ----------------
+let specialIds = []; // nạp từ bảng special_ids
+let editingSpecialId = null;
+function normId(v){ return String(v||'').trim().toUpperCase(); }
+function findSpecialId(id){ const k = normId(id); return k ? specialIds.find(x=>normId(x.id)===k) : null; }
+function escHtml(v){ return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function renderSpecialIds(){
+  const body = document.getElementById('specialIdsBody');
+  if(!body) return;
+  const q = (document.getElementById('specialIdSearch')?.value||'').trim().toLowerCase();
+  const list = specialIds.filter(x=>!q || [x.id,x.name,x.room,x.head].some(v=>String(v||'').toLowerCase().includes(q)));
+  if(!list.length){ body.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:24px;">${specialIds.length?'Không có ID nào khớp tìm kiếm.':'Chưa có ID đặc biệt nào. Bấm "+ Thêm ID" hoặc "Dán nhiều ID". Khi danh sách trống, Import sẽ không lọc theo ID.'}</td></tr>`; return; }
+  body.innerHTML = list.map(x=>`<tr>
+    <td><b>${escHtml(x.id)}</b></td><td>${escHtml(x.name)}</td><td>${escHtml(x.room)}</td><td>${escHtml(x.head)}</td>
+    <td><div class="row-actions" style="opacity:1;">
+      <button class="icon-btn" title="Sửa" onclick="openSpecialIdModal(decodeURIComponent('${encodeURIComponent(x.id)}'))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>
+      <button class="icon-btn sp-del" title="Xóa ID đặc biệt" onclick="deleteSpecialId(decodeURIComponent('${encodeURIComponent(x.id)}'))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+    </div></td></tr>`).join('');
+}
+function openSpecialIdModal(id){
+  editingSpecialId = id || null;
+  const x = id ? findSpecialId(id) : null;
+  document.getElementById('specialIdModalTitle').textContent = x ? 'Sửa ID đặc biệt' : 'Thêm ID đặc biệt';
+  document.getElementById('sp_id').value = x ? x.id : '';
+  document.getElementById('sp_id').disabled = !!x;
+  document.getElementById('sp_name').value = x ? x.name : '';
+  document.getElementById('sp_room').value = x ? x.room : '';
+  document.getElementById('sp_head').value = x ? x.head : '';
+  document.getElementById('specialIdModalOverlay').classList.add('active');
+}
+function closeSpecialIdModal(){ document.getElementById('specialIdModalOverlay').classList.remove('active'); editingSpecialId=null; document.getElementById('sp_id').disabled=false; }
+async function saveSpecialId(){
+  const id = normId(document.getElementById('sp_id').value);
+  if(!id){ alert('Vui lòng nhập ID.'); return; }
+  if(!editingSpecialId && findSpecialId(id)){ alert(`ID ${id} đã có trong danh sách. Hãy bấm nút sửa ở dòng đó.`); return; }
+  try {
+    const row = { manager_id:id, manager_name:document.getElementById('sp_name').value.trim()||null, room_name:document.getElementById('sp_room').value.trim()||null, head_name:document.getElementById('sp_head').value.trim()||null, updated_at:new Date().toISOString() };
+    const { error } = await sb.from('special_ids').upsert(row, { onConflict:'manager_id' });
+    if(error) throw error;
+    await loadAllData();
+    closeSpecialIdModal();
+    renderSpecialIds();
+    updateTelegramPreview();
+    showToast(`Đã lưu ID đặc biệt ${id} thành công.`);
+  } catch(err){ alert('Lỗi khi lưu ID đặc biệt: ' + err.message); }
+}
+function openSpecialIdBulk(){ document.getElementById('sp_bulk').value=''; document.getElementById('specialIdBulkOverlay').classList.add('active'); }
+function closeSpecialIdBulk(){ document.getElementById('specialIdBulkOverlay').classList.remove('active'); }
+async function saveSpecialIdBulk(){
+  const lines = document.getElementById('sp_bulk').value.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  const map = new Map();
+  lines.forEach(l=>{
+    const p = (l.includes('\t') ? l.split('\t') : l.split(',')).map(x=>x.trim());
+    const id = normId(p[0]);
+    if(!id || /^(ID|MKT ID)$/.test(id)) return;
+    map.set(id, { manager_id:id, manager_name:p[1]||null, room_name:p[2]||null, head_name:p[3]||null, updated_at:new Date().toISOString() });
+  });
+  if(!map.size){ alert('Không có dòng hợp lệ để lưu.'); return; }
+  try {
+    const { error } = await sb.from('special_ids').upsert([...map.values()], { onConflict:'manager_id' });
+    if(error) throw error;
+    await loadAllData();
+    closeSpecialIdBulk();
+    renderSpecialIds();
+    updateTelegramPreview();
+    showToast(`Đã lưu ${map.size} ID đặc biệt thành công.`);
+  } catch(err){ alert('Lỗi khi lưu danh sách ID: ' + err.message); }
+}
+async function deleteSpecialId(id){
+  if(currentRole !== 'owner'){ alert('Chỉ tài khoản Owner mới có quyền xóa. Tài khoản Editor chỉ được sửa, không xóa được.'); return; }
+  if(!confirm(`Xóa ID đặc biệt ${id}? Thao tác này không thể hoàn tác.`)) return;
+  try {
+    const { data: _del, error } = await sb.from('special_ids').delete().eq('manager_id', id).select();
+    if(error) throw error;
+    if(!_del || !_del.length) throw new Error('Không xóa được bản ghi nào (bạn không có quyền xóa hoặc dữ liệu đã không còn).');
+    specialIds = specialIds.filter(x=>x.id!==id);
+    renderSpecialIds();
+    updateTelegramPreview();
+    showToast(`Đã xóa ID đặc biệt ${id} thành công.`);
+  } catch(err){ alert('Lỗi khi xóa (có thể do bạn không phải Owner): ' + err.message); }
+}
+// Lọc khi import: chỉ áp dụng khi danh sách ID đặc biệt không trống VÀ file có map cột ID quản lý
+function specialFilterActive(mapping){ return specialIds.length>0 && !!(mapping && mapping.managerId); }
+function isSpecialId(id){ return !!findSpecialId(id); }
 let accountIdCounter = 100;
 let editingAccountId = null;
 
