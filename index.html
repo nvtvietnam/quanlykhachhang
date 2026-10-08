@@ -644,7 +644,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.12-ngay-that</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.13-ngay-sinh</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -666,7 +666,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.12-ngay-that</div>
+        <div class="brand-sub">Chứng khoán · v08.13-ngay-sinh</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -1742,7 +1742,7 @@ body{-webkit-text-size-adjust:100%;}
           <label>Giới tính *</label>
           <select id="f_gender" onchange="onGenderChange()"><option value="Nam">Nam</option><option value="Nữ">Nữ</option><option value="Khác">Khác</option></select>
         </div>
-        <div class="form-field"><label>Năm sinh</label><input type="number" placeholder="VD: 1985" id="f_birthyear" min="1930" max="2020" oninput="onBirthYearChange()"></div>
+        <div class="form-field"><label>Ngày sinh</label><input type="text" inputmode="numeric" maxlength="10" placeholder="dd/mm/yyyy (VD: 15/03/1991)" id="f_birthyear" oninput="formatBirthInput(this);onBirthYearChange()"></div>
         <div class="form-field"><label>NAV hiện tại (VNĐ) *</label><input type="text" inputmode="numeric" placeholder="500.000.000" id="f_nav" oninput="formatMoneyInput(this);updateTelegramPreview()"></div>
         <div class="form-field"><label>Phí tháng hiện tại (VNĐ) *</label><input type="text" inputmode="numeric" placeholder="2.000.000" id="f_fee" oninput="formatMoneyInput(this)"></div>
         <div class="form-field"><label>Ngày bắt đầu quản lý</label><input type="text" placeholder="dd/mm/yyyy — để trống = hôm nay" id="f_mgmtstart"></div>
@@ -2066,6 +2066,7 @@ async function loadAllData(){
     telegram: c.telegram_name || '',
     gender: c.gender,
     birthYear: c.birth_year,
+    birthDate: fromDbDate(c.birth_date),
     managerId: c.manager_id,
     mgmtStart: fromDbDate(c.management_start_date),
     mgmtEnd: fromDbDate(c.removed_at),
@@ -3214,7 +3215,7 @@ function openEditModal(stk){
   document.getElementById('f_managerid').value = c.managerId || '';
   document.getElementById('f_name').value = c.name;
   document.getElementById('f_gender').value = c.gender || 'Nam';
-  document.getElementById('f_birthyear').value = c.birthYear || '';
+  document.getElementById('f_birthyear').value = c.birthDate || c.birthYear || '';
   document.getElementById('f_nav').value = c.nav ? Number(c.nav).toLocaleString('vi-VN') : '';
   document.getElementById('f_fee').value = c.fee ? Number(c.fee).toLocaleString('vi-VN') : '';
   document.getElementById('f_mgmtstart').value = c.mgmtStart || '';
@@ -3277,14 +3278,16 @@ async function saveCustomer(){
   const linkedCust = linkedToStk ? customers.find(x=>x.stk===linkedToStk) : null;
 
   const gender = document.getElementById('f_gender').value;
-  const birthYear = parseInt(document.getElementById('f_birthyear').value) || null;
+  const _bi = parseBirthInput(document.getElementById('f_birthyear').value);
+  if(_bi.invalid){ alert('Ngày sinh không hợp lệ. Vui lòng nhập dd/mm/yyyy (VD: 15/03/1991) hoặc chỉ nhập năm sinh (VD: 1991), hoặc để trống.'); return; }
+  const birthYear = _bi.year;
   const managerId = document.getElementById('f_managerid').value.trim() || null;
   const note = document.getElementById('f_note').value.trim();
 
   const dbPayload = {
     account_number: stk || null,
     customer_name: name || '',
-    gender, birth_year: birthYear,
+    gender, birth_year: birthYear, birth_date: _bi.dbDate,
     manager_id: managerId,
     telegram_name: telegramVal,
     current_room_id: isSpecialRoom ? null : parseInt(roomRaw),
@@ -3449,6 +3452,30 @@ document.addEventListener('click', function(e){
   }
 });
 
+// Tự thêm dấu "/" khi gõ ngày sinh: 15031991 -> 15/03/1991 (nhập riêng năm 1991 vẫn được)
+function formatBirthInput(el){
+  let v = el.value.replace(/[^\d\/]/g,'');
+  if(!v.includes('/')){
+    if(v.length>4){ v = v.slice(0,2)+'/'+v.slice(2,4)+(v.length>4?'/'+v.slice(4,8):''); }
+  }
+  el.value = v.slice(0,10);
+}
+// Đọc ô ngày sinh: "dd/mm/yyyy" hoặc chỉ "yyyy". Trả {year, dbDate, invalid}
+function parseBirthInput(str){
+  const t = String(str||'').trim();
+  if(!t) return {year:null, dbDate:null, invalid:false};
+  let m = t.match(/^(\d{4})$/);
+  if(m){ const y=+m[1]; return (y>=1900 && y<=new Date().getFullYear()) ? {year:y, dbDate:null, invalid:false} : {year:null,dbDate:null,invalid:true}; }
+  m = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(m){
+    const d=+m[1], mo=+m[2], y=+m[3];
+    const dt = new Date(y, mo-1, d);
+    if(y>=1900 && y<=new Date().getFullYear() && dt.getFullYear()===y && dt.getMonth()===mo-1 && dt.getDate()===d)
+      return {year:y, dbDate:`${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`, invalid:false};
+    return {year:null,dbDate:null,invalid:true};
+  }
+  return {year:null, dbDate:null, invalid:true}; // đang gõ dở -> chưa tính xưng hô
+}
 function onGenderChange(){ recomputePronoun(); }
 function onBirthYearChange(){ recomputePronoun(); }
 
@@ -3459,7 +3486,7 @@ function onBirthYearChange(){ recomputePronoun(); }
 // Chưa nhập năm sinh -> Bạn (mặc định trung tính).
 function recomputePronoun(){
   const gender = document.getElementById('f_gender').value;
-  const year = parseInt(document.getElementById('f_birthyear').value);
+  const year = parseBirthInput(document.getElementById('f_birthyear').value).year;
   let pronoun = 'Bạn';
   if(year){
     if(year === 1984){
@@ -5435,7 +5462,7 @@ function analyzeImportRows(type, rows, mapping){
       const managerId = String(getMapped(row,mapping,'managerId')).trim();
       const genderRaw = String(getMapped(row,mapping,'gender')).trim();
       const gender = genderRaw || 'Khác';
-      const birthYear = parseInt(getMapped(row,mapping,'birthYear')) || null;
+      const _byRaw = String(getMapped(row,mapping,'birthYear')||''); const _byM = _byRaw.match(/(19|20)\d{2}/); const birthYear = _byM ? parseInt(_byM[0]) : (parseInt(_byRaw) || null);
       const nav = parseNum(getMapped(row,mapping,'nav'));
       const fee = parseNum(getMapped(row,mapping,'fee'));
       const roomRaw = String(getMapped(row,mapping,'room')).trim();
@@ -6177,7 +6204,7 @@ async function exportFullBackup(){
   const wb = XLSX.utils.book_new();
 
   const custRows = customers.map(c=>({
-    STK:c.stk, 'Tên KH':c.name, 'Giới tính':c.gender||'', 'Năm sinh':c.birthYear||'',
+    STK:c.stk, 'Tên KH':c.name, 'Giới tính':c.gender||'', 'Năm sinh':c.birthYear||'', 'Ngày sinh':c.birthDate||'',
     'ID quản lý':c.managerId||'', Room:roomLabel(c.room), 'Trạng thái':c.status,
     NAV:c.nav, Phí:c.fee, 'Ngày bắt đầu QL':c.mgmtStart||'', 'Ngày remove':c.mgmtEnd||'',
     'Liên kết với STK':c.linkedTo||'', 'Cập nhật gần nhất':c.updated, 'Ghi chú':c.note||''
