@@ -512,6 +512,22 @@ body.is-editor .icon-btn[title^="Xóa khoản"],body.is-editor .icon-btn[title^=
   #customersBody td:last-child,#customersHead th:last-child{position:sticky;right:0;background:var(--panel);box-shadow:-8px 0 8px -8px rgba(15,23,42,.22);z-index:2;}
   #customersBody tr:hover td:last-child{background:#F3F7FD;}
 }
+.stat-grid.move-cards{grid-template-columns:repeat(3,minmax(0,1fr));}
+.stat-card.clickable{cursor:pointer;transition:box-shadow .15s,transform .15s;}
+.stat-card.clickable:hover{box-shadow:0 4px 14px rgba(20,40,80,.12);transform:translateY(-1px);}
+.mv-day{background:#fff;border:1px solid var(--border,#E4E8EE);border-radius:12px;margin-bottom:12px;overflow:hidden;}
+.mv-day>summary{list-style:none;cursor:pointer;display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 16px;font-weight:600;}
+.mv-day>summary::-webkit-details-marker{display:none;}
+.mv-day>summary::before{content:'▸';color:#9AA5B4;transition:transform .15s;}
+.mv-day[open]>summary::before{transform:rotate(90deg);}
+.mv-chip{font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;}
+.mv-chip.new{background:#E8F0FE;color:#1D4ED8;}.mv-chip.out{background:#FDECEC;color:#B91C1C;}.mv-chip.in{background:#E3F6EE;color:#047857;}
+.mv-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:4px 16px 16px;}
+.mv-col h4{margin:0 0 6px;font-size:12.5px;}
+.mv-item{font-size:12.5px;padding:6px 8px;border-radius:8px;background:#F7F8FA;margin-bottom:5px;line-height:1.35;}
+.mv-item b{font-family:ui-monospace,monospace;}
+.mv-empty{font-size:12px;color:#9AA5B4;padding:4px 2px;}
+@media (max-width:900px){.mv-cols{grid-template-columns:1fr;}.stat-grid.move-cards{grid-template-columns:1fr;}}
 /* Màn hình hẹp / chia đôi màn hình: cột ID không bị cắt "...", tiêu đề không đè nhau */
 .loan-summary-row td{word-break:normal;}
 .loan-summary-row td.td-mgr{overflow:visible;text-overflow:clip;white-space:nowrap;}
@@ -660,7 +676,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.31-nut-sua-xoa</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.34-giu-man-hinh</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -682,7 +698,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.31-nut-sua-xoa</div>
+        <div class="brand-sub">Chứng khoán · v08.34-giu-man-hinh</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -694,6 +710,10 @@ body{-webkit-text-size-adjust:100%;}
     <div class="nav-item" data-view="customers">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       Danh sách khách hàng
+    </div>
+    <div class="nav-item" data-view="moves">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      Biến động KH
     </div>
     <div class="nav-item" data-view="rooms">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
@@ -775,6 +795,11 @@ body{-webkit-text-size-adjust:100%;}
           <div class="stat-card" id="statLoansDueCard"><div class="stat-icon-badge red">📅</div><div class="stat-label">Khoản vay đến hạn hôm nay</div><div class="stat-value" id="statLoansDueToday">–</div><div class="stat-delta" id="statLoansDueDelta"></div></div>
           <div class="stat-card" id="statMarginCallsDueCard"><div class="stat-icon-badge red">⚠️</div><div class="stat-label">RRUB/Call Margin đến hạn hôm nay</div><div class="stat-value" id="statMarginCallsDueToday">–</div><div class="stat-delta" id="statMarginCallsDueDelta"></div></div>
           <div class="stat-card" id="statRightsDueCard"><div class="stat-icon-badge red">📈</div><div class="stat-label">Quyền mua hết hạn hôm nay</div><div class="stat-value" id="statRightsDueToday">–</div><div class="stat-delta" id="statRightsDueDelta"></div></div>
+        </div>
+        <div class="stat-grid move-cards">
+          <div class="stat-card clickable" data-goto="moves"><div class="stat-icon-badge blue">🆕</div><div class="stat-label">KH mới hôm nay</div><div class="stat-value" id="mvNewToday">–</div><div class="stat-delta" id="mvNewDelta"></div></div>
+          <div class="stat-card clickable" data-goto="moves"><div class="stat-icon-badge red">⬆️</div><div class="stat-label">KH chuyển đi hôm nay</div><div class="stat-value" id="mvOutToday">–</div><div class="stat-delta" id="mvOutDelta"></div></div>
+          <div class="stat-card clickable" data-goto="moves"><div class="stat-icon-badge green">⬇️</div><div class="stat-label">KH chuyển về hôm nay</div><div class="stat-value" id="mvInToday">–</div><div class="stat-delta" id="mvInDelta"></div></div>
         </div>
 
         <div class="panel" style="margin-bottom:18px;">
@@ -1215,6 +1240,12 @@ body{-webkit-text-size-adjust:100%;}
             <button class="btn btn-primary" style="margin-top:18px;" onclick="switchView('customers')">Xem danh sách khách hàng</button>
           </div></div>
         </div>
+      </div>
+
+      <!-- ============ BIẾN ĐỘNG KH ============ -->
+      <div class="view" id="view-moves">
+        <div class="stat-grid move-cards" id="mvTopCards"></div>
+        <div id="mvDays"></div>
       </div>
 
       <!-- ============ ACCOUNTS (OWNER ONLY) ============ -->
@@ -1843,6 +1874,7 @@ body{-webkit-text-size-adjust:100%;}
         <div class="form-field"><label>NAV hiện tại (VNĐ) *</label><input type="text" inputmode="numeric" placeholder="500.000.000" id="f_nav" oninput="formatMoneyInput(this);updateTelegramPreview()"></div>
         <div class="form-field"><label>Phí tháng hiện tại (VNĐ) *</label><input type="text" inputmode="numeric" placeholder="2.000.000" id="f_fee" oninput="formatMoneyInput(this)"></div>
         <div class="form-field"><label>Ngày bắt đầu quản lý</label><input type="text" placeholder="dd/mm/yyyy — để trống = hôm nay" id="f_mgmtstart"></div>
+        <div class="form-field"><label>Nguồn KH</label><select id="f_intake"><option value="new">Khách mới (mở tài khoản mới)</option><option value="transfer_in">Chuyển về (đã có TK / từng chuyển đi)</option></select></div>
         <div class="form-field">
           <label>Nhóm / Room *</label>
           <select id="f_room" onchange="onRoomManualChange()"></select>
@@ -2116,6 +2148,7 @@ function applyRoleVisibility(){
 // ================================================================
 // TẢI TOÀN BỘ DỮ LIỆU TỪ SUPABASE
 // ================================================================
+let roomHistoryRows = [];
 async function loadAllData(){
   // --- Rooms ---
   const { data: roomRows } = await sb.from('rooms').select('*').order('room_id');
@@ -2174,6 +2207,7 @@ async function loadAllData(){
     updated: fromDbDate(c.nav_updated_at || c.fee_updated_at) || fromDbDate(c.updated_at?.slice(0,10)) || '',
     note: c.note || '',
     status: c.status,
+    intakeType: c.intake_type || 'new',
     linkedTo: c.linked_to_customer_id ? idToStk[c.linked_to_customer_id] : null,
     navHistory: navByCust[c.customer_id] || {},
     feeHistory: feeByCust[c.customer_id] || {},
@@ -2224,6 +2258,18 @@ async function loadAllData(){
   const { data: accRows } = await sb.from('user_roles').select('*').order('created_at');
   accounts = (accRows||[]).map(a=>({ id:a.email, email:a.email, name:a.display_name||a.email, role:a.role, createdAt: a.created_at ? fromDbDate(a.created_at.slice(0,10)) : '' }));
 
+  // --- Lịch sử biến động KH (mới / chuyển đi / chuyển về) ---
+  try {
+    let rh = []; let f2 = 0;
+    while(true){
+      const { data: page, error: e } = await sb.from('room_history').select('history_id, customer_id, special_room, entered_at, reason').order('history_id').range(f2, f2+999);
+      if(e) throw e;
+      rh = rh.concat(page||[]);
+      if(!page || page.length < 1000) break;
+      f2 += 1000;
+    }
+    roomHistoryRows = rh;
+  } catch(e){ roomHistoryRows = []; }
   // --- ID đặc biệt ---
   try {
     const { data: spRows } = await sb.from('special_ids').select('*').order('manager_id');
@@ -2363,14 +2409,16 @@ function switchView(name){
     import:["Import dữ liệu Excel","Cập nhật NAV, phí hàng loạt từ file Excel"],
     accounts:["Quản lý tài khoản","Tài khoản đăng nhập, sao lưu và bảo mật dữ liệu — chỉ Owner"],
     specialids:["Quản lý ID đặc biệt","ID được ưu tiên khi import và trưởng phòng gắn vào Tên Telegram"],
+    moves:["Biến động khách hàng","KH mới, chuyển đi, chuyển về theo từng ngày"],
   };
-  const icons = {dashboard:'📊',customers:'👥',rooms:'🏠',loans:'💰',margincalls:'⚠️',rights:'📈',import:'📥',accounts:'🔐',specialids:'⭐'};
+  const icons = {dashboard:'📊',customers:'👥',rooms:'🏠',loans:'💰',margincalls:'⚠️',rights:'📈',import:'📥',accounts:'🔐',specialids:'⭐',moves:'🔄'};
   const pi = document.getElementById('pageIcon'); if(pi) pi.textContent = icons[name] || '📄';
   document.title = titles[name][0] + ' — QLKH';
   document.getElementById('pageTitle').textContent = titles[name][0];
   document.getElementById('pageSubtitle').textContent = titles[name][1];
   if(name === 'accounts'){ renderAccounts(); loadAccessLog(false); }
   if(name === 'specialids') renderSpecialIds();
+  if(name === 'moves') renderMoves();
   if(name === 'import') resetImportWizard();
 }
 document.querySelectorAll('.nav-item').forEach(el=>{
@@ -2701,7 +2749,71 @@ function initials(name){
   return (parts[parts.length-1][0] + (parts.length>1?parts[0][0]:'')).toUpperCase();
 }
 
+// ---------------- BIẾN ĐỘNG KH ----------------
+function buildMoveEvents(){
+  const byId = {}; customers.forEach(c=>byId[c.id]=c);
+  const ev = []; const seen = new Set();
+  const add = (type, date, c)=>{
+    if(!c || !date) return;
+    const k = type+'|'+date+'|'+c.id; if(seen.has(k)) return; seen.add(k);
+    ev.push({type, date, c});
+  };
+  roomHistoryRows.forEach(r=>{
+    const c = byId[r.customer_id]; const d = fromDbDate(r.entered_at);
+    if(r.reason === 'Tạo khách hàng') add(c && c.intakeType==='transfer_in' ? 'in' : 'new', d, c);
+    else if(r.reason === 'Khách quay lại sau khi Remove') add('in', d, c);
+    else if(r.special_room === 'Remove') add('out', d, c);
+  });
+  // Bổ sung: KH đã chuyển đi nhưng chưa có dòng lịch sử
+  customers.forEach(c=>{ if(c.mgmtEnd && !ev.some(e=>e.type==='out' && e.c===c)) add('out', c.mgmtEnd, c); });
+  // Bổ sung: KH mới tạo/import sau đợt nhập ban đầu (bỏ qua ngày có >200 KH = đợt import nền)
+  const perStart = {}; customers.forEach(c=>{ if(c.mgmtStart) perStart[c.mgmtStart]=(perStart[c.mgmtStart]||0)+1; });
+  customers.forEach(c=>{
+    if(c.mgmtStart && perStart[c.mgmtStart] <= 200 && !ev.some(e=>(e.type==='new'||e.type==='in') && e.c===c && e.date===c.mgmtStart)) add(c.intakeType==='transfer_in' ? 'in' : 'new', c.mgmtStart, c);
+  });
+  return ev;
+}
+function mvItemHtml(e){
+  const c = e.c;
+  const nm = c.name || c.telegram || '';
+  const roomTxt = (c.room===undefined||c.room===null||c.room==='') ? '' : (typeof c.room==='number' ? 'Room '+c.room : c.room);
+  return `<div class="mv-item"><b>${escHtml(c.stk)}</b> · ${escHtml(nm)}<br><span style="color:#6B7686;">NAV ${fmt(c.nav||0)}${roomTxt?' · '+escHtml(String(roomTxt)):''}${c.managerId?' · ID '+escHtml(String(c.managerId)):''}</span></div>`;
+}
+function renderMoves(){
+  const wrap = document.getElementById('mvDays'); if(!wrap) return;
+  const ev = buildMoveEvents();
+  const today = todayDdMmYyyy();
+  const byDate = {};
+  ev.forEach(e=>{ (byDate[e.date] = byDate[e.date]||{new:[],out:[],in:[]})[e.type].push(e); });
+  if(!byDate[today]) byDate[today] = {new:[],out:[],in:[]};
+  const cnt = (d,t)=> (byDate[d] ? byDate[d][t].length : 0);
+  // thẻ tổng hôm nay (trên đầu trang)
+  const tc = document.getElementById('mvTopCards');
+  if(tc) tc.innerHTML = `
+    <div class="stat-card"><div class="stat-icon-badge blue">🆕</div><div class="stat-label">KH mới hôm nay</div><div class="stat-value">${cnt(today,'new')}</div></div>
+    <div class="stat-card"><div class="stat-icon-badge red">⬆️</div><div class="stat-label">KH chuyển đi hôm nay</div><div class="stat-value">${cnt(today,'out')}</div></div>
+    <div class="stat-card"><div class="stat-icon-badge green">⬇️</div><div class="stat-label">KH chuyển về hôm nay</div><div class="stat-value">${cnt(today,'in')}</div></div>`;
+  const toDate = s=>{ const [d,m,y]=s.split('/').map(Number); return new Date(y,m-1,d); };
+  const dates = Object.keys(byDate).sort((a,b)=>toDate(b)-toDate(a));
+  wrap.innerHTML = dates.map((d,i)=>{
+    const g = byDate[d];
+    const col = (title, arr)=>`<div class="mv-col"><h4>${title} (${arr.length})</h4>${arr.length ? arr.map(mvItemHtml).join('') : '<div class="mv-empty">Không có</div>'}</div>`;
+    return `<details class="mv-day" ${i<3?'open':''}>
+      <summary><span>${d}${d===today?' (Hôm nay)':''}</span>
+        <span class="mv-chip new">Mới ${g.new.length}</span><span class="mv-chip out">Chuyển đi ${g.out.length}</span><span class="mv-chip in">Chuyển về ${g.in.length}</span></summary>
+      <div class="mv-cols">${col('🆕 Khách hàng mới', g.new)}${col('⬆️ Chuyển đi', g.out)}${col('⬇️ Chuyển về', g.in)}</div>
+    </details>`;
+  }).join('');
+  // thẻ dashboard
+  const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
+  set('mvNewToday', cnt(today,'new')); set('mvOutToday', cnt(today,'out')); set('mvInToday', cnt(today,'in'));
+  const hint = 'Bấm để xem chi tiết';
+  set('mvNewDelta', hint); set('mvOutDelta', hint); set('mvInDelta', hint);
+}
+document.querySelectorAll('.stat-card[data-goto]').forEach(el=>el.addEventListener('click', ()=>switchView(el.dataset.goto)));
+
 function renderDashboard(){
+  try{ renderMoves(); }catch(e){ console.error('renderMoves', e); }
   const active = customers.filter(c=>c.status==="Đang quản lý");
   document.getElementById('statTotalActive').textContent = countDistinctPeople(active);
   document.getElementById('statTotalNav').textContent = fmt(active.reduce((s,c)=>s+c.nav,0));
@@ -3155,6 +3267,7 @@ function openAddModal(prefillStk){
   document.getElementById('f_nav').value = '';
   document.getElementById('f_fee').value = '';
   document.getElementById('f_mgmtstart').value = '';
+  document.getElementById('f_intake').value = 'new';
   renderRoomSelect();
   document.getElementById('f_room').value = rooms[0] ? rooms[0].id : '1';
   document.getElementById('f_status').value = 'Đang quản lý';
@@ -3326,6 +3439,7 @@ function openEditModal(stk){
   document.getElementById('f_nav').value = c.nav ? Number(c.nav).toLocaleString('vi-VN') : '';
   document.getElementById('f_fee').value = c.fee ? Number(c.fee).toLocaleString('vi-VN') : '';
   document.getElementById('f_mgmtstart').value = c.mgmtStart || '';
+  document.getElementById('f_intake').value = c.intakeType || 'new';
   renderRoomSelect();
   document.getElementById('f_room').value = c.room;
   document.getElementById('f_status').value = c.status;
@@ -3414,6 +3528,7 @@ async function saveCustomer(){
     nav_updated_at: toDbDate(today), fee_updated_at: toDbDate(today),
     note,
     management_start_date: toDbDate(mgmtStart),
+    intake_type: document.getElementById('f_intake').value === 'transfer_in' ? 'transfer_in' : 'new',
     linked_to_customer_id: linkedCust ? linkedCust.id : null,
     updated_at: new Date().toISOString(),
   };
@@ -3986,14 +4101,32 @@ async function updateLoanDueDate(id, newValue, stk){
     renderDashboard();
   }
 }
+function refreshLoanPillCounts(){
+  // Chỉ cập nhật số đếm trên các pill, không vẽ lại danh sách (giữ nguyên vị trí màn hình)
+  const el = document.getElementById('loanStatusPills'); if(!el) return;
+  el.querySelectorAll('.loan-pill').forEach(pill=>{
+    const m = pill.getAttribute('onclick')?.match(/setLoanStatusPill\('([^']+)'\)/);
+    const cnt = pill.querySelector('.cnt');
+    if(m && cnt) cnt.textContent = loans.filter(l=>l.status===m[1]).length;
+  });
+}
 async function updateLoanStatus(id, newStatus){
   const l = loans.find(x=>x.id===id);
   const oldStatus = l ? l.status : '';
   if(l) l.status = newStatus;
-  renderLoans();
+  // Không renderLoans(): giữ nguyên màn hình, chỉ ô trạng thái đổi (đã đổi tại chỗ qua onchange)
+  refreshLoanPillCounts();
   renderDashboard();
   const { error } = await sb.from('loans').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('loan_id', id);
-  if(error){ alert('Lỗi khi cập nhật trạng thái: ' + error.message); await loadAllData(); renderLoans(); renderDashboard(); }
+  if(error){
+    if(l) l.status = oldStatus;
+    document.querySelectorAll('.loan-detail-table select.status-select').forEach(sel=>{
+      const m = (sel.getAttribute('onchange')||'').match(/updateLoanStatus\((\d+),/);
+      if(m && Number(m[1])===id){ sel.value = oldStatus; sel.dataset.status = oldStatus; }
+    });
+    refreshLoanPillCounts(); renderDashboard();
+    alert('Lỗi khi cập nhật trạng thái: ' + error.message);
+  }
   else { showToast('Đã cập nhật trạng thái: ' + newStatus); if(oldStatus !== newStatus) logLoanHistory(id, 'doi_trang_thai', `${oldStatus} → ${newStatus}`); }
 }
 async function deleteLoanEntry(id){
