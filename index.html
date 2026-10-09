@@ -500,6 +500,18 @@ body.is-editor .sp-del,body.is-editor #btnBulkSelect,body.is-editor #btnBulkSele
 body.is-editor button[onclick^="openDeleteFilteredLoansModal"],body.is-editor button[onclick^="openDeleteFilteredMarginCallsModal"],
 body.is-editor .icon-btn[title^="Xóa khoản"],body.is-editor .icon-btn[title^="Xóa toàn bộ khoản"]{display:none !important;}
 
+/* Bảng nằm trong khung cuộn riêng: tiêu đề dính sát mép khung, không dính theo thanh trên cùng của trang */
+.log-scroll thead th{top:0 !important;}
+/* Danh sách khách hàng: luôn thấy nút Sửa/Xóa, không bị cắt khỏi khung */
+#view-customers thead th{white-space:normal;padding:11px 8px;line-height:1.25;}
+#view-customers tbody td{padding-left:8px;padding-right:8px;}
+#customersBody .row-actions{opacity:1;gap:2px;}
+@media (max-width:1500px){
+  #view-customers .panel{overflow-x:auto;}
+  #view-customers thead th{position:static !important;}
+  #customersBody td:last-child,#customersHead th:last-child{position:sticky;right:0;background:var(--panel);box-shadow:-8px 0 8px -8px rgba(15,23,42,.22);z-index:2;}
+  #customersBody tr:hover td:last-child{background:#F3F7FD;}
+}
 /* Màn hình hẹp / chia đôi màn hình: cột ID không bị cắt "...", tiêu đề không đè nhau */
 .loan-summary-row td{word-break:normal;}
 .loan-summary-row td.td-mgr{overflow:visible;text-overflow:clip;white-space:nowrap;}
@@ -648,7 +660,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.29-lich-su-vao</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.31-nut-sua-xoa</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -670,7 +682,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.29-lich-su-vao</div>
+        <div class="brand-sub">Chứng khoán · v08.31-nut-sua-xoa</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -1250,7 +1262,7 @@ body{-webkit-text-size-adjust:100%;}
           <button class="btn btn-secondary btn-sm" onclick="loadAccessLog(true)">🔄 Tải lại</button>
         </div>
         <div class="panel" style="margin-bottom:20px;">
-          <div style="max-height:380px;overflow:auto;">
+          <div class="log-scroll" style="max-height:380px;overflow:auto;">
           <table>
             <thead><tr><th style="width:56px;">STT</th><th>Thời gian</th><th>Tài khoản</th><th>Thiết bị / trình duyệt</th></tr></thead>
             <tbody id="accessLogBody"><tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px;">Đang tải…</td></tr></tbody>
