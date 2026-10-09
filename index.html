@@ -527,7 +527,7 @@ body.is-editor .icon-btn[title^="Xóa khoản"],body.is-editor .icon-btn[title^=
 .mv-item{font-size:12.5px;padding:6px 8px;border-radius:8px;background:#F7F8FA;margin-bottom:5px;line-height:1.35;}
 .mv-item b{font-family:ui-monospace,monospace;}
 .mv-empty{font-size:12px;color:#9AA5B4;padding:4px 2px;}
-@media (max-width:900px){.mv-cols{grid-template-columns:1fr;}.stat-grid.move-cards{grid-template-columns:1fr;}}
+@media (max-width:900px){.mv-cols{grid-template-columns:1fr;}}
 .lead-sum{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
 .lead-sum .ls{background:#F7F8FA;border:1px solid #E4E8EE;border-radius:10px;padding:8px 14px;min-width:110px;}
 .lead-sum .ls b{display:block;font-size:20px;line-height:1.2;}
@@ -560,6 +560,7 @@ body.is-editor .icon-btn[title^="Xóa khoản"],body.is-editor .icon-btn[title^=
 .mv-link{cursor:pointer;}
 .mv-link:hover{background:#F3F7FF;border-radius:8px;}
 #transferTableBody{cursor:pointer;}
+.mv-export{margin-left:auto;align-self:center;}
 /* Màn hình hẹp / chia đôi màn hình: cột ID không bị cắt "...", tiêu đề không đè nhau */
 .loan-summary-row td{word-break:normal;}
 .loan-summary-row td.td-mgr{overflow:visible;text-overflow:clip;white-space:nowrap;}
@@ -687,6 +688,47 @@ body{-webkit-text-size-adjust:100%;}
   .stat-label{font-size:10.5px;}
   .btn-sm{padding:7px 10px;}
 }
+
+/* ===== Tối ưu điện thoại (v08.41) ===== */
+.mob-filter-toggle{display:none;}
+@media (max-width:900px){
+  .mob-filter-toggle{display:block;width:100%;margin-bottom:4px;}
+  .loan-sidebar:not(.mob-open) > :not(.search-box):not(.mob-filter-toggle){display:none !important;}
+  .stat-grid.move-cards{grid-template-columns:repeat(3,minmax(0,1fr)) !important;gap:8px;}
+  .stat-grid.move-cards .stat-card{padding:10px 8px;}
+  .stat-grid.move-cards .stat-icon-badge{display:none;}
+  .stat-grid.move-cards .stat-label{font-size:11px;line-height:1.25;min-height:28px;white-space:normal !important;overflow:visible !important;text-overflow:clip !important;}
+  .loan-summary-table th,.loan-summary-table td{padding-left:6px !important;padding-right:6px !important;font-size:12.5px;}
+  .stat-grid.move-cards .stat-value{font-size:22px;}
+  .stat-grid.move-cards .stat-delta{display:none;}
+  .mv-tab{flex:1 1 calc(50% - 8px);max-width:none;}
+  .mv-export{margin-left:0;flex:1 1 100%;}
+  .lead-scroll{max-height:60vh;}
+}
+
+/* Danh sách KH tiềm năng / chuyển về / chuyển đi dạng thẻ trên điện thoại */
+@media (max-width:900px){
+  .lead-scroll{max-height:none;overflow:visible;}
+  .lead-table, .lead-table tbody{display:block;width:100% !important;min-width:0 !important;max-width:100%;}
+  .lead-table thead{display:none;}
+  .lead-table tr{display:block;background:#fff;border:1px solid #E4E8EE;border-radius:12px;margin-bottom:10px;padding:8px 12px;}
+  .lead-table tr.ld-done{background:#F3FBF7;border-color:#BFE6D2;}
+  .lead-table td{display:flex;align-items:center;justify-content:space-between;gap:10px;border:none !important;padding:5px 0 !important;background:transparent !important;min-height:30px;}
+  .lead-table td::before{content:attr(data-label);flex:0 0 38%;font-size:11.5px;font-weight:600;color:#6B7686;}
+  .lead-table td[colspan]::before{display:none;}
+  .lead-table td[data-label=""]::before{display:none;}
+  .lead-table td > input, .lead-table td > select{flex:1 1 auto;min-width:0;width:100%;}
+  .lead-sum{gap:6px;}
+  .lead-sum .ls{flex:1 1 30%;min-width:0;padding:6px 10px;}
+  .lead-sum .ls b{font-size:18px;}
+  .lead-table tr{box-sizing:border-box;max-width:100%;overflow:hidden;}
+  .lead-table td{min-width:0;box-sizing:border-box;max-width:100%;}
+  .lead-table td > input, .lead-table td > select{width:auto !important;min-width:0 !important;max-width:100% !important;flex:1 1 0 !important;box-sizing:border-box;}
+  .lead-table input.ld-stk, .lead-table input.ld-name, .lead-table input.ld-person{width:auto !important;min-width:0 !important;}
+  .lead-table td:last-child{justify-content:flex-end;}
+  .lead-table td:first-child{font-size:15px;}
+  .lead-table input, .lead-table select{font-size:16px;min-height:38px;}
+}
 </style>
 </head>
 <body>
@@ -708,7 +750,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.39-dashboard-xem-chi-tiet</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.42</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -730,7 +772,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.39-dashboard-xem-chi-tiet</div>
+        <div class="brand-sub">Chứng khoán · v08.42</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -1002,6 +1044,7 @@ body{-webkit-text-size-adjust:100%;}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               <input type="text" placeholder="Tìm theo tên khách hàng…" id="loanSearchInput" oninput="renderLoans()" style="width:100%;">
             </div>
+            <button type="button" class="btn btn-secondary btn-sm mob-filter-toggle" onclick="toggleMobFilter(this)">⚙️ Bộ lọc &amp; thao tác ▾</button>
             <label class="col-check-row" style="margin-bottom:12px;">
               <input type="checkbox" id="loanShowAll" checked onchange="renderLoans()">
               Xem tất cả (kể cả đã xử lý)
@@ -1047,6 +1090,7 @@ body{-webkit-text-size-adjust:100%;}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               <input type="text" placeholder="Tìm theo tên khách hàng…" id="mcSearchInput" oninput="renderMarginCalls()" style="width:100%;">
             </div>
+            <button type="button" class="btn btn-secondary btn-sm mob-filter-toggle" onclick="toggleMobFilter(this)">⚙️ Bộ lọc &amp; thao tác ▾</button>
             <label class="col-check-row" style="margin-bottom:12px;">
               <input type="checkbox" id="mcShowAll" checked onchange="renderMarginCalls()">
               Xem tất cả (kể cả đã xử lý)
@@ -2926,6 +2970,37 @@ function applyMvTab(){
   document.querySelectorAll('#view-moves [data-mvtab]').forEach(el=>el.classList.toggle('mv-on', el.dataset.mvtab===mvTab));
   document.querySelectorAll('#mvTabs .mv-tab').forEach(b=>b.classList.toggle('on', b.dataset.t===mvTab));
 }
+function custStatusText(stk){
+  const c = custByStk(stk);
+  if(!c) return 'Chưa có trong DS';
+  if(c.status==='Chờ xác nhận') return 'Đang chờ';
+  return c.status || '';
+}
+function exportMovesExcel(){
+  try {
+    if(typeof XLSX === 'undefined') throw new Error('Thư viện Excel chưa tải được (kiểm tra mạng rồi thử lại).');
+    const wb = XLSX.utils.book_new();
+    const add = (name, header, rows, widths)=>{
+      const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+      ws['!cols'] = widths.map(w=>({wch:w}));
+      XLSX.utils.book_append_sheet(wb, ws, name);
+    };
+    const toDate = d=>{ const [dd,mm,yy]=String(d||'').split('/').map(Number); return new Date(yy||0,(mm||1)-1,dd||1); };
+    const typeLbl = {new:'KH mới', out:'Chuyển đi', in:'Chuyển về'};
+    const ev = buildMoveEvents().sort((a,b)=>toDate(b.date)-toDate(a.date));
+    add('Theo ngày', ['Ngày','Loại','STK','Tên KH','NAV','Room','ID quản lý'],
+      ev.map(e=>[e.date, typeLbl[e.type], e.c.stk, e.c.name||e.c.telegram||'', e.c.nav||0, typeof e.c.room==='number' ? 'Room '+e.c.room : (e.c.room||''), e.c.managerId||'']), [12,12,12,30,18,12,12]);
+    add('KH tiềm năng', ['STT','Ngày tiếp nhận','Tên KH','Người liên hệ','Tình trạng liên hệ','Tình trạng KH','STK','Trong DS KH','Ghi chú'],
+      zaloLeads.map(l=>[l.id, l.date||'', l.name, l.person, l.contact, l.outcome, l.stk, l.stk ? custStatusText(l.stk) : '', l.note]), [6,14,26,18,18,16,12,18,30]);
+    add('KH chuyển về', ['Ngày chuyển','STK','Tên KH','ID chuyển về','ID cũ','Phòng cũ','STT KH (Zalo)','Tên KH (Zalo)','Tình trạng trong DS KH','Ghi chú'],
+      transferIns.slice().sort((a,b)=>b.id-a.id).map(t=>{ const c = custByStk(t.stk), l = t.leadId ? zaloLeads.find(x=>x.id===t.leadId) : null; return [t.date||'', t.stk, c?c.name:'', t.newId, t.oldId, t.oldRoom, t.leadId||'', l?l.name:'', custStatusText(t.stk), t.note]; }), [12,12,26,14,12,14,14,26,22,30]);
+    add('KH chuyển đi', ['Ngày chuyển','STK','Tên KH','ID chuyển đi','Tình trạng','Ghi chú'],
+      transferOuts.slice().sort((a,b)=>b.id-a.id).map(t=>{ const c = custByStk(t.stk); return [t.date||'', t.stk, t.name || (c?c.name:''), t.newId, !c ? 'Chưa có trong DS' : (c.status==='Đã chuyển đi' ? 'Đã Remove & cập nhật' : 'Chưa Remove'), t.note]; }), [12,12,26,14,24,30]);
+    XLSX.writeFile(wb, `Bien_dong_KH_${todayDdMmYyyy().replace(/\//g,'-')}.xlsx`);
+    showToast('Đã xuất file Excel Biến động KH.');
+  } catch(err){ alert('Lỗi khi xuất Excel: ' + err.message); }
+}
+function toggleMobFilter(btn){ const sb = btn.closest('.loan-sidebar'); const on = sb.classList.toggle('mob-open'); btn.innerHTML = on ? '⚙️ Bộ lọc &amp; thao tác ▴' : '⚙️ Bộ lọc &amp; thao tác ▾'; }
 let mvLast=[0,0,0];
 function refreshMvTabs(){ renderMvTabs(...mvLast); }
 function renderMvTabs(nNew, nOut, nIn){
@@ -2939,7 +3014,8 @@ function renderMvTabs(nNew, nOut, nIn){
     tab('daily','🗓️ Tổng quan theo ngày', `Hôm nay: mới <b>${nNew}</b> · đi <b>${nOut}</b> · về <b>${nIn}</b>`) +
     tab('leads','📞 KH tiềm năng', `<b>${zaloLeads.length}</b> KH${leadWait?` · <span class="w">${leadWait} chưa liên hệ</span>`:''}`) +
     tab('tin','⬇️ KH chuyển về', `<b>${transferIns.length}</b> KH · hôm nay <b>${nInList}</b>`) +
-    tab('tout','⬆️ KH chuyển đi', `<b>${transferOuts.length}</b> KH${toutWait?` · <span class="w">${toutWait} chưa Remove</span>`:''} · hôm nay <b>${nOutList}</b>`);
+    tab('tout','⬆️ KH chuyển đi', `<b>${transferOuts.length}</b> KH${toutWait?` · <span class="w">${toutWait} chưa Remove</span>`:''} · hôm nay <b>${nOutList}</b>`) +
+    `<button type="button" class="btn btn-secondary btn-sm mv-export" onclick="exportMovesExcel()">📥 Xuất Excel</button>`;
   applyMvTab();
 }
 document.getElementById('mvTabs')?.addEventListener('click', e=>{ const b = e.target.closest('.mv-tab'); if(b) setMvTab(b.dataset.t); });
@@ -3000,8 +3076,14 @@ const sel = (arr,v)=>arr.map(x=>`<option ${x===v?'selected':''}>${x}</option>`).
 const CONTACT_OPTS = ['Chưa liên hệ','Đã liên hệ','Đang hướng dẫn'];
 const OUTCOME_OPTS = ['Chưa rõ','Đã mở TK','Đã chuyển về','Không quan tâm'];
 
+function labelMobTable(tbodyId){
+  const tb = document.getElementById(tbodyId); if(!tb) return;
+  const heads = [...tb.closest('table').querySelectorAll('thead th')].map(th=>th.textContent.trim());
+  tb.querySelectorAll('tr').forEach(tr=>{ [...tr.children].forEach((td,i)=>{ if(!td.hasAttribute('colspan')) td.setAttribute('data-label', heads[i]||''); }); });
+}
 function renderMoveLists(){
   renderLeads(); renderTins(); renderTouts(); refreshMvTabs();
+  ['leadBody','tinBody','toutBody'].forEach(labelMobTable);
 }
 // --- 1. KH Zalo ---
 let editingLeadId = null;
@@ -3037,6 +3119,7 @@ function renderLeads(){
   if(dl){ const names = new Set(zaloLeads.map(l=>l.person).filter(Boolean)); (typeof accounts!=='undefined'?accounts:[]).forEach(a=>{ if(a.name) names.add(a.name); }); dl.innerHTML = [...names].map(n=>`<option value="${escHtml(n)}">`).join(''); }
   renderLeadSummary();
   body.innerHTML = zaloLeads.length ? zaloLeads.map(leadRowHtml).join('') : '<tr><td colspan="10" class="lead-empty">Chưa có KH nào. Bấm "Dán danh sách tên" hoặc "+ Thêm KH".</td></tr>';
+  labelMobTable('leadBody');
 }
 async function updateLead(id, field, value){
   const l = zaloLeads.find(x=>x.id===id); if(!l) return;
