@@ -528,6 +528,22 @@ body.is-editor .icon-btn[title^="Xóa khoản"],body.is-editor .icon-btn[title^=
 .mv-item b{font-family:ui-monospace,monospace;}
 .mv-empty{font-size:12px;color:#9AA5B4;padding:4px 2px;}
 @media (max-width:900px){.mv-cols{grid-template-columns:1fr;}.stat-grid.move-cards{grid-template-columns:1fr;}}
+.lead-sum{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+.lead-sum .ls{background:#F7F8FA;border:1px solid #E4E8EE;border-radius:10px;padding:8px 14px;min-width:110px;}
+.lead-sum .ls b{display:block;font-size:20px;line-height:1.2;}
+.lead-sum .ls span{font-size:11.5px;color:#6B7686;}
+.lead-sum .ls.good b{color:#047857;}.lead-sum .ls.wait b{color:#B45309;}.lead-sum .ls.bad b{color:#B91C1C;}
+.lead-scroll{overflow:auto;max-height:430px;}
+.lead-scroll thead th{top:0 !important;}
+.lead-table{width:100%;border-collapse:collapse;font-size:13px;}
+.lead-table th{text-align:left;font-size:11.5px;color:#6B7686;padding:6px 8px;border-bottom:1px solid #E4E8EE;white-space:nowrap;background:#fff;position:sticky;top:0;}
+.lead-table td{padding:6px 8px;border-bottom:1px solid #F0F2F5;vertical-align:middle;}
+.lead-table input.ld-stk{width:88px;text-transform:uppercase;}
+.lead-table input.ld-name{min-width:150px;}
+.lead-table select{font-size:12.5px;}
+.lead-table tr.ld-done td{background:#F3FBF7;}
+.lead-table td .icon-btn{display:inline-flex;vertical-align:middle;margin-right:4px;}
+.lead-empty{text-align:center;color:#9AA5B4;padding:16px;}
 /* Màn hình hẹp / chia đôi màn hình: cột ID không bị cắt "...", tiêu đề không đè nhau */
 .loan-summary-row td{word-break:normal;}
 .loan-summary-row td.td-mgr{overflow:visible;text-overflow:clip;white-space:nowrap;}
@@ -676,7 +692,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.34-giu-man-hinh</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.36-3-danh-sach</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -698,7 +714,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.34-giu-man-hinh</div>
+        <div class="brand-sub">Chứng khoán · v08.36-3-danh-sach</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -1245,6 +1261,55 @@ body{-webkit-text-size-adjust:100%;}
       <!-- ============ BIẾN ĐỘNG KH ============ -->
       <div class="view" id="view-moves">
         <div class="stat-grid move-cards" id="mvTopCards"></div>
+
+        <!-- 1. KH từ Zalo -->
+        <div class="panel" style="margin-bottom:18px;">
+          <div class="panel-header">
+            <div class="panel-title">1. KH SẾP GỬI QUA ZALO</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn btn-secondary btn-sm" onclick="openLeadBulk()">📋 Dán danh sách tên</button>
+              <button class="btn btn-primary btn-sm" onclick="openLeadModal()">+ Thêm KH</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="lead-sum" id="leadSummary"></div>
+            <div class="lead-scroll"><table class="lead-table">
+              <thead><tr><th style="width:44px;">STT</th><th>Ngày tiếp nhận</th><th>Tên KH</th><th>Tình trạng liên hệ</th><th>Tình trạng KH</th><th>STK</th><th>Trong DS KH</th><th>Ghi chú</th><th></th></tr></thead>
+              <tbody id="leadBody"></tbody>
+            </table></div>
+            <div class="field-hint" style="margin-top:8px;">Khi xử lý xong, nhập <b>STK</b> vào dòng KH. Hệ thống dùng STK để lấy tình trạng từ Danh sách khách hàng (đang quản lý / đang chờ / chưa có trong DS).</div>
+          </div>
+        </div>
+
+        <!-- 2. KH chuyển về -->
+        <div class="panel" style="margin-bottom:18px;">
+          <div class="panel-header">
+            <div class="panel-title">2. KH CHUYỂN VỀ</div>
+            <button class="btn btn-primary btn-sm" onclick="openTinModal()">+ Thêm KH chuyển về</button>
+          </div>
+          <div class="panel-body">
+            <div class="lead-scroll"><table class="lead-table">
+              <thead><tr><th>Ngày chuyển</th><th>STK</th><th>Tên KH</th><th>ID chuyển về</th><th>ID cũ</th><th>Phòng cũ</th><th>STT KH (Zalo)</th><th>Tình trạng trong DS KH</th><th></th></tr></thead>
+              <tbody id="tinBody"></tbody>
+            </table></div>
+          </div>
+        </div>
+
+        <!-- 3. KH chuyển đi -->
+        <div class="panel" style="margin-bottom:18px;">
+          <div class="panel-header">
+            <div class="panel-title">3. KH CHUYỂN ĐI</div>
+            <button class="btn btn-primary btn-sm" onclick="openToutModal()">+ Thêm KH chuyển đi</button>
+          </div>
+          <div class="panel-body">
+            <div class="lead-scroll"><table class="lead-table">
+              <thead><tr><th>Ngày chuyển</th><th>STK</th><th>Tên KH</th><th>ID chuyển đi</th><th>Tình trạng (đã Remove chưa)</th><th></th></tr></thead>
+              <tbody id="toutBody"></tbody>
+            </table></div>
+          </div>
+        </div>
+
+        <div class="section-label" style="font-weight:700;font-size:13px;color:#6B7686;margin:6px 2px 10px;">DÒNG THỜI GIAN THEO NGÀY (tự động từ Danh sách khách hàng)</div>
         <div id="mvDays"></div>
       </div>
 
@@ -1433,6 +1498,59 @@ body{-webkit-text-size-adjust:100%;}
       <button class="btn btn-secondary" onclick="closeSpecialIdModal()">Hủy</button>
       <button class="btn btn-primary" onclick="saveSpecialId()">Lưu ID</button>
     </div>
+  </div>
+</div>
+
+<div class="overlay" id="leadModalOverlay">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="leadModalTitle">Thêm KH sếp gửi</div><button class="close-x" onclick="closeLeadModal()">✕</button></div>
+    <div class="modal-body"><div class="form-grid">
+      <div class="form-field"><label>Ngày tiếp nhận</label><input type="text" id="ld_date" placeholder="dd/mm/yyyy — để trống = hôm nay"></div>
+      <div class="form-field"><label>Tên KH</label><input type="text" id="ld_name" placeholder="Tên khách hàng"></div>
+      <div class="form-field"><label>Tình trạng liên hệ</label><select id="ld_contact"><option>Chưa liên hệ</option><option>Đã liên hệ</option><option>Đang hướng dẫn</option></select></div>
+      <div class="form-field"><label>Tình trạng KH</label><select id="ld_outcome"><option>Chưa rõ</option><option>Đã mở TK</option><option>Đã chuyển về</option><option>Không quan tâm</option></select></div>
+      <div class="form-field"><label>STK (khi xử lý xong)</label><input type="text" id="ld_stk" placeholder="VD: 415086"></div>
+      <div class="form-field"><label>Ghi chú</label><input type="text" id="ld_note" placeholder="Không bắt buộc"></div>
+    </div></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeLeadModal()">Hủy</button><button class="btn btn-primary" onclick="saveLead()">Lưu</button></div>
+  </div>
+</div>
+<div class="overlay" id="leadBulkOverlay">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Dán danh sách KH sếp gửi</div><button class="close-x" onclick="closeLeadBulk()">✕</button></div>
+    <div class="modal-body">
+      <div class="field-hint" style="margin-bottom:8px;">Mỗi dòng 1 khách: <b>Tên KH, Ghi chú</b> (cách nhau bằng Tab hoặc dấu phẩy; ghi chú không bắt buộc). Ngày tiếp nhận mặc định là hôm nay, STT tự đánh số.</div>
+      <textarea id="ldb_text" rows="10" style="width:100%;" placeholder="Nguyễn Văn A	Sếp giao 09/10"></textarea>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeLeadBulk()">Hủy</button><button class="btn btn-primary" onclick="saveLeadBulk()">Thêm danh sách</button></div>
+  </div>
+</div>
+<div class="overlay" id="tinModalOverlay">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="tinModalTitle">Thêm KH chuyển về</div><button class="close-x" onclick="closeTinModal()">✕</button></div>
+    <div class="modal-body"><div class="form-grid">
+      <div class="form-field"><label>Ngày chuyển</label><input type="text" id="tin_date" placeholder="dd/mm/yyyy — để trống = hôm nay"></div>
+      <div class="form-field"><label>STK *</label><input type="text" id="tin_stk" placeholder="VD: 415086"></div>
+      <div class="form-field"><label>ID chuyển về</label><input type="text" id="tin_newid" placeholder="ID môi giới nhận KH"></div>
+      <div class="form-field"><label>ID cũ</label><input type="text" id="tin_oldid" placeholder="ID môi giới trước đây"></div>
+      <div class="form-field"><label>Phòng cũ</label><input type="text" id="tin_oldroom" placeholder="Phòng trước đây"></div>
+      <div class="form-field"><label>STT KH (từ danh sách Zalo)</label><input type="text" id="tin_lead" placeholder="VD: 3 — để trống nếu không có"></div>
+      <div class="form-field full"><label>Ghi chú</label><input type="text" id="tin_note" placeholder="Không bắt buộc"></div>
+    </div></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeTinModal()">Hủy</button><button class="btn btn-primary" onclick="saveTin()">Lưu</button></div>
+  </div>
+</div>
+<div class="overlay" id="toutModalOverlay">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="toutModalTitle">Thêm KH chuyển đi</div><button class="close-x" onclick="closeToutModal()">✕</button></div>
+    <div class="modal-body"><div class="form-grid">
+      <div class="form-field"><label>Ngày chuyển</label><input type="text" id="tout_date" placeholder="dd/mm/yyyy — để trống = hôm nay"></div>
+      <div class="form-field"><label>STK *</label><input type="text" id="tout_stk" placeholder="VD: 415086"></div>
+      <div class="form-field"><label>Tên KH</label><input type="text" id="tout_name" placeholder="Để trống = lấy theo Danh sách KH"></div>
+      <div class="form-field"><label>ID chuyển đi (ID nơi KH chuyển sang)</label><input type="text" id="tout_newid" placeholder="ID môi giới nhận KH"></div>
+      <div class="form-field full"><label>Ghi chú</label><input type="text" id="tout_note" placeholder="Không bắt buộc"></div>
+    </div></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeToutModal()">Hủy</button><button class="btn btn-primary" onclick="saveTout()">Lưu</button></div>
   </div>
 </div>
 
@@ -2149,6 +2267,7 @@ function applyRoleVisibility(){
 // TẢI TOÀN BỘ DỮ LIỆU TỪ SUPABASE
 // ================================================================
 let roomHistoryRows = [];
+let zaloLeads = [], transferIns = [], transferOuts = [];
 async function loadAllData(){
   // --- Rooms ---
   const { data: roomRows } = await sb.from('rooms').select('*').order('room_id');
@@ -2270,6 +2389,7 @@ async function loadAllData(){
     }
     roomHistoryRows = rh;
   } catch(e){ roomHistoryRows = []; }
+  await loadMoveLists();
   // --- ID đặc biệt ---
   try {
     const { data: spRows } = await sb.from('special_ids').select('*').order('manager_id');
@@ -2779,6 +2899,8 @@ function mvItemHtml(e){
   const roomTxt = (c.room===undefined||c.room===null||c.room==='') ? '' : (typeof c.room==='number' ? 'Room '+c.room : c.room);
   return `<div class="mv-item"><b>${escHtml(c.stk)}</b> · ${escHtml(nm)}<br><span style="color:#6B7686;">NAV ${fmt(c.nav||0)}${roomTxt?' · '+escHtml(String(roomTxt)):''}${c.managerId?' · ID '+escHtml(String(c.managerId)):''}</span></div>`;
 }
+let mvOpenState = {};
+document.getElementById('mvDays')?.addEventListener('toggle', e=>{ const d = e.target.dataset && e.target.dataset.d; if(d) mvOpenState[d] = e.target.open; }, true);
 function renderMoves(){
   const wrap = document.getElementById('mvDays'); if(!wrap) return;
   const ev = buildMoveEvents();
@@ -2798,7 +2920,7 @@ function renderMoves(){
   wrap.innerHTML = dates.map((d,i)=>{
     const g = byDate[d];
     const col = (title, arr)=>`<div class="mv-col"><h4>${title} (${arr.length})</h4>${arr.length ? arr.map(mvItemHtml).join('') : '<div class="mv-empty">Không có</div>'}</div>`;
-    return `<details class="mv-day" ${i<3?'open':''}>
+    return `<details class="mv-day" data-d="${d}" ${(mvOpenState[d]===undefined ? i<3 : mvOpenState[d])?'open':''}>
       <summary><span>${d}${d===today?' (Hôm nay)':''}</span>
         <span class="mv-chip new">Mới ${g.new.length}</span><span class="mv-chip out">Chuyển đi ${g.out.length}</span><span class="mv-chip in">Chuyển về ${g.in.length}</span></summary>
       <div class="mv-cols">${col('🆕 Khách hàng mới', g.new)}${col('⬆️ Chuyển đi', g.out)}${col('⬇️ Chuyển về', g.in)}</div>
@@ -2809,6 +2931,258 @@ function renderMoves(){
   set('mvNewToday', cnt(today,'new')); set('mvOutToday', cnt(today,'out')); set('mvInToday', cnt(today,'in'));
   const hint = 'Bấm để xem chi tiết';
   set('mvNewDelta', hint); set('mvOutDelta', hint); set('mvInDelta', hint);
+  renderMoveLists();
+}
+
+// ---------------- 3 DANH SÁCH: KH ZALO / CHUYỂN VỀ / CHUYỂN ĐI ----------------
+async function loadMoveLists(){
+  const ld = async (table, order)=>{ try{ const { data, error } = await sb.from(table).select('*').order(order); if(error) throw error; return data||[]; }catch(e){ console.error('load '+table, e); return []; } };
+  zaloLeads = (await ld('zalo_leads','lead_id')).map(r=>({ id:r.lead_id, date:fromDbDate(r.received_date), name:r.lead_name||'', contact:r.contact_status, outcome:r.outcome, stk:r.account_number||'', note:r.note||'' }));
+  transferIns = (await ld('transfer_in_list','id')).map(r=>({ id:r.id, date:fromDbDate(r.transfer_date), stk:r.account_number||'', newId:r.new_id||'', oldId:r.old_id||'', oldRoom:r.old_room||'', leadId:r.lead_id, note:r.note||'' }));
+  transferOuts = (await ld('transfer_out_list','id')).map(r=>({ id:r.id, date:fromDbDate(r.transfer_date), stk:r.account_number||'', name:r.customer_name||'', newId:r.new_id||'', note:r.note||'' }));
+}
+function custByStk(stk){
+  const k = String(stk||'').trim().toLowerCase().slice(0,6);
+  return k ? customers.find(c=>(c.stk||'').toLowerCase()===k) : null;
+}
+function custStatusBadge(stk){
+  const c = custByStk(stk);
+  if(!c) return '<span class="badge badge-gray">Chưa có trong DS</span>';
+  if(c.status==='Đã chuyển đi') return '<span class="badge badge-red">Đã chuyển đi</span>';
+  if(c.status==='Chờ xác nhận') return '<span class="badge badge-amber">Đang chờ</span>';
+  if(c.status==='Đang quản lý') return '<span class="badge badge-green">Đang quản lý</span>';
+  return `<span class="badge badge-gray">${escHtml(c.status||'—')}</span>`;
+}
+const ICON_EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>';
+const ICON_DEL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>';
+function delBtn(fn,id){ return currentRole==='owner' ? `<button class="icon-btn sp-del" title="Xóa" onclick="${fn}(${id})">${ICON_DEL}</button>` : ''; }
+const sel = (arr,v)=>arr.map(x=>`<option ${x===v?'selected':''}>${x}</option>`).join('');
+const CONTACT_OPTS = ['Chưa liên hệ','Đã liên hệ','Đang hướng dẫn'];
+const OUTCOME_OPTS = ['Chưa rõ','Đã mở TK','Đã chuyển về','Không quan tâm'];
+
+function renderMoveLists(){
+  renderLeads(); renderTins(); renderTouts();
+}
+// --- 1. KH Zalo ---
+let editingLeadId = null;
+function renderLeadSummary(){
+  const el = document.getElementById('leadSummary'); if(!el) return;
+  const n = f=>zaloLeads.filter(f).length;
+  const stat = (v,t,c)=>`<div class="ls ${c||''}"><b>${v}</b><span>${t}</span></div>`;
+  el.innerHTML = stat(zaloLeads.length,'Tổng KH sếp gửi')
+    + stat(n(l=>l.contact==='Chưa liên hệ' && l.outcome==='Chưa rõ'),'Chưa liên hệ','bad')
+    + stat(n(l=>l.contact!=='Chưa liên hệ' && l.outcome==='Chưa rõ'),'Đang xử lý','wait')
+    + stat(n(l=>l.outcome==='Đã mở TK'),'Đã mở TK','good')
+    + stat(n(l=>l.outcome==='Đã chuyển về'),'Đã chuyển về','good')
+    + stat(n(l=>l.outcome==='Không quan tâm'),'Không quan tâm');
+}
+function leadRowHtml(l){
+  const done = l.outcome==='Đã mở TK' || l.outcome==='Đã chuyển về';
+  return `<tr class="${done?'ld-done':''}" data-lid="${l.id}">
+    <td><b>${l.id}</b></td>
+    <td>${l.date||''}</td>
+    <td><input type="text" class="loan-note-input ld-name" value="${escHtml(l.name)}" placeholder="Tên KH" onchange="updateLead(${l.id},'name',this.value)"></td>
+    <td><select onchange="updateLead(${l.id},'contact',this.value)">${sel(CONTACT_OPTS,l.contact)}</select></td>
+    <td><select class="ld-outcome" onchange="updateLead(${l.id},'outcome',this.value)">${sel(OUTCOME_OPTS,l.outcome)}</select></td>
+    <td><input type="text" class="ld-stk" value="${escHtml(l.stk)}" placeholder="STK" onchange="updateLead(${l.id},'stk',this.value)"></td>
+    <td class="ld-ds">${l.stk ? custStatusBadge(l.stk) : '<span style="color:#9AA5B4;">—</span>'}</td>
+    <td><input type="text" class="loan-note-input" value="${escHtml(l.note)}" placeholder="Ghi chú…" onchange="updateLead(${l.id},'note',this.value)"></td>
+    <td style="white-space:nowrap;">${delBtn('deleteLead',l.id)}</td>
+  </tr>`;
+}
+function renderLeads(){
+  const body = document.getElementById('leadBody'); if(!body) return;
+  renderLeadSummary();
+  body.innerHTML = zaloLeads.length ? zaloLeads.map(leadRowHtml).join('') : '<tr><td colspan="9" class="lead-empty">Chưa có KH nào. Bấm "Dán danh sách tên" hoặc "+ Thêm KH".</td></tr>';
+}
+async function updateLead(id, field, value){
+  const l = zaloLeads.find(x=>x.id===id); if(!l) return;
+  const old = l[field]; let v = String(value||'').trim();
+  if(field==='stk') v = v.toUpperCase();
+  const col = {name:'lead_name', contact:'contact_status', outcome:'outcome', stk:'account_number', note:'note'}[field];
+  l[field] = v;
+  try {
+    const { error } = await sb.from('zalo_leads').update({ [col]: (field==='stk' && !v) ? null : v, updated_at:new Date().toISOString() }).eq('lead_id', id);
+    if(error) throw error;
+    const tr = document.querySelector(`#leadBody tr[data-lid="${id}"]`);
+    if(tr){
+      tr.classList.toggle('ld-done', l.outcome==='Đã mở TK' || l.outcome==='Đã chuyển về');
+      const c = tr.querySelector('.ld-ds'); if(c) c.innerHTML = l.stk ? custStatusBadge(l.stk) : '<span style="color:#9AA5B4;">—</span>';
+      const si = tr.querySelector('.ld-stk'); if(si) si.value = l.stk;
+    }
+    renderLeadSummary();
+    renderTins(); // STT KH ở danh sách 2 hiển thị tên
+    showToast(field==='stk' ? (custByStk(l.stk) ? 'Đã lưu STK — KH đã có trong Danh sách KH.' : 'Đã lưu STK (chưa thấy trong Danh sách KH).') : 'Đã cập nhật thành công.');
+  } catch(err){ l[field] = old; renderLeads(); alert('Lỗi khi lưu: ' + err.message); }
+}
+function openLeadModal(){
+  editingLeadId = null;
+  ['ld_date','ld_name','ld_stk','ld_note'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('ld_contact').value='Chưa liên hệ'; document.getElementById('ld_outcome').value='Chưa rõ';
+  document.getElementById('leadModalOverlay').classList.add('active');
+}
+function closeLeadModal(){ document.getElementById('leadModalOverlay').classList.remove('active'); }
+async function saveLead(){
+  const dateStr = document.getElementById('ld_date').value.trim() || todayDdMmYyyy();
+  if(!parseDdMmYyyy(dateStr)){ alert('Ngày tiếp nhận không hợp lệ (dd/mm/yyyy).'); return; }
+  const name = document.getElementById('ld_name').value.trim();
+  const stk = document.getElementById('ld_stk').value.trim().toUpperCase();
+  if(!name && !stk){ alert('Vui lòng nhập Tên KH hoặc STK.'); return; }
+  try {
+    const { error } = await sb.from('zalo_leads').insert({ received_date: toDbDate(dateStr), lead_name:name, contact_status:document.getElementById('ld_contact').value, outcome:document.getElementById('ld_outcome').value, account_number: stk||null, note:document.getElementById('ld_note').value.trim(), created_by: currentUserEmail });
+    if(error) throw error;
+    await loadMoveLists(); closeLeadModal(); renderMoveLists();
+    showToast('Đã thêm KH thành công.');
+  } catch(err){ alert('Lỗi khi lưu KH: ' + err.message); }
+}
+function openLeadBulk(){ document.getElementById('ldb_text').value=''; document.getElementById('leadBulkOverlay').classList.add('active'); }
+function closeLeadBulk(){ document.getElementById('leadBulkOverlay').classList.remove('active'); }
+async function saveLeadBulk(){
+  const lines = document.getElementById('ldb_text').value.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  const exist = new Set(zaloLeads.map(l=>l.name.trim().toLowerCase()).filter(Boolean));
+  const add = [], dups = [];
+  lines.forEach(l=>{
+    const p = (l.includes('\t') ? l.split('\t') : l.split(',')).map(x=>x.trim());
+    if(!p[0] || /^(tên|tên kh|họ tên)$/i.test(p[0])) return;
+    const k = p[0].toLowerCase();
+    if(exist.has(k)){ dups.push(p[0]); return; }
+    exist.add(k);
+    add.push({ received_date: toDbDate(todayDdMmYyyy()), lead_name:p[0], note:p[1]||'', created_by: currentUserEmail });
+  });
+  if(!add.length && !dups.length){ alert('Không có dòng hợp lệ để thêm.'); return; }
+  try {
+    if(add.length){ const { error } = await sb.from('zalo_leads').insert(add); if(error) throw error; }
+    await loadMoveLists(); closeLeadBulk(); renderMoveLists();
+    showToast(`Đã thêm ${add.length} KH.`);
+    if(dups.length) alert(`Đã thêm ${add.length} KH.\n\nBỏ qua ${dups.length} tên đã có trong danh sách (để tránh trùng):\n${dups.join('\n')}\n\nNếu là người khác trùng tên, hãy thêm riêng bằng nút "+ Thêm KH".`);
+  } catch(err){ alert('Lỗi khi thêm danh sách: ' + err.message); }
+}
+async function deleteLead(id){
+  if(currentRole !== 'owner'){ alert('Chỉ tài khoản Owner mới có quyền xóa. Tài khoản Editor chỉ được sửa, không xóa được.'); return; }
+  const l = zaloLeads.find(x=>x.id===id); if(!l) return;
+  if(!confirm(`Xóa KH STT ${l.id}${l.name?' ('+l.name+')':''}? Thao tác này không thể hoàn tác.`)) return;
+  try {
+    const { data: _del, error } = await sb.from('zalo_leads').delete().eq('lead_id', id).select();
+    if(error) throw error;
+    if(!_del || !_del.length) throw new Error('Không xóa được bản ghi nào (bạn không có quyền xóa hoặc dữ liệu đã không còn).');
+    await loadMoveLists(); renderMoveLists();
+    showToast('Đã xóa KH thành công.');
+  } catch(err){ alert('Lỗi khi xóa: ' + err.message); }
+}
+// --- 2. KH chuyển về ---
+let editingTinId = null;
+function renderTins(){
+  const body = document.getElementById('tinBody'); if(!body) return;
+  const rows = transferIns.slice().sort((a,b)=>b.id-a.id);
+  body.innerHTML = rows.length ? rows.map(t=>{
+    const c = custByStk(t.stk); const lead = t.leadId ? zaloLeads.find(x=>x.id===t.leadId) : null;
+    return `<tr data-tid="${t.id}"><td>${t.date||''}</td><td><b>${escHtml(t.stk)}</b></td><td>${escHtml(c?c.name:'')}</td><td>${escHtml(t.newId)}</td><td>${escHtml(t.oldId)}</td><td>${escHtml(t.oldRoom)}</td>
+      <td>${t.leadId ? `<b>${t.leadId}</b>${lead&&lead.name?' · '+escHtml(lead.name):''}` : '<span style="color:#9AA5B4;">—</span>'}</td>
+      <td>${custStatusBadge(t.stk)}</td>
+      <td style="white-space:nowrap;"><button class="icon-btn" title="Sửa" onclick="openTinModal(${t.id})">${ICON_EDIT}</button>${delBtn('deleteTin',t.id)}</td></tr>`;
+  }).join('') : '<tr><td colspan="9" class="lead-empty">Chưa có KH chuyển về nào. Nhận mail xong bấm "+ Thêm KH chuyển về".</td></tr>';
+}
+function openTinModal(id){
+  editingTinId = id||null; const t = id ? transferIns.find(x=>x.id===id) : null;
+  document.getElementById('tinModalTitle').textContent = t ? 'Sửa KH chuyển về' : 'Thêm KH chuyển về';
+  document.getElementById('tin_date').value = t ? (t.date||'') : '';
+  document.getElementById('tin_stk').value = t ? t.stk : '';
+  document.getElementById('tin_newid').value = t ? t.newId : '';
+  document.getElementById('tin_oldid').value = t ? t.oldId : '';
+  document.getElementById('tin_oldroom').value = t ? t.oldRoom : '';
+  document.getElementById('tin_lead').value = t && t.leadId ? t.leadId : '';
+  document.getElementById('tin_note').value = t ? t.note : '';
+  document.getElementById('tinModalOverlay').classList.add('active');
+}
+function closeTinModal(){ document.getElementById('tinModalOverlay').classList.remove('active'); editingTinId=null; }
+async function saveTin(){
+  const stk = document.getElementById('tin_stk').value.trim().toUpperCase();
+  if(!stk){ alert('Vui lòng nhập STK.'); return; }
+  const dateStr = document.getElementById('tin_date').value.trim() || todayDdMmYyyy();
+  if(!parseDdMmYyyy(dateStr)){ alert('Ngày chuyển không hợp lệ (dd/mm/yyyy).'); return; }
+  const leadRaw = document.getElementById('tin_lead').value.trim();
+  let leadId = null;
+  if(leadRaw){ leadId = parseInt(leadRaw,10); if(!zaloLeads.some(x=>x.id===leadId)){ alert(`Không có KH STT ${leadRaw} trong danh sách Zalo (mục 1). Kiểm tra lại hoặc để trống.`); return; } }
+  if(transferIns.some(x=>x.id!==editingTinId && x.stk.toLowerCase()===stk.toLowerCase() && x.date===dateStr)){ alert(`STK ${stk} đã có trong danh sách chuyển về ngày ${dateStr}.`); return; }
+  const row = { transfer_date: toDbDate(dateStr), account_number: stk, new_id: document.getElementById('tin_newid').value.trim().toUpperCase(), old_id: document.getElementById('tin_oldid').value.trim().toUpperCase(), old_room: document.getElementById('tin_oldroom').value.trim(), lead_id: leadId, note: document.getElementById('tin_note').value.trim(), updated_at: new Date().toISOString() };
+  try {
+    let error;
+    if(editingTinId) ({ error } = await sb.from('transfer_in_list').update(row).eq('id', editingTinId));
+    else ({ error } = await sb.from('transfer_in_list').insert({ ...row, created_by: currentUserEmail }));
+    if(error) throw error;
+    const wasEdit = !!editingTinId;
+    await loadMoveLists(); closeTinModal(); renderMoveLists();
+    showToast(wasEdit ? 'Đã cập nhật KH chuyển về thành công.' : 'Đã thêm KH chuyển về thành công.');
+  } catch(err){ alert('Lỗi khi lưu KH chuyển về: ' + err.message); }
+}
+async function deleteTin(id){
+  if(currentRole !== 'owner'){ alert('Chỉ tài khoản Owner mới có quyền xóa. Tài khoản Editor chỉ được sửa, không xóa được.'); return; }
+  const t = transferIns.find(x=>x.id===id); if(!t) return;
+  if(!confirm(`Xóa dòng KH chuyển về STK ${t.stk}? Thao tác này không thể hoàn tác.`)) return;
+  try {
+    const { data: _del, error } = await sb.from('transfer_in_list').delete().eq('id', id).select();
+    if(error) throw error;
+    if(!_del || !_del.length) throw new Error('Không xóa được bản ghi nào (bạn không có quyền xóa hoặc dữ liệu đã không còn).');
+    await loadMoveLists(); renderMoveLists();
+    showToast('Đã xóa thành công.');
+  } catch(err){ alert('Lỗi khi xóa: ' + err.message); }
+}
+// --- 3. KH chuyển đi ---
+let editingToutId = null;
+function toutStatusBadge(t){
+  const c = custByStk(t.stk);
+  if(!c) return '<span class="badge badge-gray">Chưa có trong DS</span>';
+  if(c.status==='Đã chuyển đi') return '<span class="badge badge-green">✅ Đã Remove &amp; cập nhật</span>';
+  return `<span class="badge badge-red">⚠️ Chưa Remove (đang ${escHtml(c.status==='Chờ xác nhận'?'chờ':'quản lý')})</span>`;
+}
+function renderTouts(){
+  const body = document.getElementById('toutBody'); if(!body) return;
+  const rows = transferOuts.slice().sort((a,b)=>b.id-a.id);
+  body.innerHTML = rows.length ? rows.map(t=>{
+    const c = custByStk(t.stk);
+    return `<tr data-oid="${t.id}"><td>${t.date||''}</td><td><b>${escHtml(t.stk)}</b></td><td>${escHtml(t.name || (c?c.name:''))}</td><td>${escHtml(t.newId)}</td><td>${toutStatusBadge(t)}</td>
+      <td style="white-space:nowrap;"><button class="icon-btn" title="Sửa" onclick="openToutModal(${t.id})">${ICON_EDIT}</button>${delBtn('deleteTout',t.id)}</td></tr>`;
+  }).join('') : '<tr><td colspan="6" class="lead-empty">Chưa có KH chuyển đi nào. Nhận mail xong bấm "+ Thêm KH chuyển đi".</td></tr>';
+}
+function openToutModal(id){
+  editingToutId = id||null; const t = id ? transferOuts.find(x=>x.id===id) : null;
+  document.getElementById('toutModalTitle').textContent = t ? 'Sửa KH chuyển đi' : 'Thêm KH chuyển đi';
+  document.getElementById('tout_date').value = t ? (t.date||'') : '';
+  document.getElementById('tout_stk').value = t ? t.stk : '';
+  document.getElementById('tout_name').value = t ? t.name : '';
+  document.getElementById('tout_newid').value = t ? t.newId : '';
+  document.getElementById('tout_note').value = t ? t.note : '';
+  document.getElementById('toutModalOverlay').classList.add('active');
+}
+function closeToutModal(){ document.getElementById('toutModalOverlay').classList.remove('active'); editingToutId=null; }
+async function saveTout(){
+  const stk = document.getElementById('tout_stk').value.trim().toUpperCase();
+  if(!stk){ alert('Vui lòng nhập STK.'); return; }
+  const dateStr = document.getElementById('tout_date').value.trim() || todayDdMmYyyy();
+  if(!parseDdMmYyyy(dateStr)){ alert('Ngày chuyển không hợp lệ (dd/mm/yyyy).'); return; }
+  if(transferOuts.some(x=>x.id!==editingToutId && x.stk.toLowerCase()===stk.toLowerCase() && x.date===dateStr)){ alert(`STK ${stk} đã có trong danh sách chuyển đi ngày ${dateStr}.`); return; }
+  const row = { transfer_date: toDbDate(dateStr), account_number: stk, customer_name: document.getElementById('tout_name').value.trim(), new_id: document.getElementById('tout_newid').value.trim().toUpperCase(), note: document.getElementById('tout_note').value.trim(), updated_at: new Date().toISOString() };
+  try {
+    let error;
+    if(editingToutId) ({ error } = await sb.from('transfer_out_list').update(row).eq('id', editingToutId));
+    else ({ error } = await sb.from('transfer_out_list').insert({ ...row, created_by: currentUserEmail }));
+    if(error) throw error;
+    const wasEdit = !!editingToutId;
+    await loadMoveLists(); closeToutModal(); renderMoveLists();
+    showToast(wasEdit ? 'Đã cập nhật KH chuyển đi thành công.' : 'Đã thêm KH chuyển đi thành công.');
+  } catch(err){ alert('Lỗi khi lưu KH chuyển đi: ' + err.message); }
+}
+async function deleteTout(id){
+  if(currentRole !== 'owner'){ alert('Chỉ tài khoản Owner mới có quyền xóa. Tài khoản Editor chỉ được sửa, không xóa được.'); return; }
+  const t = transferOuts.find(x=>x.id===id); if(!t) return;
+  if(!confirm(`Xóa dòng KH chuyển đi STK ${t.stk}? Thao tác này không thể hoàn tác.`)) return;
+  try {
+    const { data: _del, error } = await sb.from('transfer_out_list').delete().eq('id', id).select();
+    if(error) throw error;
+    if(!_del || !_del.length) throw new Error('Không xóa được bản ghi nào (bạn không có quyền xóa hoặc dữ liệu đã không còn).');
+    await loadMoveLists(); renderMoveLists();
+    showToast('Đã xóa thành công.');
+  } catch(err){ alert('Lỗi khi xóa: ' + err.message); }
 }
 document.querySelectorAll('.stat-card[data-goto]').forEach(el=>el.addEventListener('click', ()=>switchView(el.dataset.goto)));
 
