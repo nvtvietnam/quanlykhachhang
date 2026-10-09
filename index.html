@@ -648,7 +648,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.26-import-id-dac-biet</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.29-lich-su-vao</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -670,7 +670,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.26-import-id-dac-biet</div>
+        <div class="brand-sub">Chứng khoán · v08.29-lich-su-vao</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -699,13 +699,13 @@ body{-webkit-text-size-adjust:100%;}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
       Quản lý quyền mua
     </div>
-    <div class="nav-item" data-view="import">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      Import Excel
-    </div>
     <div class="nav-item" data-view="specialids">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 6.5 7 .9-5.1 4.8 1.3 7-6.2-3.5L5.8 21l1.3-7L2 9.4l7-.9z"/></svg>
       Quản lý ID đặc biệt
+    </div>
+    <div class="nav-item" data-view="import">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Import Excel
     </div>
     <div class="nav-group-label" id="ownerGroupLabel">Owner</div>
     <div class="nav-item" data-view="accounts" id="navAccounts">
@@ -1211,14 +1211,16 @@ body{-webkit-text-size-adjust:100%;}
           ⭐ Danh sách ID đặc biệt dùng cho 2 việc: <b>(1)</b> khi Import <b>Khoản vay đến hạn</b> và <b>RRUB/Call Margin</b> có cột ID quản lý, chỉ các tài khoản thuộc ID trong danh sách này được đưa vào, còn lại bị bỏ qua (nếu danh sách trống thì không lọc); <b>(2)</b> khi lưu khách hàng, phần cuối Tên Telegram tự là <b>tên trưởng phòng</b> của ID quản lý đó.
         </div>
         <div class="toolbar">
-          <input type="text" id="specialIdSearch" placeholder="Tìm ID, tên, phòng, trưởng phòng…" oninput="renderSpecialIds()" style="max-width:300px;">
+          <input type="text" id="specialIdSearch" placeholder="Tìm ID, tên, phòng, trưởng phòng, ghi chú…" oninput="renderSpecialIds()" style="max-width:300px;">
+          <select id="specialIdRoomFilter" onchange="renderSpecialIds()" style="max-width:260px;"><option value="">Tất cả phòng</option></select>
+          <span class="badge badge-blue" id="specialIdCount" style="font-size:12.5px;padding:6px 10px;">0 ID</span>
           <div class="spacer"></div>
           <button class="btn btn-secondary btn-sm" onclick="openSpecialIdBulk()">📋 Dán nhiều ID</button>
           <button class="btn btn-primary btn-sm" onclick="openSpecialIdModal()">+ Thêm ID</button>
         </div>
         <div class="panel">
           <table>
-            <thead><tr><th>ID</th><th>Tên</th><th>Phòng</th><th>Trưởng phòng</th><th></th></tr></thead>
+            <thead><tr><th style="width:56px;">STT</th><th>ID</th><th>Tên</th><th>Phòng</th><th>Trưởng phòng</th><th>Ghi chú</th><th></th></tr></thead>
             <tbody id="specialIdsBody"></tbody>
           </table>
         </div>
@@ -1236,9 +1238,25 @@ body{-webkit-text-size-adjust:100%;}
         </div>
         <div class="panel" style="margin-bottom:20px;">
           <table>
-            <thead><tr><th>Email</th><th>Tên hiển thị</th><th>Vai trò</th><th>Ngày tạo</th><th></th></tr></thead>
+            <thead><tr><th>Email</th><th>Tên hiển thị</th><th>Vai trò</th><th>Vào gần nhất</th><th>Ngày tạo</th><th></th></tr></thead>
             <tbody id="accountsBody"></tbody>
           </table>
+        </div>
+
+        <div class="toolbar">
+          <div class="panel-title" style="font-size:14px;">🕒 Lịch sử đăng nhập / truy cập</div>
+          <div class="spacer"></div>
+          <select id="accessLogFilter" onchange="renderAccessLog()" style="max-width:260px;"><option value="">Tất cả tài khoản</option></select>
+          <button class="btn btn-secondary btn-sm" onclick="loadAccessLog(true)">🔄 Tải lại</button>
+        </div>
+        <div class="panel" style="margin-bottom:20px;">
+          <div style="max-height:380px;overflow:auto;">
+          <table>
+            <thead><tr><th style="width:56px;">STT</th><th>Thời gian</th><th>Tài khoản</th><th>Thiết bị / trình duyệt</th></tr></thead>
+            <tbody id="accessLogBody"><tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px;">Đang tải…</td></tr></tbody>
+          </table>
+          </div>
+          <div class="field-hint" style="padding:8px 14px;">Hiện 300 lần vào gần nhất. Mỗi lần mở lại hệ thống (đăng nhập hoặc tải lại trang) được ghi 1 dòng. Chỉ Owner xem được.</div>
         </div>
 
         <div class="panel-title" style="font-size:14px;margin-bottom:10px;">Dữ liệu &amp; bảo mật</div>
@@ -1365,6 +1383,7 @@ body{-webkit-text-size-adjust:100%;}
         <div class="form-field full"><label>Tên</label><input type="text" id="sp_name" placeholder="Tên người quản lý ID này"></div>
         <div class="form-field full"><label>Phòng</label><input type="text" id="sp_room" placeholder="VD: Phòng Môi giới 1"></div>
         <div class="form-field full"><label>Trưởng phòng</label><input type="text" id="sp_head" placeholder="Tên trưởng phòng — sẽ nối vào cuối Tên Telegram"></div>
+        <div class="form-field full"><label>Ghi chú</label><input type="text" id="sp_note" placeholder="Ghi chú thêm (không bắt buộc)"></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -1381,7 +1400,7 @@ body{-webkit-text-size-adjust:100%;}
       <button class="close-x" onclick="closeSpecialIdBulk()">✕</button>
     </div>
     <div class="modal-body">
-      <div class="field-hint" style="margin-bottom:8px;">Mỗi dòng 1 ID, các cột cách nhau bằng Tab (copy từ Excel) hoặc dấu phẩy: <b>ID, Tên, Phòng, Trưởng phòng</b>. ID đã có sẽ được cập nhật.</div>
+      <div class="field-hint" style="margin-bottom:8px;">Mỗi dòng 1 ID, các cột cách nhau bằng Tab (copy từ Excel) hoặc dấu phẩy: <b>ID, Tên, Phòng, Trưởng phòng, Ghi chú</b>. ID đã có sẽ được cập nhật.</div>
       <textarea id="sp_bulk" rows="10" style="width:100%;" placeholder="BBY3	Nguyễn Văn A	Phòng 1	Trần Văn B"></textarea>
     </div>
     <div class="modal-footer">
@@ -2196,7 +2215,7 @@ async function loadAllData(){
   // --- ID đặc biệt ---
   try {
     const { data: spRows } = await sb.from('special_ids').select('*').order('manager_id');
-    specialIds = (spRows||[]).map(r=>({ id:r.manager_id, name:r.manager_name||'', room:r.room_name||'', head:r.head_name||'' }));
+    specialIds = (spRows||[]).map(r=>({ id:r.manager_id, name:r.manager_name||'', room:r.room_name||'', head:r.head_name||'', note:r.note||'' }));
   } catch(e){ specialIds = []; }
   if(typeof renderSpecialIds === 'function') renderSpecialIds();
 
@@ -2338,7 +2357,7 @@ function switchView(name){
   document.title = titles[name][0] + ' — QLKH';
   document.getElementById('pageTitle').textContent = titles[name][0];
   document.getElementById('pageSubtitle').textContent = titles[name][1];
-  if(name === 'accounts') renderAccounts();
+  if(name === 'accounts'){ renderAccounts(); loadAccessLog(false); }
   if(name === 'specialids') renderSpecialIds();
   if(name === 'import') resetImportWizard();
 }
@@ -5157,6 +5176,7 @@ const FIELD_SPECS = {
     {key:'name', label:'Tên', required:false, guesses:['ten','ho ten','ten nguoi quan ly','ten moi gioi']},
     {key:'room', label:'Phòng', required:false, guesses:['phong','phong ban','ten phong']},
     {key:'head', label:'Trưởng phòng', required:false, guesses:['truong phong','ten truong phong','tp']},
+    {key:'note', label:'Ghi chú', required:false, guesses:['ghi chu','note']},
   ],
   right: [
     {key:'stk', label:'Số tài khoản', required:true, guesses:['so tai khoan','stk','so tk','sotk']},
@@ -5176,7 +5196,7 @@ const IMPORT_TYPE_META = {
   loan: {hint:'Kéo thả file khoản vay đến hạn vào đây, hoặc bấm để chọn file', note:'Nếu file không có cột số tiền vay, khoản vay sẽ được tạo với số tiền = 0 — bổ sung tay sau. Nếu 1 ô Số tài khoản có nhiều STK cách nhau bằng dấu phẩy, hệ thống tự tách thành từng khoản vay riêng.'},
   margincall: {hint:'Kéo thả file RRUB/Call Margin vào đây, hoặc bấm để chọn file', note:'Nếu file không có cột Số tiền, khoản sẽ được tạo với số tiền = 0 — bổ sung tay sau. Nếu 1 ô Số tài khoản có nhiều STK cách nhau bằng dấu phẩy, hệ thống tự tách thành từng khoản riêng.'},
   right: {hint:'Kéo thả file quyền mua vào đây, hoặc bấm để chọn file'},
-  specialid: {hint:'Kéo thả file danh sách ID đặc biệt vào đây, hoặc bấm để chọn file', note:'ID chưa có thì thêm mới; ID đã có thì KHÔNG thêm lại mà chỉ cập nhật các cột bạn map và có dữ liệu trong file (Tên, Phòng, Trưởng phòng). Cột không map hoặc ô để trống thì giữ nguyên dữ liệu cũ.'},
+  specialid: {hint:'Kéo thả file danh sách ID đặc biệt vào đây, hoặc bấm để chọn file', note:'ID chưa có thì thêm mới; ID đã có thì KHÔNG thêm lại mà chỉ cập nhật các cột bạn map và có dữ liệu trong file (Tên, Phòng, Trưởng phòng, Ghi chú). Cột không map hoặc ô để trống thì giữ nguyên dữ liệu cũ.'},
 };
 
 let currentImportType = 'nav';
@@ -5671,7 +5691,7 @@ function analyzeImportRows(type, rows, mapping){
       const accRawCell = String(getMapped(row,mapping,'account')).trim();
       const due = parseDateCell(getMapped(row,mapping,'dueDate'));
       const managerId = String(getMapped(row,mapping,'managerId')).trim();
-      if(specialFilterActive(mapping) && !isSpecialId(managerId)){ plan.skippedSpecial.push({line:lineNo, content:`TK ${accRawCell} — ID ${managerId||'(trống)'}`}); return; }
+      if(specialFilterActive(mapping) && !isSpecialId(managerId)){ plan.skippedSpecial.push({line:lineNo, account:accRawCell, managerId, content:`TK ${accRawCell} — ID ${managerId||'(trống)'}`}); return; }
       // 1 ô có nhiều số tài khoản cách nhau bằng dấu phẩy -> tách thành nhiều khoản vay riêng
       const accList = accRawCell.split(',').map(s=>s.trim()).filter(Boolean);
       if(accList.length===0){ plan.errors.push({line:lineNo, content:'STK: (trống)', error:'Thiếu số tài khoản'}); return; }
@@ -5694,7 +5714,7 @@ function analyzeImportRows(type, rows, mapping){
       const due = parseDateCell(getMapped(row,mapping,'dueDate'));
       const amount = parseNum(getMapped(row,mapping,'amount')) || 0;
       const managerId = String(getMapped(row,mapping,'managerId')).trim();
-      if(specialFilterActive(mapping) && !isSpecialId(managerId)){ plan.skippedSpecial.push({line:lineNo, content:`TK ${accRawCell} — ID ${managerId||'(trống)'}`}); return; }
+      if(specialFilterActive(mapping) && !isSpecialId(managerId)){ plan.skippedSpecial.push({line:lineNo, account:accRawCell, managerId, content:`TK ${accRawCell} — ID ${managerId||'(trống)'}`}); return; }
       // 1 ô có nhiều số tài khoản cách nhau bằng dấu phẩy -> tách thành nhiều khoản riêng
       const accList = accRawCell.split(',').map(s=>s.trim()).filter(Boolean);
       if(accList.length===0){ plan.errors.push({line:lineNo, content:'STK: (trống)', error:'Thiếu số tài khoản'}); return; }
@@ -5718,11 +5738,11 @@ function analyzeImportRows(type, rows, mapping){
       if(seenSpecialKeys.has(id)){ plan.errors.push({line:lineNo, content:`ID ${id}`, error:'Trùng ID trong file — bỏ qua dòng này, giữ dòng đầu tiên'}); return; }
       seenSpecialKeys.add(id);
       const val = k => mapping[k] ? String(getMapped(row,mapping,k)==null?'':getMapped(row,mapping,k)).trim() : '';
-      const nv = {name:val('name'), room:val('room'), head:val('head')}; // rỗng = không cập nhật
+      const nv = {name:val('name'), room:val('room'), head:val('head'), note:val('note')}; // rỗng = không cập nhật
       const existing = findSpecialId(id);
       let changed = false;
-      if(existing){ changed = (nv.name && nv.name!==existing.name) || (nv.room && nv.room!==existing.room) || (nv.head && nv.head!==existing.head); }
-      const item = {id, name:nv.name, room:nv.room, head:nv.head, existing, isNew:!existing, changed:!!changed};
+      if(existing){ changed = (nv.name && nv.name!==existing.name) || (nv.room && nv.room!==existing.room) || (nv.head && nv.head!==existing.head) || (nv.note && nv.note!==existing.note); }
+      const item = {id, name:nv.name, room:nv.room, head:nv.head, note:nv.note, existing, isNew:!existing, changed:!!changed};
       if(!existing) plan.newCount++; else if(changed) plan.changedCount++; else plan.unchangedCount++;
       plan.valid.push(item);
     }
@@ -5777,12 +5797,11 @@ function renderImportStep3Summary(plan){
 
   const errPanel = document.getElementById('errorPanel');
   const _sk = plan.skippedSpecial || [];
-  if(plan.errors.length || _sk.length){
+  if(plan.errors.length){
     errPanel.style.display = 'block';
-    document.getElementById('importErrorBody').innerHTML = plan.errors.slice(0,200).map(e=>`<tr><td>${e.line}</td><td>${e.content}</td><td><span class="badge badge-red">${e.error}</span></td></tr>`).join('')
-      + _sk.slice(0,200).map(e=>`<tr><td>${e.line}</td><td>${e.content}</td><td><span class="badge badge-gray">Không thuộc ID đặc biệt — bỏ qua</span></td></tr>`).join('');
+    document.getElementById('importErrorBody').innerHTML = plan.errors.slice(0,200).map(e=>`<tr><td>${e.line}</td><td>${e.content}</td><td><span class="badge badge-red">${e.error}</span></td></tr>`).join('');
   } else { errPanel.style.display = 'none'; }
-  if(_sk.length) showToast(`Đã bỏ qua ${_sk.length} dòng không thuộc ID đặc biệt.`);
+  if(_sk.length) showToast(`Có ${_sk.length} STK bị loại vì không thuộc ID đặc biệt — xem danh sách bên dưới.`,'error');
   else if((plan.type==='loan'||plan.type==='margincall') && specialIds.length && !currentColumnMapping.managerId) showToast('Chưa map cột ID quản lý nên không lọc được theo ID đặc biệt.','error');
 
   const unmatchedPanel = document.getElementById('unmatchedPanel');
@@ -5791,8 +5810,38 @@ function renderImportStep3Summary(plan){
     document.getElementById('unmatchedBody').innerHTML = plan.unmatched.slice(0,500).map(u=>`<tr><td>${u.line}</td><td>${u.stk}</td><td>${u.name}</td><td>${u.managerId||'—'}</td></tr>`).join('') + (plan.unmatched.length>500 ? `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:14px;">… và ${plan.unmatched.length-500} dòng khác</td></tr>` : '');
   } else { unmatchedPanel.style.display = 'none'; }
 
+  renderSkippedSpecialPanel(plan);
   document.getElementById('btnToStep4').style.opacity = plan.valid.length===0 ? '.5' : '1';
   document.getElementById('btnToStep4').disabled = plan.valid.length===0;
+}
+
+// Panel riêng, nổi bật: liệt kê các STK bị loại vì không thuộc ID đặc biệt để người dùng kiểm tra lại
+function renderSkippedSpecialPanel(plan){
+  let box = document.getElementById('skippedSpecialPanel');
+  const sk = plan.skippedSpecial || [];
+  if(!box){
+    box = document.createElement('div'); box.id = 'skippedSpecialPanel';
+    const anchor = document.getElementById('errorPanel');
+    anchor.parentNode.insertBefore(box, anchor);
+  }
+  if(!sk.length){ box.style.display='none'; box.innerHTML=''; return; }
+  const noId = sk.filter(x=>!x.managerId).length;
+  box.style.display = 'block';
+  box.innerHTML = `<div class="panel" style="border:2px solid #D9822B;margin-bottom:16px;">
+    <div class="panel-header" style="background:#FFF4E5;"><div class="panel-title" style="color:#9A5B13;">⚠️ ${sk.length} STK bị LOẠI vì không thuộc ID đặc biệt — vui lòng kiểm tra lại</div>
+      <button class="btn btn-secondary btn-sm" onclick="downloadSkippedSpecial()">⬇️ Tải danh sách bị loại (Excel)</button></div>
+    <div class="panel-body" style="padding:10px 14px;font-size:12.5px;color:var(--text-muted);">Các STK dưới đây <b>sẽ không được import</b>.${noId?` Trong đó ${noId} dòng không có ID quản lý.`:''} Nếu STK nào cần giữ, hãy thêm ID của nó vào mục Quản lý ID đặc biệt rồi import lại file.</div>
+    <div style="max-height:260px;overflow:auto;"><table><thead><tr><th>Dòng</th><th>STK</th><th>ID trong file</th></tr></thead><tbody>
+      ${sk.slice(0,500).map(x=>`<tr><td>${x.line}</td><td>${escHtml(x.account)}</td><td>${x.managerId?escHtml(x.managerId):'<span class="badge badge-red">Trống</span>'}</td></tr>`).join('')}
+      ${sk.length>500?`<tr><td colspan="3" style="text-align:center;color:var(--text-muted);">… và ${sk.length-500} dòng khác — tải file Excel để xem đủ</td></tr>`:''}
+    </tbody></table></div></div>`;
+}
+function downloadSkippedSpecial(){
+  const plan = pendingImportPlan; if(!plan || !plan.skippedSpecial || !plan.skippedSpecial.length) return;
+  const rows = plan.skippedSpecial.map(x=>({ 'Dòng trong file':x.line, 'STK':x.account, 'ID trong file':x.managerId||'' }));
+  const ws = XLSX.utils.json_to_sheet(rows), wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'STK bi loai');
+  XLSX.writeFile(wb, `STK_bi_loai_${(plan.type||'import')}_${todayDdMmYyyy().replace(/\//g,'-')}.xlsx`);
 }
 
 function goToImportStep4(){
@@ -5885,12 +5934,12 @@ function goToImportStep4(){
       return `<tr${rowStyle}><td>${it.account}</td><td>${it.dueDate}</td><td class="num-col num">${it.amount?fmt(it.amount):'—'}</td><td>${it.managerId||'—'}</td><td>${tag}</td></tr>`;
     }).join('');
   } else if(plan.type==='specialid'){
-    head.innerHTML = `<tr><th>ID</th><th>Tên</th><th>Phòng</th><th>Trưởng phòng</th><th>Trạng thái</th></tr>`;
+    head.innerHTML = `<tr><th>ID</th><th>Tên</th><th>Phòng</th><th>Trưởng phòng</th><th>Ghi chú</th><th>Trạng thái</th></tr>`;
     const cell = (nw, old) => nw ? (old && old!==nw ? `<span style="color:var(--text-muted);text-decoration:line-through;">${escHtml(old)}</span> → <b>${escHtml(nw)}</b>` : escHtml(nw)) : (old ? escHtml(old) : '—');
     body.innerHTML = plan.valid.slice(0,300).map(it=>{
       const e = it.existing || {};
       const tag = it.isNew ? '<span class="badge badge-blue">Mới</span>' : it.changed ? '<span class="badge badge-amber">Cập nhật</span>' : '<span class="badge badge-gray">Không đổi</span>';
-      return `<tr><td><b>${escHtml(it.id)}</b></td><td>${cell(it.name,e.name)}</td><td>${cell(it.room,e.room)}</td><td>${cell(it.head,e.head)}</td><td>${tag}</td></tr>`;
+      return `<tr><td><b>${escHtml(it.id)}</b></td><td>${cell(it.name,e.name)}</td><td>${cell(it.room,e.room)}</td><td>${cell(it.head,e.head)}</td><td>${cell(it.note,e.note)}</td><td>${tag}</td></tr>`;
     }).join('');
   } else if(plan.type==='right'){
     head.innerHTML = `<tr><th>STK</th><th>Mã CP</th><th>Tỷ lệ</th><th class="num-col">Giá</th><th class="num-col">SL được mua</th><th>Ngày chốt</th><th>Hạn ĐK</th><th>Trạng thái</th></tr>`;
@@ -6044,7 +6093,7 @@ async function confirmImportToDatabase(){
     }
     else if(plan.type==='specialid'){
       const now = new Date().toISOString();
-      const toInsert = plan.valid.filter(it=>it.isNew).map(it=>({ manager_id: it.id, manager_name: it.name||null, room_name: it.room||null, head_name: it.head||null, updated_at: now }));
+      const toInsert = plan.valid.filter(it=>it.isNew).map(it=>({ manager_id: it.id, manager_name: it.name||null, room_name: it.room||null, head_name: it.head||null, note: it.note||null, updated_at: now }));
       if(toInsert.length){ const { error } = await sb.from('special_ids').insert(toInsert); if(error) throw error; }
       // ID đã có: chỉ cập nhật các trường có dữ liệu mới trong file, trường còn lại giữ nguyên
       const toUpdate = plan.valid.filter(it=>it.changed);
@@ -6054,6 +6103,7 @@ async function confirmImportToDatabase(){
           if(it.name) payload.manager_name = it.name;
           if(it.room) payload.room_name = it.room;
           if(it.head) payload.head_name = it.head;
+          if(it.note) payload.note = it.note;
           return sb.from('special_ids').update(payload).eq('manager_id', it.id);
         }));
         const bad = results.find(r=>r.error); if(bad) throw bad.error;
@@ -6072,6 +6122,13 @@ async function confirmImportToDatabase(){
 
     await loadAllData();
     renderCustomers(); renderDashboard(); renderRooms(); renderLoans(); renderMarginCalls(); renderRights(); renderSpecialIds();
+    if(plan.skippedSpecial && plan.skippedSpecial.length){
+      const subEl = document.getElementById('importResultSub');
+      subEl.textContent += ` ⚠️ Có ${plan.skippedSpecial.length} STK bị loại vì không thuộc ID đặc biệt (không được import) — bấm "Tải danh sách bị loại" bên dưới để kiểm tra lại.`;
+      let dl = document.getElementById('btnDownloadSkipped');
+      if(!dl){ dl = document.createElement('button'); dl.id='btnDownloadSkipped'; dl.className='btn btn-secondary'; dl.style.marginTop='14px'; dl.textContent='⬇️ Tải danh sách STK bị loại (Excel)'; dl.onclick=downloadSkippedSpecial; subEl.parentNode.appendChild(dl); }
+      dl.style.display='inline-flex';
+    } else { const dl = document.getElementById('btnDownloadSkipped'); if(dl) dl.style.display='none'; }
     goImportStep(5);
   } catch(err){
     alert('Lỗi khi cập nhật dữ liệu: ' + err.message);
@@ -6292,10 +6349,26 @@ function renderSpecialIds(){
   const body = document.getElementById('specialIdsBody');
   if(!body) return;
   const q = (document.getElementById('specialIdSearch')?.value||'').trim().toLowerCase();
-  const list = specialIds.filter(x=>!q || [x.id,x.name,x.room,x.head].some(v=>String(v||'').toLowerCase().includes(q)));
-  if(!list.length){ body.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:24px;">${specialIds.length?'Không có ID nào khớp tìm kiếm.':'Chưa có ID đặc biệt nào. Bấm "+ Thêm ID" hoặc "Dán nhiều ID". Khi danh sách trống, Import sẽ không lọc theo ID.'}</td></tr>`; return; }
-  body.innerHTML = list.map(x=>`<tr>
-    <td><b>${escHtml(x.id)}</b></td><td>${escHtml(x.name)}</td><td>${escHtml(x.room)}</td><td>${escHtml(x.head)}</td>
+  // Dropdown lọc theo phòng — dựng lại từ dữ liệu hiện có, giữ lựa chọn đang chọn
+  const sel = document.getElementById('specialIdRoomFilter');
+  if(sel){
+    const cur = sel.value;
+    const rs = [...new Set(specialIds.map(x=>x.room).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi'));
+    sel.innerHTML = '<option value="">Tất cả phòng</option>' + rs.map(r=>`<option value="${escHtml(r)}">${escHtml(r)}</option>`).join('') + (specialIds.some(x=>!x.room)?'<option value="__none__">(Chưa có phòng)</option>':'');
+    if([...sel.options].some(o=>o.value===cur)) sel.value = cur;
+  }
+  const roomF = sel ? sel.value : '';
+  const list = specialIds.filter(x=>{
+    if(roomF==='__none__' && x.room) return false;
+    if(roomF && roomF!=='__none__' && x.room!==roomF) return false;
+    return !q || [x.id,x.name,x.room,x.head,x.note].some(v=>String(v||'').toLowerCase().includes(q));
+  });
+  const cnt = document.getElementById('specialIdCount');
+  if(cnt) cnt.textContent = (list.length===specialIds.length) ? `Tổng: ${specialIds.length} ID` : `Hiển thị ${list.length} / Tổng ${specialIds.length} ID`;
+  if(!list.length){ body.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">${specialIds.length?'Không có ID nào khớp tìm kiếm / bộ lọc.':'Chưa có ID đặc biệt nào. Bấm "+ Thêm ID", "Dán nhiều ID" hoặc Import Excel. Khi danh sách trống, Import sẽ không lọc theo ID.'}</td></tr>`; return; }
+  body.innerHTML = list.map((x,i)=>`<tr>
+    <td>${i+1}</td>
+    <td><b>${escHtml(x.id)}</b></td><td>${escHtml(x.name)}</td><td>${escHtml(x.room)}</td><td>${escHtml(x.head)}</td><td>${escHtml(x.note)}</td>
     <td><div class="row-actions" style="opacity:1;">
       <button class="icon-btn" title="Sửa" onclick="openSpecialIdModal(decodeURIComponent('${encodeURIComponent(x.id)}'))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>
       <button class="icon-btn sp-del" title="Xóa ID đặc biệt" onclick="deleteSpecialId(decodeURIComponent('${encodeURIComponent(x.id)}'))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
@@ -6310,6 +6383,7 @@ function openSpecialIdModal(id){
   document.getElementById('sp_name').value = x ? x.name : '';
   document.getElementById('sp_room').value = x ? x.room : '';
   document.getElementById('sp_head').value = x ? x.head : '';
+  document.getElementById('sp_note').value = x ? x.note : '';
   document.getElementById('specialIdModalOverlay').classList.add('active');
 }
 function closeSpecialIdModal(){ document.getElementById('specialIdModalOverlay').classList.remove('active'); editingSpecialId=null; document.getElementById('sp_id').disabled=false; }
@@ -6318,7 +6392,7 @@ async function saveSpecialId(){
   if(!id){ alert('Vui lòng nhập ID.'); return; }
   if(!editingSpecialId && findSpecialId(id)){ alert(`ID ${id} đã có trong danh sách. Hãy bấm nút sửa ở dòng đó.`); return; }
   try {
-    const row = { manager_id:id, manager_name:document.getElementById('sp_name').value.trim()||null, room_name:document.getElementById('sp_room').value.trim()||null, head_name:document.getElementById('sp_head').value.trim()||null, updated_at:new Date().toISOString() };
+    const row = { manager_id:id, manager_name:document.getElementById('sp_name').value.trim()||null, room_name:document.getElementById('sp_room').value.trim()||null, head_name:document.getElementById('sp_head').value.trim()||null, note:document.getElementById('sp_note').value.trim()||null, updated_at:new Date().toISOString() };
     const { error } = await sb.from('special_ids').upsert(row, { onConflict:'manager_id' });
     if(error) throw error;
     await loadAllData();
@@ -6337,7 +6411,7 @@ async function saveSpecialIdBulk(){
     const p = (l.includes('\t') ? l.split('\t') : l.split(',')).map(x=>x.trim());
     const id = normId(p[0]);
     if(!id || /^(ID|MKT ID)$/.test(id)) return;
-    map.set(id, { manager_id:id, manager_name:p[1]||null, room_name:p[2]||null, head_name:p[3]||null, updated_at:new Date().toISOString() });
+    map.set(id, { manager_id:id, manager_name:p[1]||null, room_name:p[2]||null, head_name:p[3]||null, note:p[4]||null, updated_at:new Date().toISOString() });
   });
   if(!map.size){ alert('Không có dòng hợp lệ để lưu.'); return; }
   try {
@@ -6369,6 +6443,69 @@ function isSpecialId(id){ return !!findSpecialId(id); }
 let accountIdCounter = 100;
 let editingAccountId = null;
 
+// ---------------- LỊCH SỬ ĐĂNG NHẬP / TRUY CẬP (bảng access_log, chỉ Owner đọc được) ----------------
+let accessLogs = [];        // 300 lần vào gần nhất
+let accessLastByEmail = {}; // lần vào gần nhất của từng tài khoản
+function fmtDateTime(iso){
+  if(!iso) return '—';
+  const d = new Date(iso); if(isNaN(d)) return '—';
+  const p = n=>String(n).padStart(2,'0');
+  return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function timeAgo(iso){
+  const sec = Math.max(0, Math.round((Date.now()-new Date(iso).getTime())/1000));
+  if(sec<60) return 'vừa xong';
+  if(sec<3600) return Math.floor(sec/60)+' phút trước';
+  if(sec<86400) return Math.floor(sec/3600)+' giờ trước';
+  return Math.floor(sec/86400)+' ngày trước';
+}
+function parseUA(ua){
+  ua = String(ua||'');
+  const os = /Windows/i.test(ua)?'Windows' : /Android/i.test(ua)?'Android' : /iPhone|iPad|iOS/i.test(ua)?'iPhone/iPad' : /Mac OS/i.test(ua)?'Mac' : /Linux/i.test(ua)?'Linux' : '';
+  const br = /Edg\//.test(ua)?'Edge' : /OPR\/|Opera/.test(ua)?'Opera' : /CocApp|coc_coc/i.test(ua)?'Cốc Cốc' : /Chrome\//.test(ua)?'Chrome' : /Firefox\//.test(ua)?'Firefox' : /Safari\//.test(ua)?'Safari' : '';
+  const mobile = /Mobile|Android|iPhone/i.test(ua) ? ' (điện thoại)' : '';
+  return (br||os) ? `${br}${br&&os?' · ':''}${os}${mobile}` : (ua.slice(0,40)||'—');
+}
+function accessLastCell(email){
+  const t = accessLastByEmail[email];
+  if(t===undefined) return '<span style="color:var(--text-muted);">…</span>';
+  if(!t) return '<span style="color:var(--text-muted);">Chưa có</span>';
+  return `<b>${fmtDateTime(t)}</b><div style="font-size:11.5px;color:var(--text-muted);">${timeAgo(t)}</div>`;
+}
+async function loadAccessLog(showMsg){
+  if(currentRole !== 'owner') return;
+  try {
+    const { data, error } = await sb.from('access_log').select('email, user_agent, logged_in_at').order('logged_in_at', {ascending:false}).limit(300);
+    if(error) throw error;
+    accessLogs = data || [];
+    // Lần vào gần nhất của từng tài khoản — hỏi riêng từng tài khoản để người ít vào vẫn có dữ liệu
+    const last = {};
+    await Promise.all(accounts.map(async a=>{
+      const { data: r } = await sb.from('access_log').select('logged_in_at').eq('email', a.email).order('logged_in_at', {ascending:false}).limit(1);
+      last[a.email] = (r && r[0]) ? r[0].logged_in_at : null;
+    }));
+    accessLastByEmail = last;
+    renderAccounts();
+    renderAccessLog();
+    if(showMsg) showToast('Đã tải lại lịch sử đăng nhập.');
+  } catch(err){
+    const b = document.getElementById('accessLogBody');
+    if(b) b.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--red);padding:20px;">Không tải được lịch sử: ${escHtml(err.message)}</td></tr>`;
+    if(showMsg) alert('Lỗi khi tải lịch sử đăng nhập: ' + err.message);
+  }
+}
+function renderAccessLog(){
+  const body = document.getElementById('accessLogBody'); if(!body) return;
+  const sel = document.getElementById('accessLogFilter');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Tất cả tài khoản</option>' + accounts.map(a=>`<option value="${escHtml(a.email)}">${escHtml(a.name)} — ${escHtml(a.email)}</option>`).join('');
+  if([...sel.options].some(o=>o.value===cur)) sel.value = cur;
+  const nameOf = {}; accounts.forEach(a=>{ nameOf[a.email] = a.name; });
+  const list = accessLogs.filter(x=>!sel.value || x.email===sel.value);
+  if(!list.length){ body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px;">Chưa có dữ liệu.</td></tr>'; return; }
+  body.innerHTML = list.map((x,i)=>`<tr><td>${i+1}</td><td>${fmtDateTime(x.logged_in_at)} <span style="color:var(--text-muted);font-size:11.5px;">(${timeAgo(x.logged_in_at)})</span></td><td><b>${escHtml(nameOf[x.email]||x.email)}</b><div style="font-size:11.5px;color:var(--text-muted);">${escHtml(x.email)}</div></td><td>${escHtml(parseUA(x.user_agent))}</td></tr>`).join('');
+}
+
 function renderAccounts(){
   document.getElementById('accountsBody').innerHTML = accounts.map(a=>{
     const ownerCount = accounts.filter(x=>x.role==='owner').length;
@@ -6377,6 +6514,7 @@ function renderAccounts(){
       <td>${a.email}</td>
       <td class="cust-name">${a.name}</td>
       <td><span class="badge ${a.role==='owner'?'badge-blue':'badge-gray'}">${a.role==='owner'?'Owner':'Editor'}</span></td>
+      <td>${accessLastCell(a.email)}</td>
       <td>${a.createdAt}</td>
       <td>
         <div class="row-actions" style="opacity:1;">
