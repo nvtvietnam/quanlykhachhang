@@ -524,6 +524,8 @@ body.is-editor .icon-btn[title^="Xóa khoản"],body.is-editor .icon-btn[title^=
 .mv-chip.new{background:#E8F0FE;color:#1D4ED8;}.mv-chip.out{background:#FDECEC;color:#B91C1C;}.mv-chip.in{background:#E3F6EE;color:#047857;}
 .mv-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:4px 16px 16px;}
 .mv-col h4{margin:0 0 6px;font-size:12.5px;}
+.mv-col.out{border-left:2px dashed #F3C6C6;padding-left:14px;}
+@media (max-width:900px){.mv-col.out{border-left:none;padding-left:0;border-top:2px dashed #F3C6C6;padding-top:10px;}}
 .mv-item{font-size:12.5px;padding:6px 8px;border-radius:8px;background:#F7F8FA;margin-bottom:5px;line-height:1.35;}
 .mv-item b{font-family:ui-monospace,monospace;}
 .mv-empty{font-size:12px;color:#9AA5B4;padding:4px 2px;}
@@ -750,7 +752,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.42</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.47</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -772,7 +774,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.42</div>
+        <div class="brand-sub">Chứng khoán · v08.47</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -929,7 +931,7 @@ body{-webkit-text-size-adjust:100%;}
                   <thead><tr><th>Ngày</th><th class="num-col">Về (KH)</th><th class="num-col">NAV về</th><th class="num-col">Đi (KH)</th><th class="num-col">NAV đi</th><th class="num-col">NAV ròng</th></tr></thead>
                   <tbody id="transferTableBody" data-goto="moves" data-tab="daily" title="Bấm để xem chi tiết từng KH"></tbody>
                 </table>
-                <a class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="switchView('customers')">Xem chi tiết →</a>
+                <a href="#" class="btn btn-ghost btn-sm" style="margin-top:8px;" data-goto="moves" data-tab="daily">Xem chi tiết →</a>
               </div>
             </div>
           </div>
@@ -975,6 +977,11 @@ body{-webkit-text-size-adjust:100%;}
             <option value="Chờ xác nhận">Chờ xác nhận</option>
             <option value="Đã chuyển đi">Đã chuyển đi</option>
             <option value="KH ưu tiên">KH ưu tiên</option>
+          </select>
+          <select class="filter-select" id="filterCtype" onchange="renderCustomers()">
+            <option value="">Tất cả loại hình</option>
+            <option value="KH thường">KH thường</option>
+            <option value="KH chia sẻ">KH chia sẻ</option>
           </select>
           <div class="spacer"></div>
 
@@ -2057,6 +2064,7 @@ body{-webkit-text-size-adjust:100%;}
         <div class="form-field"><label>NAV hiện tại (VNĐ) *</label><input type="text" inputmode="numeric" placeholder="500.000.000" id="f_nav" oninput="formatMoneyInput(this);updateTelegramPreview()"></div>
         <div class="form-field"><label>Phí tháng hiện tại (VNĐ) *</label><input type="text" inputmode="numeric" placeholder="2.000.000" id="f_fee" oninput="formatMoneyInput(this)"></div>
         <div class="form-field"><label>Ngày bắt đầu quản lý</label><input type="text" placeholder="dd/mm/yyyy — để trống = hôm nay" id="f_mgmtstart"></div>
+        <div class="form-field"><label>Loại hình KH</label><select id="f_ctype"><option value="KH thường">KH thường</option><option value="KH chia sẻ">KH chia sẻ</option></select></div>
         <div class="form-field"><label>Nguồn KH</label><select id="f_intake"><option value="new">Khách mới (mở tài khoản mới)</option><option value="transfer_in">Chuyển về (đã có TK / từng chuyển đi)</option></select></div>
         <div class="form-field">
           <label>Nhóm / Room *</label>
@@ -2392,6 +2400,7 @@ async function loadAllData(){
     note: c.note || '',
     status: c.status,
     intakeType: c.intake_type || 'new',
+    ctype: c.customer_type || 'KH thường',
     linkedTo: c.linked_to_customer_id ? idToStk[c.linked_to_customer_id] : null,
     navHistory: navByCust[c.customer_id] || {},
     feeHistory: feeByCust[c.customer_id] || {},
@@ -2572,7 +2581,9 @@ function roomBadgeClass(room){
 function statusBadge(s){
   if(s==="Đang quản lý") return '<span class="badge badge-green">Đang quản lý</span>';
   if(s==="Chờ xác nhận") return '<span class="badge badge-amber">Chờ xác nhận</span>';
-  return '<span class="badge badge-gray">Đã chuyển đi</span>';
+  if(s==="KH ưu tiên") return '<span class="badge badge-blue">KH ưu tiên</span>';
+  if(s==="Đã chuyển đi") return '<span class="badge badge-gray">Đã chuyển đi</span>';
+  return `<span class="badge badge-gray">${escHtml(s||'—')}</span>`;
 }
 
 // ---------------- NAV / VIEW SWITCH ----------------
@@ -2625,6 +2636,7 @@ const CORE_COLUMNS = [
   {key:'room',    label:'Room'},
   {key:'updated', label:'Ngày cập nhật'},
   {key:'note',    label:'Ghi chú'},
+  {key:'ctype',   label:'Loại hình'},
   {key:'status',  label:'Trạng thái'},
 ];
 // Các mốc ngày đã có dữ liệu lịch sử — trong bản thật sẽ lấy động từ nav_history / fee_history
@@ -2711,6 +2723,7 @@ function cellValue(c, cust, idx){
     case 'room': return roomLabel(cust.room);
     case 'updated': return cust.updated;
     case 'note': return `<span style="color:var(--text-muted);">${cust.note||'—'}</span>`;
+    case 'ctype': return cust.ctype==='KH chia sẻ' ? '<span class="badge badge-blue">KH chia sẻ</span>' : '<span style="color:var(--text-muted);">KH thường</span>';
     case 'status': return statusBadge(cust.status);
     default: return '';
   }
@@ -2732,6 +2745,7 @@ function renderCustomersHead(){
 const FILTER_FIELDS = [
   {key:'room',       label:'Room',              type:'select', options: ()=>[...rooms.map(r=>({value:r.id,label:r.name})), ...SPECIAL_ROOMS.map(s=>({value:s,label:s}))]},
   {key:'status',     label:'Trạng thái',        type:'select', options: ()=>[{value:'Đang quản lý',label:'Đang quản lý'},{value:'Chờ xác nhận',label:'Chờ xác nhận'},{value:'Đã chuyển đi',label:'Đã chuyển đi'}]},
+  {key:'ctype',      label:'Loại hình KH',      type:'select', options: ()=>[{value:'KH thường',label:'KH thường'},{value:'KH chia sẻ',label:'KH chia sẻ'}]},
   {key:'gender',     label:'Giới tính',         type:'select', options: ()=>[{value:'Nam',label:'Nam'},{value:'Nữ',label:'Nữ'},{value:'Khác',label:'Khác'}]},
   {key:'nav_latest', label:'NAV (mới nhất)',    type:'number'},
   {key:'fee_latest', label:'Phí (mới nhất)',    type:'number'},
@@ -2818,6 +2832,7 @@ function matchesAdvancedFilters(c){
       if(f.field==='room') actual = c.room;
       else if(f.field==='status') actual = c.status;
       else if(f.field==='gender') actual = c.gender;
+      else if(f.field==='ctype') actual = c.ctype;
       return String(actual) === String(f.value);
     }
     let actual;
@@ -2851,11 +2866,13 @@ function getFilteredSortedList(){
   const q = (document.getElementById('searchInput').value||'').toLowerCase();
   const roomF = document.getElementById('filterRoom').value;
   const statusF = document.getElementById('filterStatus').value;
+  const ctypeF = document.getElementById('filterCtype').value;
   let list = customers.filter(c=>{
     const matchQ = !q || c.code.toLowerCase().includes(q) || c.stk.toLowerCase().includes(q) || c.name.toLowerCase().includes(q) || (c.telegram||'').toLowerCase().includes(q);
     const matchRoom = !roomF || String(c.room)===roomF;
     const matchStatus = !statusF || c.status===statusF;
-    return matchQ && matchRoom && matchStatus && matchesAdvancedFilters(c);
+    const matchCtype = !ctypeF || (c.ctype||'KH thường')===ctypeF;
+    return matchQ && matchRoom && matchStatus && matchCtype && matchesAdvancedFilters(c);
   });
   if(sortState.key){
     const fieldMap = {nav_latest:'nav', fee_latest:'fee'};
@@ -2905,6 +2922,7 @@ function rawCellValue(c, cust, idx){
     case 'room': return roomLabel(cust.room);
     case 'updated': return cust.updated;
     case 'note': return cust.note || '';
+    case 'ctype': return cust.ctype || 'KH thường';
     case 'status': return cust.status;
     default: return '';
   }
@@ -2951,18 +2969,14 @@ function buildMoveEvents(){
   });
   // Bổ sung: KH đã chuyển đi nhưng chưa có dòng lịch sử
   customers.forEach(c=>{ if(c.mgmtEnd && !ev.some(e=>e.type==='out' && e.c===c)) add('out', c.mgmtEnd, c); });
-  // Bổ sung: KH mới tạo/import sau đợt nhập ban đầu (bỏ qua ngày có >200 KH = đợt import nền)
-  const perStart = {}; customers.forEach(c=>{ if(c.mgmtStart) perStart[c.mgmtStart]=(perStart[c.mgmtStart]||0)+1; });
-  customers.forEach(c=>{
-    if(c.mgmtStart && perStart[c.mgmtStart] <= 200 && !ev.some(e=>(e.type==='new'||e.type==='in') && e.c===c && e.date===c.mgmtStart)) add(c.intakeType==='transfer_in' ? 'in' : 'new', c.mgmtStart, c);
-  });
+  // Import Excel = dữ liệu ban đầu, không tính là KH mới / chuyển về
   return ev;
 }
 function mvItemHtml(e){
   const c = e.c;
   const nm = c.name || c.telegram || '';
   const roomTxt = (c.room===undefined||c.room===null||c.room==='') ? '' : (typeof c.room==='number' ? 'Room '+c.room : c.room);
-  return `<div class="mv-item"><b>${escHtml(c.stk)}</b> · ${escHtml(nm)}<br><span style="color:#6B7686;">NAV ${fmt(c.nav||0)}${roomTxt?' · '+escHtml(String(roomTxt)):''}${c.managerId?' · ID '+escHtml(String(c.managerId)):''}</span></div>`;
+  return `<div class="mv-item"><b>${escHtml(c.stk)}</b> · ${escHtml(nm)}<br><span style="color:#6B7686;">${c.ctype==='KH chia sẻ'?'<b style="color:#2358E8;">[Chia sẻ]</b> ':''}NAV ${fmt(c.nav||0)}${roomTxt?' · '+escHtml(String(roomTxt)):''}${c.managerId?' · ID '+escHtml(String(c.managerId)):''}</span></div>`;
 }
 let mvTab = 'daily';
 function setMvTab(t){ mvTab = t; applyMvTab(); }
@@ -2988,8 +3002,8 @@ function exportMovesExcel(){
     const toDate = d=>{ const [dd,mm,yy]=String(d||'').split('/').map(Number); return new Date(yy||0,(mm||1)-1,dd||1); };
     const typeLbl = {new:'KH mới', out:'Chuyển đi', in:'Chuyển về'};
     const ev = buildMoveEvents().sort((a,b)=>toDate(b.date)-toDate(a.date));
-    add('Theo ngày', ['Ngày','Loại','STK','Tên KH','NAV','Room','ID quản lý'],
-      ev.map(e=>[e.date, typeLbl[e.type], e.c.stk, e.c.name||e.c.telegram||'', e.c.nav||0, typeof e.c.room==='number' ? 'Room '+e.c.room : (e.c.room||''), e.c.managerId||'']), [12,12,12,30,18,12,12]);
+    add('Theo ngày', ['Ngày','Loại','STK','Tên KH','Loại hình','NAV','Room','ID quản lý'],
+      ev.map(e=>[e.date, typeLbl[e.type], e.c.stk, e.c.name||e.c.telegram||'', e.c.ctype||'KH thường', e.c.nav||0, typeof e.c.room==='number' ? 'Room '+e.c.room : (e.c.room||''), e.c.managerId||'']), [12,12,12,30,14,18,12,12]);
     add('KH tiềm năng', ['STT','Ngày tiếp nhận','Tên KH','Người liên hệ','Tình trạng liên hệ','Tình trạng KH','STK','Trong DS KH','Ghi chú'],
       zaloLeads.map(l=>[l.id, l.date||'', l.name, l.person, l.contact, l.outcome, l.stk, l.stk ? custStatusText(l.stk) : '', l.note]), [6,14,26,18,18,16,12,18,30]);
     add('KH chuyển về', ['Ngày chuyển','STK','Tên KH','ID chuyển về','ID cũ','Phòng cũ','STT KH (Zalo)','Tên KH (Zalo)','Tình trạng trong DS KH','Ghi chú'],
@@ -3035,11 +3049,11 @@ function renderMoves(){
   const dates = Object.keys(byDate).sort((a,b)=>toDate(b)-toDate(a));
   wrap.innerHTML = dates.map((d,i)=>{
     const g = byDate[d];
-    const col = (title, arr)=>`<div class="mv-col"><h4>${title} (${arr.length})</h4>${arr.length ? arr.map(mvItemHtml).join('') : '<div class="mv-empty">Không có</div>'}</div>`;
+    const col = (title, arr, cls)=>`<div class="mv-col ${cls||''}"><h4>${title} (${arr.length})</h4>${arr.length ? arr.map(mvItemHtml).join('') : '<div class="mv-empty">Không có</div>'}</div>`;
     return `<details class="mv-day" data-d="${d}" ${(mvOpenState[d]===undefined ? i<3 : mvOpenState[d])?'open':''}>
       <summary><span>${d}${d===today?' (Hôm nay)':''}</span>
-        <span class="mv-chip new">Mới ${g.new.length}</span><span class="mv-chip out">Chuyển đi ${g.out.length}</span><span class="mv-chip in">Chuyển về ${g.in.length}</span></summary>
-      <div class="mv-cols">${col('🆕 Khách hàng mới', g.new)}${col('⬆️ Chuyển đi', g.out)}${col('⬇️ Chuyển về', g.in)}</div>
+        <span class="mv-chip new">Mới ${g.new.length}</span><span class="mv-chip in">Chuyển về ${g.in.length}</span><span class="mv-chip out" style="margin-left:auto;">Chuyển đi ${g.out.length}</span></summary>
+      <div class="mv-cols">${col('🆕 Khách hàng mới', g.new)}${col('⬇️ Chuyển về', g.in)}${col('⬆️ Chuyển đi', g.out, 'out')}</div>
     </details>`;
   }).join('');
   // thẻ dashboard
@@ -3067,6 +3081,7 @@ function custStatusBadge(stk){
   if(c.status==='Đã chuyển đi') return '<span class="badge badge-red">Đã chuyển đi</span>';
   if(c.status==='Chờ xác nhận') return '<span class="badge badge-amber">Đang chờ</span>';
   if(c.status==='Đang quản lý') return '<span class="badge badge-green">Đang quản lý</span>';
+  if(c.status==='KH ưu tiên') return '<span class="badge badge-blue">KH ưu tiên</span>';
   return `<span class="badge badge-gray">${escHtml(c.status||'—')}</span>`;
 }
 const ICON_EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>';
@@ -3513,15 +3528,10 @@ function renderTransferPanel(){
   }
   const bucketByStr = {}; buckets.forEach(b=>bucketByStr[b.dateStr]=b);
 
-  customers.forEach(c=>{
-    if(c.mgmtStart && bucketByStr[c.mgmtStart]){
-      bucketByStr[c.mgmtStart].inCount++;
-      bucketByStr[c.mgmtStart].inNav += c.nav||0;
-    }
-    if(c.mgmtEnd && bucketByStr[c.mgmtEnd]){
-      bucketByStr[c.mgmtEnd].outCount++;
-      bucketByStr[c.mgmtEnd].outNav += c.nav||0;
-    }
+  buildMoveEvents().forEach(e=>{
+    const b = bucketByStr[e.date]; if(!b) return;
+    if(e.type==='in'){ b.inCount++; b.inNav += e.c.nav||0; }
+    else if(e.type==='out'){ b.outCount++; b.outNav += e.c.nav||0; }
   });
 
   const totalIn = buckets.reduce((s,b)=>s+b.inCount,0);
@@ -3768,6 +3778,7 @@ function openAddModal(prefillStk){
   document.getElementById('f_fee').value = '';
   document.getElementById('f_mgmtstart').value = '';
   document.getElementById('f_intake').value = 'new';
+  document.getElementById('f_ctype').value = 'KH thường';
   renderRoomSelect();
   document.getElementById('f_room').value = rooms[0] ? rooms[0].id : '1';
   document.getElementById('f_status').value = 'Đang quản lý';
@@ -3940,6 +3951,7 @@ function openEditModal(stk){
   document.getElementById('f_fee').value = c.fee ? Number(c.fee).toLocaleString('vi-VN') : '';
   document.getElementById('f_mgmtstart').value = c.mgmtStart || '';
   document.getElementById('f_intake').value = c.intakeType || 'new';
+  document.getElementById('f_ctype').value = c.ctype || 'KH thường';
   renderRoomSelect();
   document.getElementById('f_room').value = c.room;
   document.getElementById('f_status').value = c.status;
@@ -4029,6 +4041,7 @@ async function saveCustomer(){
     note,
     management_start_date: toDbDate(mgmtStart),
     intake_type: document.getElementById('f_intake').value === 'transfer_in' ? 'transfer_in' : 'new',
+    customer_type: document.getElementById('f_ctype').value === 'KH chia sẻ' ? 'KH chia sẻ' : 'KH thường',
     linked_to_customer_id: linkedCust ? linkedCust.id : null,
     updated_at: new Date().toISOString(),
   };
@@ -5790,6 +5803,7 @@ const FIELD_SPECS = {
     {key:'gender', label:'Giới tính', required:false, guesses:['gioi tinh']},
     {key:'birthYear', label:'Năm sinh', required:false, guesses:['nam sinh']},
     {key:'status', label:'Trạng thái', required:false, guesses:['trang thai']},
+    {key:'ctype', label:'Loại hình KH', required:false, guesses:['loai hinh','loai kh','loai tai khoan']},
     {key:'mgmtStart', label:'Ngày bắt đầu quản lý', required:false, guesses:['ngay bat dau quan ly','ngay bat dau']},
     {key:'note', label:'Ghi chú', required:false, guesses:['ghi chu']},
   ],
@@ -6247,18 +6261,23 @@ function analyzeImportRows(type, rows, mapping){
       const roomRaw = String(getMapped(row,mapping,'room')).trim();
       const statusRaw = String(getMapped(row,mapping,'status')).trim();
       const status = statusRaw || 'Đang quản lý';
+      const ctRaw = String(getMapped(row,mapping,'ctype')||'').trim();
+      const ctNorm = ctRaw.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase();
+      let ctype = 'KH thường', ctypeBad = false;
+      if(ctRaw){ if(/chia\s*se/.test(ctNorm)) ctype='KH chia sẻ'; else if(/thuong/.test(ctNorm)) ctype='KH thường'; else ctypeBad = true; }
       const mgmtStart = String(getMapped(row,mapping,'mgmtStart')).trim();
       const note = String(getMapped(row,mapping,'note')).trim();
       // LƯU Ý: "Tên KH" và "Tên Telegram" là 2 trường tách biệt — không copy Telegram vào Tên KH.
       // Nếu thiếu Tên KH nhưng có Tên Telegram, vẫn cho qua: Tên KH để trống (—), Tên Telegram giữ riêng.
       const stkInvalid = !stk || stk.length!==6;
+      if(ctypeBad){ plan.errors.push({line:lineNo, content:`STK ${stk||'(trống)'} — Loại hình: ${ctRaw}`, error:'Loại hình không hợp lệ (chỉ nhận: KH thường / KH chia sẻ)'}); return; }
       if(!name && !telegram){ plan.errors.push({line:lineNo, content:`STK ${stk||'(trống)'}`, error:'Thiếu cả Tên KH và Tên Telegram — không có gì để hiển thị cho KH này'}); return; }
 
       // Dòng không có STK hợp lệ (VD: "Admin", ô trống, lỗi gõ) —
       // vẫn lưu lại theo tên, đánh dấu "KH ưu tiên" để bạn tự rà soát/xóa sau nếu không đúng.
       if(stkInvalid){
         const item = {
-          stk: '', name, telegram, nav, fee, managerId, gender, birthYear, roomRaw,
+          stk: '', name, telegram, nav, fee, managerId, gender, birthYear, roomRaw, ctype,
           status: 'KH ưu tiên',
           mgmtStart, note: note ? `${note} | KH ưu tiên (import — thiếu STK)` : 'KH ưu tiên (import — thiếu STK)',
           existing: null, isNew: true, isPriorityFallback: true, rawStk: stk || '(trống)',
@@ -6292,7 +6311,7 @@ function analyzeImportRows(type, rows, mapping){
         }
       }
 
-      const item = {stk,name,telegram,nav,fee,managerId,gender,birthYear,roomRaw,status,mgmtStart,note,existing,isAssignStk};
+      const item = {stk,name,telegram,nav,fee,managerId,gender,birthYear,roomRaw,status,mgmtStart,note,existing,isAssignStk,ctype};
       if(stkDupInFile){
         item.isDupInFile = true; item.isNew = false;
         plan.unchangedCount++;
@@ -6314,6 +6333,7 @@ function analyzeImportRows(type, rows, mapping){
         item.birthYearChanged = !!mapping.birthYear && birthYear !== existing.birthYear;
         item.statusChanged = !!statusRaw && statusRaw !== existing.status;
         item.noteChanged = !!mapping.note && note !== (existing.note||'');
+        item.ctypeChanged = !!mapping.ctype && !!ctRaw && ctype !== (existing.ctype||'KH thường');
 
         // Xác định Room mục tiêu từ file (nếu có) để so sánh với Room hiện tại của KH
         if(roomRaw){
@@ -6327,7 +6347,7 @@ function analyzeImportRows(type, rows, mapping){
         }
         const anyFieldChanged = isAssignStk || navChanged || feeChanged || item.roomChanged
           || item.nameChanged || item.telegramChanged || item.managerIdChanged
-          || item.genderChanged || item.birthYearChanged || item.statusChanged || item.noteChanged;
+          || item.genderChanged || item.birthYearChanged || item.statusChanged || item.noteChanged || item.ctypeChanged;
         if(anyFieldChanged) plan.changedCount++; else plan.unchangedCount++;
       }
       plan.valid.push(item);
@@ -6655,6 +6675,7 @@ async function confirmImportToDatabase(){
               nav_updated_at: toDbDate(today), fee_updated_at: toDbDate(today),
               note: it.note||null,
               management_start_date: toDbDate(it.mgmtStart||today),
+              customer_type: it.ctype || 'KH thường',
             }).select().single();
             if(error) throw error;
             if(it.nav) await sb.from('nav_history').insert({customer_id:ins.customer_id, update_date:toDbDate(today), nav:it.nav, source: plan.type==='bc12'?'import_bc12':'import_nav'});
@@ -6663,8 +6684,9 @@ async function confirmImportToDatabase(){
             if(it.isPriorityFallback) priorityFallbackCount++;
           } else if(it.navChanged || it.feeChanged || (syncRoom && it.roomChanged)
               || it.nameChanged || it.telegramChanged || it.managerIdChanged
-              || it.genderChanged || it.birthYearChanged || it.statusChanged || it.noteChanged){
+              || it.genderChanged || it.birthYearChanged || it.statusChanged || it.noteChanged || it.ctypeChanged){
             const payload = { updated_at: new Date().toISOString() };
+            if(it.ctypeChanged) payload.customer_type = it.ctype;
             if(it.navChanged){ payload.current_nav = it.nav; payload.nav_updated_at = toDbDate(today); }
             if(it.feeChanged){ payload.current_fee = it.fee; payload.fee_updated_at = toDbDate(today); }
             // Cột nào ĐÃ MAP ở bước nhập thì luôn ghi đè bằng dữ liệu mới nhất trong file — kể cả khi ô đó
