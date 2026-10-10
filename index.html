@@ -752,7 +752,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.47</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.48</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -774,7 +774,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.47</div>
+        <div class="brand-sub">Chứng khoán · v08.48</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -1606,7 +1606,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="form-field"><label>ID chuyển về</label><input type="text" id="tin_newid" placeholder="ID môi giới nhận KH"></div>
       <div class="form-field"><label>ID cũ</label><input type="text" id="tin_oldid" placeholder="ID môi giới trước đây"></div>
       <div class="form-field"><label>Phòng cũ</label><input type="text" id="tin_oldroom" placeholder="Phòng trước đây"></div>
-      <div class="form-field"><label>STT KH (từ danh sách Zalo)</label><input type="text" id="tin_lead" placeholder="VD: 3 — để trống nếu không có"></div>
+      <div class="form-field"><label>STT KH (từ danh sách Zalo)</label><input type="text" id="tin_lead" placeholder="Tự nhảy ra khi nhập STK (nếu có trong DS Zalo)"><div id="tin_lead_hint" style="font-size:12px;margin-top:4px;min-height:16px;"></div></div>
       <div class="form-field full"><label>Ghi chú</label><input type="text" id="tin_note" placeholder="Không bắt buộc"></div>
     </div></div>
     <div class="modal-footer"><button class="btn btn-secondary" onclick="closeTinModal()">Hủy</button><button class="btn btn-primary" onclick="saveTin()">Lưu</button></div>
@@ -3233,8 +3233,25 @@ function openTinModal(id){
   document.getElementById('tin_oldroom').value = t ? t.oldRoom : '';
   document.getElementById('tin_lead').value = t && t.leadId ? t.leadId : '';
   document.getElementById('tin_note').value = t ? t.note : '';
+  tinLeadAuto = false; document.getElementById('tin_lead_hint').textContent = '';
   document.getElementById('tinModalOverlay').classList.add('active');
 }
+let tinLeadAuto = false;
+function autoFillTinLead(){
+  const stk = document.getElementById('tin_stk').value.trim().toLowerCase();
+  const inp = document.getElementById('tin_lead'), hint = document.getElementById('tin_lead_hint');
+  const m = stk.length>=6 ? zaloLeads.filter(l=>l.stk && String(l.stk).trim().toLowerCase()===stk) : [];
+  if(m.length){
+    const l = m.sort((a,b)=>b.id-a.id)[0];
+    inp.value = l.id; tinLeadAuto = true;
+    hint.style.color = '#0E9F6E'; hint.textContent = `✓ Khớp KH Zalo STT ${l.id}${l.name?' · '+l.name:''}${l.date?' · tiếp nhận '+l.date:''}`;
+  } else {
+    if(tinLeadAuto){ inp.value = ''; tinLeadAuto = false; }
+    hint.style.color = '#6B7686'; hint.textContent = stk.length>=6 ? 'Không thấy STK này trong danh sách KH tiềm năng (Zalo) — có thể nhập STT tay hoặc để trống.' : '';
+  }
+}
+document.getElementById('tin_stk')?.addEventListener('input', autoFillTinLead);
+document.getElementById('tin_lead')?.addEventListener('input', ()=>{ tinLeadAuto = false; });
 function closeTinModal(){ document.getElementById('tinModalOverlay').classList.remove('active'); editingTinId=null; }
 async function saveTin(){
   const stk = document.getElementById('tin_stk').value.trim().toUpperCase();
