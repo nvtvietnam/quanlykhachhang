@@ -731,7 +731,9 @@ body{-webkit-text-size-adjust:100%;}
   .lead-table td:first-child{font-size:15px;}
   .lead-table input, .lead-table select{font-size:16px;min-height:38px;}
 }
-.cp-stt{cursor:pointer;color:#2358E8;text-decoration:underline dotted;}
+.cp-stt{cursor:pointer;padding:2px 7px;margin:-2px -7px;border-radius:6px;transition:background .15s,color .15s;}
+.cp-stt:hover{background:#E6EEFF;color:#2358E8;}
+.cp-stt:active{background:#CFE0FF;}
 </style>
 </head>
 <body>
@@ -753,7 +755,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.54</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.55</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -775,7 +777,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.54</div>
+        <div class="brand-sub">Chứng khoán · v08.55</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -2707,7 +2709,7 @@ function cellValue(c, cust, idx){
   if(c.type==='nav') return cust.navHistory[c.date] ? fmt(cust.navHistory[c.date]) : '<span style="color:var(--text-muted);">—</span>';
   if(c.type==='fee') return cust.feeHistory[c.date] ? fmt(cust.feeHistory[c.date]) : '<span style="color:var(--text-muted);">—</span>';
   switch(c.key){
-    case 'stt': return `<span class="cp-stt" title="Bấm để copy số tài khoản" onclick="event.stopPropagation();copyStk('${String(cust.stk).replace(/'/g,'')}')">${idx+1}</span>`;
+    case 'stt': return idx+1;
     case 'name': return cust.name
       ? `<div class="cust-name" title="${cust.name}">${cust.name}</div>`
       : `<div class="cust-name" style="color:var(--text-muted);font-weight:400;" title="Chưa có Họ và tên KH">—</div>`;
@@ -3083,8 +3085,8 @@ function norm6(v, strict){
 }
 function copyStk(stk){
   stk = String(stk||'').trim();
-  if(!stk){ showToast('Dòng này chưa có số tài khoản để copy.'); return; }
-  const ok = ()=>showToast('Đã copy số tài khoản: '+stk);
+  if(!stk){ showToast('Dòng này chưa có số tài khoản để copy.', 'error', 1000); return; }
+  const ok = ()=>showToast('Đã copy: '+stk, 'ok', 1000);
   const fb = ()=>{ try{ const ta=document.createElement('textarea'); ta.value=stk; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); ok(); }catch(e){ alert('Không tự copy được — STK: '+stk); } };
   if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(stk).then(ok).catch(fb); else fb();
 }
@@ -3144,7 +3146,7 @@ function renderLeadSummary(){
 function leadRowHtml(l){
   const done = l.outcome==='Đã mở TK' || l.outcome==='Đã chuyển về';
   return `<tr class="${done?'ld-done':''}" data-lid="${l.id}">
-    <td><b class="cp-stt" title="Bấm để copy số tài khoản" onclick="copyStk(zaloLeads.find(x=>x.id===${l.id}).stk)">${l.id}</b></td>
+    <td><b>${l.id}</b></td>
     <td>${l.date||''}</td>
     <td><input type="text" class="loan-note-input ld-name" value="${escHtml(l.name)}" placeholder="Tên KH" onchange="updateLead(${l.id},'name',this.value)"></td>
     <td><input type="text" class="loan-note-input ld-person" list="ldPersonList" value="${escHtml(l.person)}" placeholder="Người liên hệ" onchange="updateLead(${l.id},'person',this.value)"></td>
@@ -3246,7 +3248,7 @@ function renderTins(){
   body.innerHTML = rows.length ? rows.map(t=>{
     const c = custByStk(t.stk); const lead = t.leadId ? zaloLeads.find(x=>x.id===t.leadId) : null;
     return `<tr data-tid="${t.id}"><td>${t.date||''}</td><td><b class="cp-stt" title="Bấm để copy số tài khoản" onclick="copyStk('${escHtml(t.stk)}')">${escHtml(t.stk)}</b></td><td>${escHtml(t.name || (c?c.name:''))}</td><td class="num-col">${c ? fmt(c.nav||0) : '<span style="color:#9AA5B4;">—</span>'}</td><td>${escHtml(t.newId)}</td>
-      <td>${t.leadId ? `<b class="cp-stt" title="Bấm để copy số tài khoản" onclick="copyStk('${escHtml(t.stk)}')">${t.leadId}</b>${lead&&lead.name?' · '+escHtml(lead.name):''}` : '<span style="color:#9AA5B4;">—</span>'}</td>
+      <td>${t.leadId ? `<b>${t.leadId}</b>${lead&&lead.name?' · '+escHtml(lead.name):''}` : '<span style="color:#9AA5B4;">—</span>'}</td>
       <td>${c ? clickableBadge(t.stk, custStatusBadge(t.stk)) : `<span class="badge-click" style="cursor:pointer;" title="Bấm để thêm KH này vào danh sách" onclick="addCustFromTin(${t.id})"><span class="badge badge-gray">Chưa có trong DS</span> <span style="color:#2358E8;font-size:12px;font-weight:600;">＋ Thêm KH</span></span>`}</td>
       <td style="white-space:nowrap;"><button class="icon-btn" title="Sửa" onclick="openTinModal(${t.id})">${ICON_EDIT}</button>${delBtn('deleteTin',t.id)}</td></tr>`;
   }).join('') : '<tr><td colspan="8" class="lead-empty">Chưa có KH chuyển về nào. Nhận mail xong bấm "+ Thêm KH chuyển về".</td></tr>';
@@ -4439,7 +4441,7 @@ function copyTelegramPreview(){
   const input = document.getElementById('f_telegram_preview');
   const text = input.value.trim() || input.placeholder;
   navigator.clipboard.writeText(text).then(()=>{
-    showToast('Đã sao chép: ' + text);
+    showToast('Đã sao chép: ' + text, 'ok', 1000);
   }).catch(()=>{
     alert('Không thể tự động sao chép trên trình duyệt này — vui lòng bôi đen và copy thủ công.');
   });
@@ -4559,7 +4561,7 @@ function openLoanModal(preselectStk){
 }
 function closeLoanModal(){ document.getElementById('loanModalOverlay').classList.remove('active'); }
 // Thông báo nổi (popup nhỏ ở giữa phía trên, tự tắt sau vài giây)
-function showToast(msg, type){
+function showToast(msg, type, ms){
   let box = document.getElementById('toastBox');
   if(!box){
     box = document.createElement('div'); box.id = 'toastBox';
@@ -4573,7 +4575,7 @@ function showToast(msg, type){
   t.lastChild.textContent = msg;
   box.appendChild(t);
   requestAnimationFrame(()=>{ t.style.opacity='1'; t.style.transform='translateY(0)'; });
-  setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(-8px)'; setTimeout(()=>t.remove(), 250); }, 2000);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(-8px)'; setTimeout(()=>t.remove(), 250); }, ms||2000);
 }
 
 async function saveLoan(){
