@@ -752,7 +752,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.48</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.49</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -774,7 +774,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.48</div>
+        <div class="brand-sub">Chứng khoán · v08.49</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -3075,6 +3075,8 @@ function custByStk(stk){
   const k = String(stk||'').trim().toLowerCase().slice(0,6);
   return k ? customers.find(c=>(c.stk||'').toLowerCase()===k) : null;
 }
+function openCustFromMove(stk){ if(custByStk(stk)) openEditModal(stk); }
+function clickableBadge(stk, html){ return custByStk(stk) ? `<span class="badge-click" style="cursor:pointer;" title="Bấm để mở / sửa thông tin KH" onclick="openCustFromMove('${String(stk).replace(/'/g,'')}')">${html}</span>` : html; }
 function custStatusBadge(stk){
   const c = custByStk(stk);
   if(!c) return '<span class="badge badge-gray">Chưa có trong DS</span>';
@@ -3219,7 +3221,7 @@ function renderTins(){
     const c = custByStk(t.stk); const lead = t.leadId ? zaloLeads.find(x=>x.id===t.leadId) : null;
     return `<tr data-tid="${t.id}"><td>${t.date||''}</td><td><b>${escHtml(t.stk)}</b></td><td>${escHtml(c?c.name:'')}</td><td>${escHtml(t.newId)}</td><td>${escHtml(t.oldId)}</td><td>${escHtml(t.oldRoom)}</td>
       <td>${t.leadId ? `<b>${t.leadId}</b>${lead&&lead.name?' · '+escHtml(lead.name):''}` : '<span style="color:#9AA5B4;">—</span>'}</td>
-      <td>${custStatusBadge(t.stk)}</td>
+      <td>${clickableBadge(t.stk, custStatusBadge(t.stk))}</td>
       <td style="white-space:nowrap;"><button class="icon-btn" title="Sửa" onclick="openTinModal(${t.id})">${ICON_EDIT}</button>${delBtn('deleteTin',t.id)}</td></tr>`;
   }).join('') : '<tr><td colspan="9" class="lead-empty">Chưa có KH chuyển về nào. Nhận mail xong bấm "+ Thêm KH chuyển về".</td></tr>';
 }
@@ -3298,7 +3300,7 @@ function renderTouts(){
   const rows = transferOuts.slice().sort((a,b)=>b.id-a.id);
   body.innerHTML = rows.length ? rows.map(t=>{
     const c = custByStk(t.stk);
-    return `<tr data-oid="${t.id}"><td>${t.date||''}</td><td><b>${escHtml(t.stk)}</b></td><td>${escHtml(t.name || (c?c.name:''))}</td><td>${escHtml(t.newId)}</td><td>${toutStatusBadge(t)}</td>
+    return `<tr data-oid="${t.id}"><td>${t.date||''}</td><td><b>${escHtml(t.stk)}</b></td><td>${escHtml(t.name || (c?c.name:''))}</td><td>${escHtml(t.newId)}</td><td>${clickableBadge(t.stk, toutStatusBadge(t))}</td>
       <td style="white-space:nowrap;"><button class="icon-btn" title="Sửa" onclick="openToutModal(${t.id})">${ICON_EDIT}</button>${delBtn('deleteTout',t.id)}</td></tr>`;
   }).join('') : '<tr><td colspan="6" class="lead-empty">Chưa có KH chuyển đi nào. Nhận mail xong bấm "+ Thêm KH chuyển đi".</td></tr>';
 }
@@ -4141,6 +4143,7 @@ async function saveCustomer(){
     renderCustomers();
     renderDashboard();
     renderRooms();
+    try{ renderMoveLists(); renderMoves(); }catch(e){}
     showToast(_wasEdit ? 'Đã cập nhật khách hàng thành công.' : 'Đã thêm khách hàng thành công.');
   } catch(err){
     alert('Lỗi khi lưu khách hàng: ' + err.message);
@@ -4158,10 +4161,25 @@ function onStatusChange(){
     roomSel.value = 'Remove';
     dateWrap.style.display = 'block';
     document.getElementById('f_removed_date').value = new Date().toLocaleDateString('vi-VN');
+    applyMovedOutTelegram(true);
   } else {
     dateWrap.style.display = 'none';
+    applyMovedOutTelegram(false);
   }
   updateTelegramPreview();
+}
+// Tên Telegram của KH chuyển đi: giữ tên cũ + " đã chuyển đi (dd/mm/yyyy)" — tự điền khi đổi trạng thái, vẫn sửa tay được.
+const MOVED_OUT_RE = /\s*đã chuyển đi\s*\([^)]*\)\s*$/i;
+function applyMovedOutTelegram(on){
+  const inp = document.getElementById('f_telegram_preview');
+  let base = inp.value.trim().replace(MOVED_OUT_RE,'').trim();
+  if(on){
+    if(!base) base = (document.getElementById('f_name').value||'').trim();
+    if(!base) return;
+    inp.value = `${base} đã chuyển đi (${todayDdMmYyyy()})`;
+  } else {
+    inp.value = base;
+  }
 }
 function onRoomManualChange(){
   const room = document.getElementById('f_room').value;
