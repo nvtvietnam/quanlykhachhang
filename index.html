@@ -756,7 +756,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.64</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.68</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -778,7 +778,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.64</div>
+        <div class="brand-sub">Chứng khoán · v08.68</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -1177,9 +1177,10 @@ body{-webkit-text-size-adjust:100%;}
         <div class="import-step" id="importStep1">
           <div class="toolbar" style="margin-bottom:16px;">
             <div class="step-toggle" style="display:flex;gap:8px;flex-wrap:wrap;">
-              <button class="btn btn-secondary btn-sm" id="btnTypeCustomerList" onclick="setImportType('customerlist')">👥 Import Danh sách KH</button>
-              <button class="btn btn-primary btn-sm" id="btnTypeNav" onclick="setImportType('nav')">📊 Import file NAV</button>
-              <button class="btn btn-secondary btn-sm" id="btnTypeBc12" onclick="setImportType('bc12')">💰 Import file BC12 (Phí)</button>
+              <button class="btn btn-primary btn-sm" id="btnTypeUpdate" onclick="setImportType('update')">👥 Import Danh sách KH (NAV, Phí, Tên…)</button>
+              <button class="btn btn-secondary btn-sm" id="btnTypeCustomerList" onclick="setImportType('customerlist')" style="display:none;">👥 Import Danh sách KH (tạo mới)</button>
+              <button class="btn btn-secondary btn-sm" id="btnTypeNav" onclick="setImportType('nav')" style="display:none;">📊 Import file NAV</button>
+              <button class="btn btn-secondary btn-sm" id="btnTypeBc12" onclick="setImportType('bc12')" style="display:none;">💰 Import file BC12 (Phí)</button>
               <button class="btn btn-secondary btn-sm" id="btnTypeLoan" onclick="setImportType('loan')">📅 Import Khoản vay đến hạn</button>
               <button class="btn btn-secondary btn-sm" id="btnTypeMarginCall" onclick="setImportType('margincall')">⚠️ Import RRUB/Call Margin</button>
               <button class="btn btn-secondary btn-sm" id="btnTypeRight" onclick="setImportType('right')">📈 Import Quyền mua</button>
@@ -1187,6 +1188,12 @@ body{-webkit-text-size-adjust:100%;}
             </div>
           </div>
 
+          <div id="importModeBox" class="panel" style="margin-bottom:12px;"><div class="panel-body" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <b style="font-size:13px;">Chế độ:</b>
+            <button class="btn btn-primary btn-sm" id="btnModeUpdate" onclick="setImportMode('update')">🔄 Cập nhật KH đã có</button>
+            <button class="btn btn-secondary btn-sm" id="btnModeCreate" onclick="setImportMode('create')">➕ Thêm KH mới</button>
+            <span class="field-hint" id="importModeHint" style="margin:0;"></span>
+          </div></div>
           <div class="panel"><div class="panel-body">
             <div class="upload-box" id="uploadBox" onclick="triggerFilePicker()">
               <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleFileSelected(this.files)">
@@ -1258,6 +1265,14 @@ body{-webkit-text-size-adjust:100%;}
           <div class="panel"><div class="panel-body">
             <div class="so-section-title" style="margin-top:0;">Chọn cột dữ liệu</div>
             <div class="field-hint" style="margin-bottom:14px;">Cho hệ thống biết cột nào trong file tương ứng với trường nào. Hệ thống đã tự đoán sẵn theo tên cột — bạn kiểm tra và đổi lại nếu chưa đúng.</div>
+            <div id="dataDateBox" style="display:none;margin-bottom:14px;padding:10px 12px;background:#F3F6FB;border-radius:8px;">
+              <label style="font-weight:700;font-size:13px;">📅 Ngày dữ liệu (ghi vào lịch sử NAV / Phí):
+                <input type="date" id="importDataDate" style="margin-left:8px;"></label>
+              <div style="margin-top:10px;"><label style="font-weight:700;font-size:13px;">💰 Phí này là của tháng:
+                <input type="month" id="importFeeMonth" style="margin-left:8px;"></label>
+                <span class="field-hint" style="margin-left:6px;">Mỗi tháng 1 số phí; nhập lại cùng tháng thì thay thế. Phí mới nhất = phí của tháng gần nhất.</span></div>
+              <div class="field-hint" style="margin-top:4px;">Mặc định là hôm nay. Nếu file có cột ngày, chọn cột đó là "Ngày dữ liệu" ở dưới để lấy ngày theo từng dòng (dòng nào trống thì dùng ngày chọn ở đây).</div>
+            </div>
             <div id="columnMappingGrid" class="form-grid"></div>
             <div class="field-hint" style="margin-top:12px;" id="mappingFileInfo"></div>
             <div id="syncRoomOption" style="display:none;margin-top:14px;padding:12px;background:var(--accent-soft);border-radius:8px;">
@@ -1289,9 +1304,9 @@ body{-webkit-text-size-adjust:100%;}
               <tbody id="importErrorBody"></tbody></table>
             </div>
           </div>
-          <div class="panel" id="unmatchedPanel" style="display:none;margin-top:16px;"><div class="panel-header"><div class="panel-title">⚠️ STK trong file không tìm thấy trong hệ thống</div><button class="btn btn-secondary btn-sm" onclick="downloadUnmatched()">⬇️ Xuất danh sách (Excel)</button></div>
+          <div class="panel" id="unmatchedPanel" style="display:none;margin-top:16px;"><div class="panel-header"><div class="panel-title" id="unmatchedTitle">⚠️ STK trong file không tìm thấy trong hệ thống</div><button class="btn btn-secondary btn-sm" onclick="downloadUnmatched()">⬇️ Xuất danh sách (Excel)</button></div>
             <div class="panel-body" style="padding:0;">
-              <div class="field-hint" style="padding:12px 16px 0;">Các STK này có trong file nhưng chưa tồn tại trong danh sách khách hàng — không cập nhật được. Kiểm tra lại STK, hoặc thêm khách hàng này qua "Import Danh sách KH" trước.</div>
+              <div class="field-hint" id="unmatchedHint" style="padding:12px 16px 0;">Các STK này có trong file nhưng chưa tồn tại trong danh sách khách hàng — không cập nhật được. Kiểm tra lại STK, hoặc thêm khách hàng này qua "Import Danh sách KH" trước.</div>
               <table><thead><tr><th>Dòng</th><th>STK</th><th>Tên (trong file)</th><th>ID QL</th></tr></thead>
               <tbody id="unmatchedBody"></tbody></table>
             </div>
@@ -2337,6 +2352,7 @@ function applyRoleVisibility(){
   if(ownerLabel) ownerLabel.style.display = isOwner ? 'block' : 'none';
   const cleanupPanel = document.getElementById('cleanupPanel');
   if(cleanupPanel) cleanupPanel.style.display = isOwner ? 'block' : 'none';
+  const colBtn = document.querySelector('button[onclick="toggleColumnManager()"]'); if(colBtn) colBtn.style.display = isOwner ? '' : 'none';
 }
 
 // ================================================================
@@ -2467,6 +2483,7 @@ async function loadAllData(){
     roomHistoryRows = rh;
   } catch(e){ roomHistoryRows = []; }
   await loadMoveLists();
+  await loadColumnPrefs();
   // --- ID đặc biệt ---
   try {
     const { data: spRows } = await sb.from('special_ids').select('*').order('manager_id');
@@ -2643,16 +2660,56 @@ const CORE_COLUMNS = [
   {key:'status',  label:'Trạng thái'},
 ];
 // Các mốc ngày đã có dữ liệu lịch sử — trong bản thật sẽ lấy động từ nav_history / fee_history
-const NAV_DATES = ["27/08/2026","31/07/2026","30/06/2026"];
-const FEE_DATES = ["27/08/2026","31/07/2026"];
+const NAV_DATES = [];   // các mốc ngày NAV đã có dữ liệu (tự cập nhật từ lịch sử)
+const FEE_MONTHS = [];  // các tháng đã có phí, dạng 'YYYY-MM' (tự cập nhật từ lịch sử)
+function monthKeyOf(d){ const p = String(d).split('/'); return p.length===3 ? `${p[2]}-${p[1]}` : ''; }
+function monthLabel(mk){ const [y,m] = mk.split('-'); return `T${parseInt(m,10)}.${String(y).slice(2)}`; }
+function dateSortKey(d){ return String(d).split('/').reverse().join(''); }
+let axesFor = null;
+function ensureAxes(){
+  if(axesFor === customers) return; axesFor = customers;
+  const nd = new Set(), fm = new Set();
+  customers.forEach(c=>{ Object.keys(c.navHistory||{}).forEach(d=>nd.add(d)); Object.keys(c.feeHistory||{}).forEach(d=>{ const k=monthKeyOf(d); if(k) fm.add(k); }); });
+  NAV_DATES.length = 0; [...nd].sort((a,b)=>dateSortKey(b).localeCompare(dateSortKey(a))).slice(0,15).forEach(d=>NAV_DATES.push(d));
+  FEE_MONTHS.length = 0; [...fm].sort().reverse().forEach(k=>FEE_MONTHS.push(k));
+}
+function feeOfMonth(c, mk){
+  let best = null, bk = '';
+  for(const d of Object.keys(c.feeHistory||{})){ if(monthKeyOf(d)!==mk) continue; const k = dateSortKey(d); if(k>bk){ bk=k; best=d; } }
+  return best===null ? undefined : c.feeHistory[best];
+}
+function latestFeeMonth(c){ let m=''; for(const d of Object.keys(c.feeHistory||{})){ const k=monthKeyOf(d); if(k>m) m=k; } return m; }
+let feeMonthsSel = null;   // null = mặc định 3 tháng gần nhất
+function effectiveFeeMonths(){ ensureAxes(); const base = feeMonthsSel ? FEE_MONTHS.filter(k=>feeMonthsSel.has(k)) : FEE_MONTHS.slice(0,3); return base.slice().sort(); }
+function dateOptLabel(d){ return String(d).includes('/') ? shortDate(d) : monthLabel(d); }
+// ---- Lưu cấu hình cột dùng chung (chỉ Owner chọn, mọi tài khoản đều thấy như vậy) ----
+async function loadColumnPrefs(){
+  try {
+    const { data } = await sb.from('app_settings').select('value').eq('key','column_prefs').maybeSingle();
+    if(data && data.value){ const p = JSON.parse(data.value);
+      if(Array.isArray(p.core)) visibleCols = new Set(p.core);
+      if(Array.isArray(p.nav)) visibleNavDates = new Set(p.nav);
+      feeMonthsSel = Array.isArray(p.fee) ? new Set(p.fee) : null; }
+  } catch(e){}
+}
+let _colSaveT = null;
+function saveColumnPrefs(){
+  if(currentRole!=='owner') return;
+  clearTimeout(_colSaveT);
+  _colSaveT = setTimeout(async ()=>{
+    const val = JSON.stringify({core:[...visibleCols], nav:[...visibleNavDates], fee:effectiveFeeMonths()});
+    const { error } = await sb.from('app_settings').upsert({ key:'column_prefs', value:val, updated_at:new Date().toISOString() });
+    if(error) showToast('Lưu cấu hình cột thất bại: '+error.message,'error',2500); else showToast('Đã lưu cột hiển thị cho mọi tài khoản','success',1200);
+  }, 500);
+}
 
 let visibleCols = new Set(CORE_COLUMNS.filter(c=>c.key!=='gender' && c.key!=='updated').map(c=>c.key));   // mặc định ẩn Giới tính + Ngày cập nhật, hiện các cột còn lại
 let visibleNavDates = new Set();                          // mặc định chưa hiện cột NAV theo ngày
-let visibleFeeDates = new Set();                          // mặc định chưa hiện cột Phí theo ngày
 
 function shortDate(d){ const [dd,mm] = d.split('/'); return `${dd}/${mm}`; }
 
 function toggleColumnManager(){
+  if(currentRole!=='owner'){ showToast('Chỉ Owner được chọn cột hiển thị','error',1500); return; }
   document.getElementById('columnManager').classList.toggle('open');
   renderColumnManagerList();
 }
@@ -2661,34 +2718,39 @@ function renderColumnManagerList(){
     const checked = visibleCols.has(c.key) ? 'checked' : '';
     return `<label class="col-check-row"><input type="checkbox" ${checked} onchange="toggleColumn('${c.key}')"> ${c.label}</label>`;
   }).join('');
-  const navHtml = NAV_DATES.map(d=>{
+  ensureAxes();
+  const navHtml = NAV_DATES.length ? NAV_DATES.map(d=>{
     const checked = visibleNavDates.has(d) ? 'checked' : '';
     return `<label class="col-check-row"><input type="checkbox" ${checked} onchange="toggleNavDate('${d}')"> NAV ${shortDate(d)}</label>`;
-  }).join('');
-  const feeHtml = FEE_DATES.map(d=>{
-    const checked = visibleFeeDates.has(d) ? 'checked' : '';
-    return `<label class="col-check-row"><input type="checkbox" ${checked} onchange="toggleFeeDate('${d}')"> Phí ${shortDate(d)}</label>`;
-  }).join('');
+  }).join('') : '<div class="field-hint">Chưa có dữ liệu NAV theo ngày</div>';
+  ensureAxes();
+  const _eff = new Set(effectiveFeeMonths());
+  const feeHtml = FEE_MONTHS.length ? FEE_MONTHS.map(k=>{
+    const checked = _eff.has(k) ? 'checked' : '';
+    return `<label class="col-check-row"><input type="checkbox" ${checked} onchange="toggleFeeMonth('${k}')"> Phí ${monthLabel(k)}</label>`;
+  }).join('') : '<div class="field-hint">Chưa có dữ liệu phí theo tháng</div>';
   document.getElementById('columnManagerList').innerHTML = `
     <div class="pronoun-manager-title" style="margin-top:0;">Thông tin chung</div>
     ${coreHtml}
     <div class="pronoun-manager-title" style="margin-top:12px;">NAV theo mốc ngày</div>
     ${navHtml}
-    <div class="pronoun-manager-title" style="margin-top:12px;">Phí theo mốc ngày</div>
+    <div class="pronoun-manager-title" style="margin-top:12px;">Phí theo tháng</div>
     ${feeHtml}
   `;
 }
 function toggleColumn(key){
   if(visibleCols.has(key)) visibleCols.delete(key); else visibleCols.add(key);
-  renderCustomers();
+  renderCustomers(); saveColumnPrefs();
 }
 function toggleNavDate(d){
   if(visibleNavDates.has(d)) visibleNavDates.delete(d); else visibleNavDates.add(d);
-  renderCustomers();
+  renderCustomers(); saveColumnPrefs();
 }
-function toggleFeeDate(d){
-  if(visibleFeeDates.has(d)) visibleFeeDates.delete(d); else visibleFeeDates.add(d);
-  renderCustomers();
+function toggleFeeMonth(k){
+  const cur = new Set(effectiveFeeMonths());
+  if(cur.has(k)) cur.delete(k); else cur.add(k);
+  feeMonthsSel = cur;
+  renderCustomers(); saveColumnPrefs();
 }
 document.addEventListener('click', function(e){
   const wrap = document.getElementById('columnManager');
@@ -2699,16 +2761,17 @@ document.addEventListener('click', function(e){
 });
 
 function activeColumns(){
+  ensureAxes();
   const cols = [...FIXED_COLUMNS];
   CORE_COLUMNS.forEach(c=>{ if(visibleCols.has(c.key)) cols.push(c); });
   NAV_DATES.forEach(d=>{ if(visibleNavDates.has(d)) cols.push({key:'navdate:'+d, label:'NAV '+shortDate(d), num:true, date:d, type:'nav'}); });
-  FEE_DATES.forEach(d=>{ if(visibleFeeDates.has(d)) cols.push({key:'feedate:'+d, label:'Phí '+shortDate(d), num:true, date:d, type:'fee'}); });
+  effectiveFeeMonths().forEach(k=>cols.push({key:'feem:'+k, label:'Phí '+monthLabel(k), num:true, month:k, type:'feem'}));
   return cols;
 }
 
 function cellValue(c, cust, idx){
   if(c.type==='nav') return cust.navHistory[c.date] ? fmt(cust.navHistory[c.date]) : '<span style="color:var(--text-muted);">—</span>';
-  if(c.type==='fee') return cust.feeHistory[c.date] ? fmt(cust.feeHistory[c.date]) : '<span style="color:var(--text-muted);">—</span>';
+  if(c.type==='feem'){ const v = feeOfMonth(cust, c.month); return v!==undefined ? fmt(v) : '<span style="color:var(--text-muted);">—</span>'; }
   switch(c.key){
     case 'stt': return idx+1;
     case 'name': return cust.name
@@ -2753,13 +2816,14 @@ const FILTER_FIELDS = [
   {key:'nav_latest', label:'NAV (mới nhất)',    type:'number'},
   {key:'fee_latest', label:'Phí (mới nhất)',    type:'number'},
   {key:'nav_date',   label:'NAV theo ngày',     type:'number_date', dates: NAV_DATES},
-  {key:'fee_date',   label:'Phí theo ngày',     type:'number_date', dates: FEE_DATES},
+  {key:'fee_month',  label:'Phí theo tháng',    type:'number_date', dates: FEE_MONTHS},
   {key:'birth_year', label:'Năm sinh',          type:'number'},
 ];
 let advancedFilters = [];
 let filterIdCounter = 1;
 
 function toggleAdvFilterPanel(){
+  ensureAxes();
   const panel = document.getElementById('advFilterPanel');
   const open = panel.style.display !== 'none';
   panel.style.display = open ? 'none' : 'block';
@@ -2795,7 +2859,7 @@ function renderFilterRows(){
     const fieldOptions = FILTER_FIELDS.map(x=>`<option value="${x.key}" ${x.key===f.field?'selected':''}>${x.label}</option>`).join('');
     let dateHtml = '';
     if(cfg.type==='number_date'){
-      dateHtml = `<select class="filter-select" onchange="updateFilterDate(${f.id}, this.value)">${cfg.dates.map(d=>`<option value="${d}" ${d===f.date?'selected':''}>${shortDate(d)}</option>`).join('')}</select>`;
+      dateHtml = `<select class="filter-select" onchange="updateFilterDate(${f.id}, this.value)">${cfg.dates.map(d=>`<option value="${d}" ${d===f.date?'selected':''}>${dateOptLabel(d)}</option>`).join('')}</select>`;
     }
     let opHtml, valHtml;
     if(cfg.type==='select'){
@@ -2843,7 +2907,7 @@ function matchesAdvancedFilters(c){
     else if(f.field==='fee_latest') actual = c.fee;
     else if(f.field==='birth_year') actual = c.birthYear;
     else if(f.field==='nav_date') actual = c.navHistory[f.date];
-    else if(f.field==='fee_date') actual = c.feeHistory[f.date];
+    else if(f.field==='fee_month') actual = feeOfMonth(c, f.date);
     if(actual === undefined || actual === null) return false;
     const num = parseFloat(String(f.value).replace(/[^\d.-]/g,''));
     if(isNaN(num)) return true;
@@ -2913,7 +2977,7 @@ function renderCustomers(){
 // ---------------- XUẤT EXCEL ----------------
 function rawCellValue(c, cust, idx){
   if(c.type==='nav') return cust.navHistory[c.date] ?? '';
-  if(c.type==='fee') return cust.feeHistory[c.date] ?? '';
+  if(c.type==='feem') return feeOfMonth(cust, c.month) ?? '';
   switch(c.key){
     case 'stt': return idx+1;
     case 'name': return cust.name || '';
@@ -5891,6 +5955,22 @@ function renderRights(){
 // ==================================================================
 
 const FIELD_SPECS = {
+  update: [
+    {key:'stk', label:'STK (dùng để khớp KH)', required:true, guesses:['stk','so tk','sotk','so tai khoan','sotaikhoan']},
+    {key:'name', label:'Tên KH', guesses:['ten kh','ten khach hang','ho va ten','ho ten','ten tai khoan','ten chu tai khoan','ten tk','khach hang','ten']},
+    {key:'telegram', label:'Tên Telegram', guesses:['telegram','ten telegram']},
+    {key:'nav', label:'NAV', guesses:['nav','tong']},
+    {key:'fee', label:'Phí', guesses:['phi','phi giao dich']},
+    {key:'managerId', label:'ID người quản lý', guesses:['mkt id','id ql','id quan ly','id']},
+    {key:'room', label:'Room (đồng bộ)', guesses:['room hien tai','room','nhom']},
+    {key:'mgmtStart', label:'Ngày bắt đầu quản lý', guesses:['ngay bat dau quan ly','ngay bat dau','ngay quan ly']},
+    {key:'ctype', label:'Loại hình KH', guesses:['loai hinh','loai kh','loai tai khoan']},
+    {key:'status', label:'Trạng thái', guesses:['trang thai']},
+    {key:'gender', label:'Giới tính', guesses:['gioi tinh']},
+    {key:'birthYear', label:'Năm sinh', guesses:['nam sinh']},
+    {key:'note', label:'Ghi chú', guesses:['ghi chu']},
+    {key:'dataDate', label:'Ngày dữ liệu (NAV/Phí)', guesses:['ngay du lieu','ngay chot','ngay nav','ngay cap nhat','ngay']},
+  ],
   customerlist: [
     {key:'stk', label:'STK', required:true, guesses:['stk','so tk','sotk','so tai khoan','sotaikhoan']},
     {key:'name', label:'Tên KH', required:false, guesses:['ten kh','ten khach hang','ho ten','ten']},
@@ -5953,11 +6033,32 @@ const IMPORT_TYPE_META = {
   bc12: {hint:'Kéo thả file BC12 (phí) vào đây, hoặc bấm để chọn file'},
   loan: {hint:'Kéo thả file khoản vay đến hạn vào đây, hoặc bấm để chọn file', note:'Nếu file không có cột số tiền vay, khoản vay sẽ được tạo với số tiền = 0 — bổ sung tay sau. Nếu 1 ô Số tài khoản có nhiều STK cách nhau bằng dấu phẩy, hệ thống tự tách thành từng khoản vay riêng.'},
   margincall: {hint:'Kéo thả file RRUB/Call Margin vào đây, hoặc bấm để chọn file', note:'Nếu file không có cột Số tiền, khoản sẽ được tạo với số tiền = 0 — bổ sung tay sau. Nếu 1 ô Số tài khoản có nhiều STK cách nhau bằng dấu phẩy, hệ thống tự tách thành từng khoản riêng.'},
+  update: {hint:'Kéo thả file Excel vào đây (NAV, phí, danh sách KH… đều được), hoặc bấm để chọn file', note:'Chọn chế độ ở trên: Cập nhật KH đã có hoặc Thêm KH mới (khớp theo STK). Ở bước sau bạn chọn cột nào trong file ghi vào trường nào; ô trống trong file thì giữ nguyên dữ liệu cũ.'},
   right: {hint:'Kéo thả file quyền mua vào đây, hoặc bấm để chọn file'},
   specialid: {hint:'Kéo thả file danh sách ID đặc biệt vào đây, hoặc bấm để chọn file', note:'ID chưa có thì thêm mới; ID đã có thì KHÔNG thêm lại mà chỉ cập nhật các cột bạn map và có dữ liệu trong file (Tên, Phòng, Trưởng phòng, Ghi chú). Cột không map hoặc ô để trống thì giữ nguyên dữ liệu cũ.'},
 };
 
-let currentImportType = 'nav';
+let currentImportType = 'update';
+let importMode = 'update';
+function setImportMode(m){
+  importMode = m;
+  document.getElementById('btnModeUpdate').className = 'btn btn-sm ' + (m==='update'?'btn-primary':'btn-secondary');
+  document.getElementById('btnModeCreate').className = 'btn btn-sm ' + (m==='create'?'btn-primary':'btn-secondary');
+  document.getElementById('importModeHint').textContent = m==='update' ? 'Chỉ cập nhật KH đã có STK. STK chưa có → báo lại và cho xuất danh sách.' : 'Chỉ thêm KH có STK chưa có. STK đã có → không đụng tới, báo lại và cho xuất danh sách.';
+}
+function readFeeMonth(){ const el=document.getElementById('importFeeMonth'); if(el && /^\d{4}-\d{2}$/.test(el.value)) return el.value; const t=new Date(); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}`; }
+function feeDateForMonth(mk){ const t=new Date(); const cur=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}`; if(mk===cur) return todayDdMmYyyy(); const [y,m]=mk.split('-'); return `${String(new Date(+y,+m,0).getDate()).padStart(2,'0')}/${m}/${y}`; }
+async function upsertMonthlyFee(custId, mk, fee, source){
+  const [y,m]=mk.split('-'); const start=`${y}-${m}-01`, end=`${y}-${m}-${String(new Date(+y,+m,0).getDate()).padStart(2,'0')}`;
+  const { data, error } = await sb.from('fee_history').update({fee, source}).eq('customer_id',custId).gte('update_date',start).lte('update_date',end).select('history_id');
+  if(error) throw error;
+  if(!data || !data.length){ const { error:e2 } = await sb.from('fee_history').insert({customer_id:custId, update_date:toDbDate(feeDateForMonth(mk)), fee, source}); if(e2) throw e2; }
+}
+function readDataDate(){
+  const el = document.getElementById('importDataDate'); const v = el && el.value;
+  const m = v && v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : todayDdMmYyyy();
+}
 const importStepLabels = ["Upload file","Chọn cột dữ liệu","Kiểm tra dữ liệu","Xem trước thay đổi","Hoàn tất"];
 function renderImportSteps(current){
   document.getElementById('importSteps').innerHTML = importStepLabels.map((label,i)=>{
@@ -5974,10 +6075,12 @@ function goImportStep(step){
 
 function setImportType(type){
   currentImportType = type;
-  const map = {customerlist:'btnTypeCustomerList', nav:'btnTypeNav', bc12:'btnTypeBc12', loan:'btnTypeLoan', margincall:'btnTypeMarginCall', right:'btnTypeRight', specialid:'btnTypeSpecialId'};
+  const map = {update:'btnTypeUpdate', customerlist:'btnTypeCustomerList', nav:'btnTypeNav', bc12:'btnTypeBc12', loan:'btnTypeLoan', margincall:'btnTypeMarginCall', right:'btnTypeRight', specialid:'btnTypeSpecialId'};
   Object.entries(map).forEach(([t,id])=>{
     document.getElementById(id).className = 'btn btn-sm ' + (t===type ? 'btn-primary' : 'btn-secondary');
   });
+  document.getElementById('importModeBox').style.display = (type==='update') ? 'block' : 'none';
+  if(type==='update') setImportMode(importMode);
   document.getElementById('uploadHint').textContent = IMPORT_TYPE_META[type].hint;
   document.getElementById('uploadSubHint').textContent = 'Hệ thống sẽ tự đọc tên các cột có trong file để bạn chọn ở bước tiếp theo';
   const noteEl = document.getElementById('importTypeNote');
@@ -5989,6 +6092,7 @@ function setImportType(type){
 // Reset toàn bộ trạng thái wizard về bước 1 sạch sẽ — gọi mỗi khi vào lại màn Import Excel,
 // để không còn giữ lại tên file / dữ liệu của lần import trước.
 function resetImportWizard(){
+  if(document.getElementById('btnModeUpdate')) setImportMode(importMode);
   pendingImportPlan = null;
   pendingImportRows = [];
   pendingImportHeaders = [];
@@ -5999,7 +6103,7 @@ function resetImportWizard(){
 }
 
 const IMPORT_TYPE_LABELS = {
-  customerlist: '👥 Danh sách KH', nav: '📊 NAV', bc12: '💰 BC12 (Phí)', loan: '📅 Khoản vay', margincall: '⚠️ RRUB/Call Margin', right: '📈 Quyền mua', specialid: '⭐ ID đặc biệt',
+  update: '🔄 Cập nhật KH', customerlist: '👥 Danh sách KH', nav: '📊 NAV', bc12: '💰 BC12 (Phí)', loan: '📅 Khoản vay', margincall: '⚠️ RRUB/Call Margin', right: '📈 Quyền mua', specialid: '⭐ ID đặc biệt',
 };
 // ---------------- DỌN DỮ LIỆU CŨ (chỉ Owner) ----------------
 let pendingCleanupLoanIds = null;
@@ -6284,7 +6388,50 @@ let currentOverwrite = {};
 function toggleOwBox(key, hasCol){
   const el = document.getElementById('owbox_'+key); if(el) el.style.display = hasCol ? 'flex' : 'none';
 }
+let currentHeaderTarget = {};
+function rebuildHeaderMapping(){
+  const specs = FIELD_SPECS.update; const m = {}; const dup = [];
+  specs.forEach(sp=>m[sp.key]='');
+  Object.entries(currentHeaderTarget).forEach(([h,t])=>{ if(!t) return; if(m[t]) dup.push(t); m[t]=h; });
+  currentColumnMapping = m;
+  const w = document.getElementById('mapDupWarn');
+  if(w){ const names = [...new Set(dup)].map(k=>FIELD_SPECS.update.find(x=>x.key===k).label);
+    w.style.display = names.length ? 'block' : 'none';
+    w.textContent = names.length ? '⚠️ Có nhiều cột cùng chọn ghi vào: ' + names.join(', ') + ' — hệ thống chỉ lấy cột chọn sau cùng.' : ''; }
+  const sm = document.getElementById('mapSummary');
+  if(sm){ const parts = specs.filter(sp=>sp.key!=='stk' && m[sp.key]).map(sp=>`<b>${sp.label}</b> ← cột "${m[sp.key]}"`);
+    sm.innerHTML = parts.length ? 'Sẽ ghi đè: ' + parts.join(' · ') : 'Chưa chọn trường nào để ghi đè.'; }
+}
+function setHeaderTarget(h, t){ currentHeaderTarget[h]=t; rebuildHeaderMapping(); }
+function renderUpdateMappingStep(){
+  const specs = FIELD_SPECS.update;
+  const grid = document.getElementById('columnMappingGrid');
+  document.getElementById('dataDateBox').style.display='block';
+  { const fmEl=document.getElementById('importFeeMonth'); if(fmEl && !fmEl.value){ const t=new Date(); fmEl.value=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}`; } }
+  { const d=document.getElementById('importDataDate'); if(d && !d.value){ const t=new Date(); d.value=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`; } }
+  currentHeaderTarget = {}; const taken = new Set();
+  pendingImportHeaders.forEach(h=>{
+    let t = '';
+    for(const sp of specs){ if(taken.has(sp.key)) continue; if(guessColumnFor({guesses:sp.guesses},[h])===h){ t=sp.key; break; } }
+    if(t) taken.add(t); currentHeaderTarget[h]=t;
+  });
+  const sample = h=>{ const r = pendingImportRows.find(r=>r[h]!==undefined && String(r[h]).trim()!==''); return r ? String(r[h]).slice(0,40) : ''; };
+  grid.innerHTML = '<div style="grid-column:1/-1;font-weight:700;font-size:13px;">Các cột đọc được từ file — chọn mỗi cột sẽ ghi đè lên trường nào của KH trên hệ thống</div>'
+    + pendingImportHeaders.map((h,i)=>{
+      const opts = ['<option value="">— Không ghi (bỏ qua cột này) —</option>'].concat(specs.map(sp=>`<option value="${sp.key}" ${currentHeaderTarget[h]===sp.key?'selected':''}>${sp.label}</option>`)).join('');
+      return `<div class="form-field"><label>Cột trong file: <b>${escHtml(h)}</b></label>
+        <div class="field-hint" style="margin:0 0 4px;">Ví dụ: ${escHtml(sample(h))||'(trống)'}</div>
+        <select onchange="setHeaderTarget(pendingImportHeaders[${i}], this.value)">${opts}</select></div>`;
+    }).join('')
+    + '<div id="mapDupWarn" style="grid-column:1/-1;display:none;color:var(--amber);font-size:12.5px;font-weight:600;"></div>'
+    + '<div id="mapSummary" style="grid-column:1/-1;font-size:13px;background:#F3F6FB;border-radius:8px;padding:10px 12px;"></div>';
+  rebuildHeaderMapping();
+  document.getElementById('mappingFileInfo').innerHTML = `File có <b>${pendingImportHeaders.length} cột</b> — tổng <b>${pendingImportRows.length} dòng</b> dữ liệu. Ô trống trong file thì giữ nguyên dữ liệu cũ.`;
+  document.getElementById('syncRoomOption').style.display = 'none';
+}
 function renderColumnMappingStep(){
+  if(currentImportType==='update') return renderUpdateMappingStep();
+  document.getElementById('dataDateBox').style.display='none';
   const specs = FIELD_SPECS[currentImportType];
   const grid = document.getElementById('columnMappingGrid');
   const canOw = ['customerlist','nav','bc12'].includes(currentImportType);
@@ -6322,6 +6469,7 @@ function proceedFromMapping(){
     return;
   }
   pendingImportPlan = analyzeImportRows(currentImportType, pendingImportRows, currentColumnMapping);
+  pendingImportPlan.mode = (currentImportType==='update') ? importMode : null;
   renderImportStep3Summary(pendingImportPlan);
   goImportStep(3);
 }
@@ -6329,6 +6477,7 @@ function proceedFromMapping(){
 function analyzeImportRows(type, rows, mapping){
   const ow = k => !!mapping[k] && currentOverwrite[k]===true;
   const plan = { type, valid:[], errors:[], skippedSpecial:[], unmatched:[], newCount:0, changedCount:0, unchangedCount:0, unmatchedCount:0, skippedHasStkCount:0, assignedStkCount:0 };
+  const dataDateSel = readDataDate(); const feeMonthSel = readFeeMonth();
   const seenStks = new Set(); // chặn trùng STK trong cùng 1 file — CHỈ áp dụng cho Danh sách KH (tạo mới)
   const seenLoanKeys = new Set(); // chặn trùng (account+ngày đến hạn) trong cùng 1 file
   const seenMarginCallKeys = new Set(); // chặn trùng (account+hạn xử lý) trong cùng 1 file
@@ -6337,6 +6486,63 @@ function analyzeImportRows(type, rows, mapping){
   rows.forEach((row, idx)=>{
     const lineNo = idx+2;
 
+    if(type==='update'){
+      const has = v => v!==undefined && v!==null && String(v).trim()!=='';
+      const raw = k => getMapped(row,mapping,k);
+      const stk = norm6(String(raw('stk')).trim(), true);
+      const nameIn = String(raw('name')||'').trim();
+      if(!stk || stk.length!==6){ plan.errors.push({line:lineNo, content:`STK: ${stk||'(trống)'}${nameIn?' — '+nameIn:''}`, error:'Thiếu hoặc sai định dạng STK (cần đúng 6 ký tự)'}); return; }
+      const existing = customers.find(c=>c.stk===stk);
+      const rd = (mapping.dataDate && has(raw('dataDate'))) ? parseDateCell(raw('dataDate')) : '';
+      const dataDate = /^\d{2}\/\d{2}\/\d{4}$/.test(rd) ? rd : dataDateSel;
+      if(importMode==='create'){
+        const mgr = String(raw('managerId')||'').trim();
+        if(existing){ plan.unmatched.push({line:lineNo, stk, name:nameIn||existing.name||'', managerId:mgr}); plan.unmatchedCount++; return; }
+        if(seenStks.has(stk)){ plan.valid.push({stk, name:nameIn, existing:null, isDupInFile:true, changes:[]}); plan.unchangedCount++; return; }
+        const tgIn = String(raw('telegram')||'').trim();
+        if(!nameIn && !tgIn){ plan.errors.push({line:lineNo, content:`STK ${stk}`, error:'Thiếu cả Tên KH và Tên Telegram — không thêm'}); return; }
+        const ctRaw = String(raw('ctype')||'').trim(); const ctN = ctRaw.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase();
+        let ctype='KH thường'; if(ctRaw){ if(/chia\s*se/.test(ctN)) ctype='KH chia sẻ'; else if(!/thuong/.test(ctN)){ plan.errors.push({line:lineNo, content:`STK ${stk} — Loại hình: ${ctRaw}`, error:'Loại hình không hợp lệ (chỉ nhận: KH thường / KH chia sẻ)'}); return; } }
+        const byM = String(raw('birthYear')||'').match(/(19|20)\d{2}/);
+        const msRaw = has(raw('mgmtStart')) ? parseDateCell(raw('mgmtStart')) : '';
+        seenStks.add(stk);
+        plan.valid.push({stk, name:nameIn, telegram:tgIn, nav:has(raw('nav'))?parseNum(raw('nav')):0, fee:has(raw('fee'))?parseNum(raw('fee')):0,
+          managerId:mgr, gender:String(raw('gender')||'').trim()||'Khác', birthYear:byM?parseInt(byM[0]):null,
+          roomRaw:String(raw('room')||'').trim(), status:String(raw('status')||'').trim()||'Đang quản lý', ctype,
+          mgmtStart:/^\d{2}\/\d{2}\/\d{4}$/.test(msRaw)?msRaw:'', note:String(raw('note')||'').trim(), existing:null, isNew:true, dataDate, feeMonth:feeMonthSel, changes:[]});
+        plan.newCount++;
+        return;
+      }
+      if(!existing){ plan.unmatched.push({line:lineNo, stk, name:nameIn||'(không có tên trong file)', managerId:String(raw('managerId')||'').trim()}); plan.unmatchedCount++; return; }
+      if(seenStks.has(stk)){ plan.valid.push({stk, name:existing.name, existing, isDupInFile:true, changes:[]}); plan.unchangedCount++; return; }
+      seenStks.add(stk);
+      const item = {stk, name:existing.name, existing, changes:[], dataDate};
+      const ch = (flag,label,oldV,newV)=>{ item[flag]=true; item.changes.push({label, old:oldV, nw:newV}); };
+      if(mapping.name && has(raw('name')) && nameIn!==existing.name){ item.name=nameIn; ch('nameChanged','Tên KH',existing.name,nameIn); }
+      if(mapping.telegram && has(raw('telegram'))){ const v=String(raw('telegram')).trim(); item.telegram=v; if(v!==(existing.telegram||'')) ch('telegramChanged','Telegram',existing.telegram,v); }
+      if(mapping.managerId && has(raw('managerId'))){ const v=String(raw('managerId')).trim(); item.managerId=v; if(v!==(existing.managerId||'')) ch('managerIdChanged','ID QL',existing.managerId,v); }
+      if(mapping.nav && has(raw('nav'))){ const v=parseNum(raw('nav')); item.nav=v; if(v!==existing.nav) ch('navChanged','NAV',fmt(existing.nav),fmt(v)); }
+      if(mapping.fee && has(raw('fee'))){ const v=parseNum(raw('fee')); item.fee=v; item.feeMonth=feeMonthSel; const cur=feeOfMonth(existing,feeMonthSel); const lm=latestFeeMonth(existing); item.feeIsLatest = !lm || feeMonthSel>=lm; if(v!==cur) ch('feeChanged','Phí '+monthLabel(feeMonthSel), cur===undefined?'—':fmt(cur), fmt(v)); }
+      if(mapping.gender && has(raw('gender'))){ const v=String(raw('gender')).trim(); item.gender=v; if(v!==(existing.gender||'')) ch('genderChanged','Giới tính',existing.gender,v); }
+      if(mapping.birthYear && has(raw('birthYear'))){ const m=String(raw('birthYear')).match(/(19|20)\d{2}/); const v=m?parseInt(m[0]):null; if(v){ item.birthYear=v; if(v!==existing.birthYear) ch('birthYearChanged','Năm sinh',existing.birthYear,v); } }
+      if(mapping.status && has(raw('status'))){ const v=String(raw('status')).trim(); item.status=v; if(v!==existing.status) ch('statusChanged','Trạng thái',existing.status,v); }
+      if(mapping.note && has(raw('note'))){ const v=String(raw('note')).trim(); item.note=v; if(v!==(existing.note||'')) ch('noteChanged','Ghi chú',existing.note,v); }
+      if(mapping.ctype && has(raw('ctype'))){
+        const n=String(raw('ctype')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase();
+        const v = /chia\s*se/.test(n) ? 'KH chia sẻ' : (/thuong/.test(n) ? 'KH thường' : null);
+        if(!v){ plan.errors.push({line:lineNo, content:`STK ${stk} — Loại hình: ${raw('ctype')}`, error:'Loại hình không hợp lệ (chỉ nhận: KH thường / KH chia sẻ) — dòng này bỏ qua'}); return; }
+        item.ctype=v; if(v!==(existing.ctype||'KH thường')) ch('ctypeChanged','Loại hình',existing.ctype,v);
+      }
+      if(mapping.mgmtStart && has(raw('mgmtStart'))){ const v=parseDateCell(raw('mgmtStart')); if(/^\d{2}\/\d{2}\/\d{4}$/.test(v)){ item.mgmtStart=v; if(v!==existing.mgmtStart) ch('mgmtStartChanged','Ngày QL',existing.mgmtStart,v); } else { plan.errors.push({line:lineNo, content:`STK ${stk} — Ngày: ${raw('mgmtStart')}`, error:'Ngày bắt đầu quản lý sai định dạng (cần dd/mm/yyyy) — dòng này bỏ qua'}); return; } }
+      if(mapping.room && has(raw('room'))){
+        const roomRaw=String(raw('room')).trim(); let key=null;
+        if(SPECIAL_ROOMS.includes(roomRaw)) key=roomRaw; else { const mt=resolveRoomByName(roomRaw); if(mt) key=mt; }
+        if(key!==null && key!==existing.room){ item.roomChanged=true; item.targetRoomKey=key; item.changes.push({label:'Room', old:roomLabel(existing.room), nw:roomLabel(key)}); }
+      }
+      if(item.changes.length) plan.changedCount++; else plan.unchangedCount++;
+      plan.valid.push(item);
+      return;
+    }
     // NAV / BC12: CHỈ cập nhật cho tài khoản đã có sẵn, KHÔNG tạo mới, KHÔNG lọc trùng trong file
     // (file NAV/phí nạp định kỳ, mục đích duy nhất là đối soát khớp/không khớp với hệ thống).
     if(type==='nav' || type==='bc12'){
@@ -6555,15 +6761,17 @@ function analyzeImportRows(type, rows, mapping){
 }
 
 function renderImportStep3Summary(plan){
-  const isReconcileType = (plan.type==='nav' || plan.type==='bc12');
+  const isReconcileType = (plan.type==='nav' || plan.type==='bc12' || plan.type==='update');
   if(isReconcileType){
-    document.getElementById('lblValid').textContent = 'Khớp được (sẽ cập nhật)';
-    document.getElementById('lblNew').textContent = 'Không tìm thấy trong hệ thống';
+    const _cr = plan.type==='update' && plan.mode==='create';
+    document.getElementById('lblValid').textContent = _cr ? 'Dòng hợp lệ' : 'Khớp được (sẽ cập nhật)';
+    document.getElementById('lblNew').textContent = _cr ? 'STK đã có (không thêm)' : 'Không tìm thấy trong hệ thống';
     document.getElementById('lblChanged').textContent = 'Có thay đổi';
     document.getElementById('lblUnchanged').textContent = 'Không đổi';
     document.getElementById('lblError').textContent = 'Dòng lỗi (thiếu STK)';
     document.getElementById('sumValid').textContent = plan.valid.length;
     document.getElementById('sumNew').textContent = plan.unmatchedCount;
+    if(_cr){ document.getElementById('lblChanged').textContent = 'Sẽ thêm mới'; }
   } else {
     document.getElementById('lblValid').textContent = 'Dòng hợp lệ';
     document.getElementById('lblNew').textContent = 'Mới';
@@ -6573,7 +6781,7 @@ function renderImportStep3Summary(plan){
     document.getElementById('sumValid').textContent = plan.valid.length;
     document.getElementById('sumNew').textContent = plan.newCount;
   }
-  document.getElementById('sumChanged').textContent = plan.changedCount;
+  document.getElementById('sumChanged').textContent = (plan.type==='update' && plan.mode==='create') ? plan.newCount : plan.changedCount;
   document.getElementById('sumUnchanged').textContent = plan.unchangedCount;
   document.getElementById('sumError').textContent = plan.errors.length;
 
@@ -6589,6 +6797,9 @@ function renderImportStep3Summary(plan){
   const unmatchedPanel = document.getElementById('unmatchedPanel');
   if(isReconcileType && plan.unmatched.length){
     unmatchedPanel.style.display = 'block';
+    const _c2 = plan.type==='update' && plan.mode==='create';
+    document.getElementById('unmatchedTitle').textContent = _c2 ? '⚠️ STK trong file ĐÃ CÓ trong hệ thống — không thêm mới' : '⚠️ STK trong file không tìm thấy trong hệ thống';
+    document.getElementById('unmatchedHint').textContent = _c2 ? 'Các STK này đã tồn tại trong danh sách khách hàng nên không được thêm và không bị sửa gì. Muốn cập nhật dữ liệu của họ thì dùng chế độ "Cập nhật KH đã có".' : 'Các STK này có trong file nhưng chưa tồn tại trong danh sách khách hàng — không cập nhật được. Xuất danh sách ra Excel, rồi dùng chế độ "Thêm KH mới" nếu cần tạo.';
     document.getElementById('unmatchedBody').innerHTML = plan.unmatched.slice(0,500).map(u=>`<tr><td>${u.line}</td><td>${u.stk}</td><td>${u.name}</td><td>${u.managerId||'—'}</td></tr>`).join('') + (plan.unmatched.length>500 ? `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:14px;">… và ${plan.unmatched.length-500} dòng khác</td></tr>` : '');
   } else { unmatchedPanel.style.display = 'none'; }
 
@@ -6622,8 +6833,8 @@ function downloadUnmatched(){
   const plan = pendingImportPlan; if(!plan || !plan.unmatched || !plan.unmatched.length) return;
   const rows = plan.unmatched.map(x=>({ 'Dòng trong file':x.line, 'STK':x.stk, 'Tên (trong file)':x.name, 'ID QL':x.managerId||'' }));
   const ws = XLSX.utils.json_to_sheet(rows), wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'STK khong tim thay');
-  XLSX.writeFile(wb, `STK_khong_tim_thay_${(plan.type||'import')}_${todayDdMmYyyy().replace(/\//g,'-')}.xlsx`);
+  XLSX.utils.book_append_sheet(wb, ws, plan.mode==='create'?'STK da co':'STK khong tim thay');
+  XLSX.writeFile(wb, `${plan.mode==='create'?'STK_da_co':'STK_khong_tim_thay'}_${(plan.type||'import')}_${todayDdMmYyyy().replace(/\//g,'-')}.xlsx`);
 }
 function downloadSkippedSpecial(){
   const plan = pendingImportPlan; if(!plan || !plan.skippedSpecial || !plan.skippedSpecial.length) return;
@@ -6639,7 +6850,7 @@ function goToImportStep4(){
   const head = document.getElementById('previewTableHead');
   const body = document.getElementById('previewTableBody');
   document.getElementById('previewTitle').textContent = `Xem trước ${plan.valid.length} dòng sẽ áp dụng`;
-  if(plan.type==='customerlist'){
+  if(plan.type==='customerlist' || (plan.type==='update' && plan.mode==='create')){
     head.innerHTML = `<tr><th>STK</th><th>Tên KH</th><th>Room</th><th class="num-col">NAV cũ</th><th class="num-col">NAV mới</th><th class="num-col">Phí cũ</th><th class="num-col">Phí mới</th><th>Trạng thái</th></tr>`;
     body.innerHTML = plan.valid.slice(0,300).map(it=>{
       if(it.isPriorityFallback){
@@ -6690,10 +6901,15 @@ function goToImportStep4(){
         roomCell = it.roomRaw;
       } else {
         const matched = resolveRoomByName(it.roomRaw);
-        roomCell = matched ? roomLabel(matched) : `<span style="color:var(--amber);" title="Không khớp tên Room nào đang có — sẽ tự gán theo ngưỡng NAV">⚠️ ${it.roomRaw}</span>`;
+        roomCell = matched ? roomLabel(matched) : `<span style="color:var(--amber);" title="Không khớp tên Room nào đang có — để trống Room">⚠️ ${it.roomRaw}</span>`;
       }
       return `<tr><td>${it.stk}</td><td>${it.name}</td><td>${roomCell}</td><td class="num-col ${it.navChanged?'diff-old':''} num">${navOld}</td><td class="num-col ${it.navChanged?'diff-new':''} num">${navNew}</td><td class="num-col ${it.feeChanged?'diff-old':''} num">${feeOld}</td><td class="num-col ${it.feeChanged?'diff-new':''} num">${feeNew}</td><td>${tag}</td></tr>`;
     }).join('') + (plan.valid.length>300 ? `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:14px;">… và ${plan.valid.length-300} dòng khác</td></tr>` : '');
+  } else if(plan.type==='update'){
+    const rows = plan.valid.filter(it=>it.changes && it.changes.length);
+    document.getElementById('previewTitle').textContent = `Xem trước ${rows.length} KH sẽ được cập nhật (${plan.valid.length-rows.length} KH không đổi)`;
+    head.innerHTML = `<tr><th>STK</th><th>Tên KH</th><th>Thay đổi (cũ → mới)</th></tr>`;
+    body.innerHTML = rows.slice(0,300).map(it=>`<tr><td>${it.stk}</td><td>${escHtml(it.existing.name||'')}</td><td>${it.changes.map(c=>`<div><b>${c.label}:</b> <span style="color:var(--text-muted);text-decoration:line-through;">${escHtml(String(c.old==null||c.old===''?'—':c.old))}</span> → <b style="color:var(--green);">${escHtml(String(c.nw))}</b></div>`).join('')}</td></tr>`).join('') + (rows.length>300 ? `<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:14px;">… và ${rows.length-300} KH khác</td></tr>` : '');
   } else if(plan.type==='nav' || plan.type==='bc12'){
     head.innerHTML = `<tr><th>STK</th><th>Tên KH</th><th class="num-col">NAV cũ</th><th class="num-col">NAV mới</th><th class="num-col">Phí cũ</th><th class="num-col">Phí mới</th><th>Trạng thái</th></tr>`;
     body.innerHTML = plan.valid.slice(0,300).map(it=>{
@@ -6751,9 +6967,9 @@ async function confirmImportToDatabase(){
   const today = todayDdMmYyyy();
   let newCount=0, updatedCount=0, errCount=0, roomUnmatchedCount=0, priorityFallbackCount=0, assignedStkCount=0;
   try {
-    if(plan.type==='nav' || plan.type==='bc12' || plan.type==='customerlist'){
+    if(plan.type==='nav' || plan.type==='bc12' || plan.type==='customerlist' || plan.type==='update'){
       const syncRoomEl = document.getElementById('syncRoomOnUpdate');
-      const syncRoom = plan.type==='customerlist' && syncRoomEl && syncRoomEl.checked;
+      const syncRoom = (plan.type==='customerlist' && syncRoomEl && syncRoomEl.checked) || (plan.type==='update' && !!currentColumnMapping.room);
       let roomSyncedCount = 0;
       await ensureManagersExist(plan.valid.map(it=>it.managerId));
       const __total = plan.valid.length; let __done = 0;
@@ -6770,16 +6986,16 @@ async function confirmImportToDatabase(){
             if(it.telegram) payload.telegram_name = it.telegram;
             if(it.managerId) payload.manager_id = it.managerId;
             if(it.existing.status === 'KH ưu tiên') payload.status = it.status || 'Đang quản lý';
-            if(it.navChanged){ payload.current_nav = it.nav; payload.nav_updated_at = toDbDate(today); }
-            if(it.feeChanged){ payload.current_fee = it.fee; payload.fee_updated_at = toDbDate(today); }
+            if(it.navChanged){ payload.current_nav = it.nav; payload.nav_updated_at = toDbDate(it.dataDate||today); }
+            if(it.feeChanged){ payload.current_fee = it.fee; payload.fee_updated_at = toDbDate(it.dataDate||today); }
             const { error } = await sb.from('customers').update(payload).eq('customer_id', it.existing.id);
             if(error) throw error;
-            if(it.navChanged) await sb.from('nav_history').insert({customer_id:it.existing.id, update_date:toDbDate(today), nav:it.nav, source:'import_customerlist'});
-            if(it.feeChanged) await sb.from('fee_history').insert({customer_id:it.existing.id, update_date:toDbDate(today), fee:it.fee, source:'import_customerlist'});
+            if(it.navChanged) await sb.from('nav_history').insert({customer_id:it.existing.id, update_date:toDbDate(it.dataDate||today), nav:it.nav, source:'import_customerlist'});
+            if(it.feeChanged) await sb.from('fee_history').insert({customer_id:it.existing.id, update_date:toDbDate(it.dataDate||today), fee:it.fee, source:'import_customerlist'});
             updatedCount++; assignedStkCount++;
           } else if(it.isNew){
             let roomId=null, specialRoom=null;
-            if(plan.type==='customerlist' && it.roomRaw){
+            if((plan.type==='customerlist'||plan.type==='update') && it.roomRaw){
               if(SPECIAL_ROOMS.includes(it.roomRaw)) specialRoom = it.roomRaw;
               else {
                 const matched = resolveRoomByName(it.roomRaw);
@@ -6797,23 +7013,24 @@ async function confirmImportToDatabase(){
               current_room_id: roomId, special_room: specialRoom,
               status: it.status || 'Đang quản lý',
               current_nav: it.nav||0, current_fee: it.fee||0,
-              nav_updated_at: toDbDate(today), fee_updated_at: toDbDate(today),
+              nav_updated_at: toDbDate(it.dataDate||today), fee_updated_at: toDbDate(it.dataDate||today),
               note: it.note||null,
               management_start_date: toDbDate(it.mgmtStart||today),
               customer_type: it.ctype || 'KH thường',
             }).select().single();
             if(error) throw error;
-            if(it.nav) await sb.from('nav_history').insert({customer_id:ins.customer_id, update_date:toDbDate(today), nav:it.nav, source: plan.type==='bc12'?'import_bc12':'import_nav'});
-            if(it.fee) await sb.from('fee_history').insert({customer_id:ins.customer_id, update_date:toDbDate(today), fee:it.fee, source: plan.type==='bc12'?'import_bc12':'import_nav'});
+            if(it.nav) await sb.from('nav_history').insert({customer_id:ins.customer_id, update_date:toDbDate(it.dataDate||today), nav:it.nav, source: plan.type==='bc12'?'import_bc12':'import_nav'});
+            if(it.fee){ if(plan.type==='update') await upsertMonthlyFee(ins.customer_id, it.feeMonth, it.fee, 'import_nav'); else await sb.from('fee_history').insert({customer_id:ins.customer_id, update_date:toDbDate(it.dataDate||today), fee:it.fee, source: plan.type==='bc12'?'import_bc12':'import_nav'}); }
             newCount++;
             if(it.isPriorityFallback) priorityFallbackCount++;
           } else if(it.navChanged || it.feeChanged || (syncRoom && it.roomChanged)
               || it.nameChanged || it.telegramChanged || it.managerIdChanged
-              || it.genderChanged || it.birthYearChanged || it.statusChanged || it.noteChanged || it.ctypeChanged){
+              || it.genderChanged || it.birthYearChanged || it.statusChanged || it.noteChanged || it.ctypeChanged || it.mgmtStartChanged){
             const payload = { updated_at: new Date().toISOString() };
             if(it.ctypeChanged) payload.customer_type = it.ctype;
-            if(it.navChanged){ payload.current_nav = it.nav; payload.nav_updated_at = toDbDate(today); }
-            if(it.feeChanged){ payload.current_fee = it.fee; payload.fee_updated_at = toDbDate(today); }
+            if(it.mgmtStartChanged) payload.management_start_date = toDbDate(it.mgmtStart);
+            if(it.navChanged){ payload.current_nav = it.nav; payload.nav_updated_at = toDbDate(it.dataDate||today); }
+            if(it.feeChanged && (plan.type!=='update' || it.feeIsLatest)){ payload.current_fee = it.fee; payload.fee_updated_at = toDbDate(it.dataDate||today); }
             // Cột nào ĐÃ MAP ở bước nhập thì luôn ghi đè bằng dữ liệu mới nhất trong file — kể cả khi ô đó
             // để trống (ghi thành rỗng/null, xóa dữ liệu cũ của trường này). Cột không map thì không đụng tới.
             if(it.nameChanged) payload.customer_name = it.name || '';
@@ -6831,8 +7048,8 @@ async function confirmImportToDatabase(){
             }
             const { error } = await sb.from('customers').update(payload).eq('customer_id', it.existing.id);
             if(error) throw error;
-            if(it.navChanged) await sb.from('nav_history').insert({customer_id:it.existing.id, update_date:toDbDate(today), nav:it.nav, source: plan.type==='bc12'?'import_bc12':'import_nav'});
-            if(it.feeChanged) await sb.from('fee_history').insert({customer_id:it.existing.id, update_date:toDbDate(today), fee:it.fee, source: plan.type==='bc12'?'import_bc12':'import_nav'});
+            if(it.navChanged) await sb.from('nav_history').insert({customer_id:it.existing.id, update_date:toDbDate(it.dataDate||today), nav:it.nav, source: plan.type==='bc12'?'import_bc12':'import_nav'});
+            if(it.feeChanged){ if(plan.type==='update') await upsertMonthlyFee(it.existing.id, it.feeMonth, it.fee, 'import_nav'); else await sb.from('fee_history').insert({customer_id:it.existing.id, update_date:toDbDate(it.dataDate||today), fee:it.fee, source: plan.type==='bc12'?'import_bc12':'import_nav'}); }
             if(didSyncRoom){
               await sb.from('room_history').insert({
                 customer_id: it.existing.id,
@@ -6851,7 +7068,7 @@ async function confirmImportToDatabase(){
       let __idx = 0;
       const __worker = async ()=>{ while(__idx < __total){ const it = plan.valid[__idx++]; await __one(it); __done++; if(__done%25===0||__done===__total) btn.textContent = `Đang cập nhật… ${Math.round(__done*100/__total)}%`; } };
       await Promise.all(Array.from({length:Math.min(12,__total||1)}, __worker));
-      await sb.from('import_batches').insert({ import_type: plan.type, file_name: document.getElementById('fileInput').files[0]?.name, imported_by: currentUserEmail, total_rows: plan.valid.length+plan.errors.length+(plan.unmatchedCount||0), new_customers:newCount, updated_rows:updatedCount, error_rows: plan.errors.length+errCount });
+      await sb.from('import_batches').insert({ import_type: plan.type==='update'?'customerlist':plan.type, file_name: document.getElementById('fileInput').files[0]?.name, imported_by: currentUserEmail, total_rows: plan.valid.length+plan.errors.length+(plan.unmatchedCount||0), new_customers:newCount, updated_rows:updatedCount, error_rows: plan.errors.length+errCount });
       document.getElementById('importResultTitle').textContent = 'Đã cập nhật thành công'; showToast('Đã cập nhật thành công');
       document.getElementById('importResultSub').textContent = `${newCount} khách mới được thêm · ${updatedCount} khách được cập nhật theo cột đã map (NAV/phí, Tên KH, Tên Telegram, ID QL, giới tính, năm sinh, trạng thái, ghi chú — ghi đè bằng dữ liệu mới nhất trong file kể cả khi để trống)${assignedStkCount?` (trong đó ${assignedStkCount} khách được gán STK thật, chuyển khỏi "KH ưu tiên")`:''}${roomSyncedCount?` (trong đó ${roomSyncedCount} khách được đồng bộ lại Room)`:''}${plan.unmatchedCount?` · ${plan.unmatchedCount} STK trong file không tìm thấy trong hệ thống (xem lại ở bước Kiểm tra dữ liệu)`:''}${plan.skippedHasStkCount?` · ${plan.skippedHasStkCount} dòng khớp Tên Telegram nhưng KH đã có STK thật — đã bỏ qua, không sửa gì`:''}${errCount?` · ${errCount} dòng lỗi khi ghi`:''}${roomUnmatchedCount?` · ${roomUnmatchedCount} dòng có tên Room không khớp, đã tự gán theo ngưỡng NAV`:''}${priorityFallbackCount?` · ${priorityFallbackCount} dòng thiếu STK đã lưu tạm dạng "KH ưu tiên" — vào Danh sách khách hàng lọc trạng thái này để rà soát và xóa dòng không đúng`:''} · Cột nào bạn KHÔNG map ở file lần này thì dữ liệu cũ vẫn giữ nguyên.`;
     }
