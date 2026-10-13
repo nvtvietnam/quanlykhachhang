@@ -756,7 +756,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.62</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.64</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -778,7 +778,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.62</div>
+        <div class="brand-sub">Chứng khoán · v08.64</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -1289,7 +1289,7 @@ body{-webkit-text-size-adjust:100%;}
               <tbody id="importErrorBody"></tbody></table>
             </div>
           </div>
-          <div class="panel" id="unmatchedPanel" style="display:none;margin-top:16px;"><div class="panel-header"><div class="panel-title">STK trong file không tìm thấy trong hệ thống</div></div>
+          <div class="panel" id="unmatchedPanel" style="display:none;margin-top:16px;"><div class="panel-header"><div class="panel-title">⚠️ STK trong file không tìm thấy trong hệ thống</div><button class="btn btn-secondary btn-sm" onclick="downloadUnmatched()">⬇️ Xuất danh sách (Excel)</button></div>
             <div class="panel-body" style="padding:0;">
               <div class="field-hint" style="padding:12px 16px 0;">Các STK này có trong file nhưng chưa tồn tại trong danh sách khách hàng — không cập nhật được. Kiểm tra lại STK, hoặc thêm khách hàng này qua "Import Danh sách KH" trước.</div>
               <table><thead><tr><th>Dòng</th><th>STK</th><th>Tên (trong file)</th><th>ID QL</th></tr></thead>
@@ -6281,26 +6281,35 @@ async function proceedFromUpload(){
 }
 
 let currentOverwrite = {};
+function toggleOwBox(key, hasCol){
+  const el = document.getElementById('owbox_'+key); if(el) el.style.display = hasCol ? 'flex' : 'none';
+}
 function renderColumnMappingStep(){
   const specs = FIELD_SPECS[currentImportType];
   const grid = document.getElementById('columnMappingGrid');
-  currentColumnMapping = {};
-  grid.innerHTML = specs.map(spec=>{
-    const guessed = guessColumnFor(spec, pendingImportHeaders);
-    currentColumnMapping[spec.key] = guessed;
+  const canOw = ['customerlist','nav','bc12'].includes(currentImportType);
+  currentColumnMapping = {}; currentOverwrite = {};
+  const cardHtml = (spec, guessed)=>{
+    currentOverwrite[spec.key] = true;
     const options = ['<option value="">— Không có —</option>']
-      .concat(pendingImportHeaders.map(h=>`<option value="${h}" ${h===guessed?'selected':''}>${h}</option>`))
-      .join('');
-    const owDefault = (currentImportType==='customerlist') ? true : (spec.key===(currentImportType==='bc12'?'fee':'nav'));
-    currentOverwrite[spec.key] = owDefault;
-    const owBox = (spec.key==='stk' || !['customerlist','nav','bc12'].includes(currentImportType)) ? ''
-      : `<label style="display:flex;align-items:center;gap:6px;margin-top:5px;font-size:12.5px;font-weight:600;color:var(--text);cursor:pointer;"><input type="checkbox" ${owDefault?'checked':''} onchange="currentOverwrite['${spec.key}']=this.checked"> Ghi đè ${spec.label} theo file</label>`;
+      .concat(pendingImportHeaders.map(h=>`<option value="${h}" ${h===guessed?'selected':''}>${h}</option>`)).join('');
+    const owBox = (!canOw || spec.key==='stk') ? (spec.key==='stk' && canOw ? '<div class="field-hint" style="margin-top:4px;">Dùng để khớp KH trong hệ thống</div>' : '')
+      : `<label id="owbox_${spec.key}" style="display:${guessed?'flex':'none'};align-items:center;gap:6px;margin-top:6px;font-size:12.5px;font-weight:600;cursor:pointer;"><input type="checkbox" checked onchange="currentOverwrite['${spec.key}']=this.checked"> Ghi đè ${spec.label} trên hệ thống theo file</label>`;
     return `<div class="form-field">
-      <label>Cột chứa ${spec.label} ${spec.required?'<span style="color:var(--red);">*</span>':'<span style="font-weight:500;color:var(--text-muted);">(nếu có)</span>'}</label>
-      <select onchange="currentColumnMapping['${spec.key}']=this.value">${options}</select>
+      <label>Cột chứa ${spec.label} ${spec.required?'<span style="color:var(--red);">*</span>':''}</label>
+      <select onchange="currentColumnMapping['${spec.key}']=this.value;toggleOwBox('${spec.key}',!!this.value)">${options}</select>
       ${owBox}
     </div>`;
-  }).join('');
+  };
+  const found=[], missing=[];
+  specs.forEach(spec=>{
+    const g = guessColumnFor(spec, pendingImportHeaders);
+    currentColumnMapping[spec.key] = g;
+    (g || spec.required ? found : missing).push(cardHtml(spec,g));
+  });
+  grid.innerHTML = `<div style="grid-column:1/-1;font-weight:700;font-size:13px;">✅ Các trường đọc được từ file${canOw?' — tick trường nào muốn ghi đè lên dữ liệu trên hệ thống':''}</div>`
+    + found.join('')
+    + (missing.length ? `<details style="grid-column:1/-1;margin-top:6px;"><summary style="cursor:pointer;font-size:12.5px;color:var(--text-muted);">Trường không thấy trong file (${missing.length}) — bỏ qua, không ghi gì. Bấm để chọn cột thủ công nếu có.</summary><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:10px;">${missing.join('')}</div></details>` : '');
   document.getElementById('mappingFileInfo').innerHTML = `File có <b>${pendingImportHeaders.length} cột</b>: ${pendingImportHeaders.join(', ')} — tổng <b>${pendingImportRows.length} dòng</b> dữ liệu.`;
   document.getElementById('syncRoomOption').style.display = (currentImportType==='customerlist') ? 'block' : 'none';
 }
@@ -6609,6 +6618,13 @@ function renderSkippedSpecialPanel(plan){
       ${sk.length>500?`<tr><td colspan="3" style="text-align:center;color:var(--text-muted);">… và ${sk.length-500} dòng khác — tải file Excel để xem đủ</td></tr>`:''}
     </tbody></table></div></div>`;
 }
+function downloadUnmatched(){
+  const plan = pendingImportPlan; if(!plan || !plan.unmatched || !plan.unmatched.length) return;
+  const rows = plan.unmatched.map(x=>({ 'Dòng trong file':x.line, 'STK':x.stk, 'Tên (trong file)':x.name, 'ID QL':x.managerId||'' }));
+  const ws = XLSX.utils.json_to_sheet(rows), wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'STK khong tim thay');
+  XLSX.writeFile(wb, `STK_khong_tim_thay_${(plan.type||'import')}_${todayDdMmYyyy().replace(/\//g,'-')}.xlsx`);
+}
 function downloadSkippedSpecial(){
   const plan = pendingImportPlan; if(!plan || !plan.skippedSpecial || !plan.skippedSpecial.length) return;
   const rows = plan.skippedSpecial.map(x=>({ 'Dòng trong file':x.line, 'STK':x.account, 'ID trong file':x.managerId||'' }));
@@ -6669,7 +6685,7 @@ function goToImportStep4(){
       if(it.existing && it.roomChanged){
         roomCell = `<span style="color:var(--text-muted);text-decoration:line-through;">${roomLabel(it.existing.room)}</span> → <b style="color:var(--green);">${roomLabel(it.targetRoomKey)}</b>`;
       } else if(!it.roomRaw){
-        roomCell = it.existing ? roomLabel(it.existing.room) : `<span style="color:var(--text-muted);">— (tự gán theo NAV)</span>`;
+        roomCell = it.existing ? roomLabel(it.existing.room) : `<span style="color:var(--text-muted);">— (chưa có Room)</span>`;
       } else if(SPECIAL_ROOMS.includes(it.roomRaw)){
         roomCell = it.roomRaw;
       } else {
@@ -6768,10 +6784,10 @@ async function confirmImportToDatabase(){
               else {
                 const matched = resolveRoomByName(it.roomRaw);
                 if(matched) roomId = matched;
-                else { roomId = autoAssignRoom(it.nav||0); roomUnmatchedCount++; }
+                else { roomId = null; roomUnmatchedCount++; }
               }
             } else {
-              roomId = autoAssignRoom(it.nav||0);
+              roomId = null;
             }
             const { data: ins, error } = await sb.from('customers').insert({
               account_number: it.isPriorityFallback ? generateTempStk() : it.stk, customer_name: it.name || '',
