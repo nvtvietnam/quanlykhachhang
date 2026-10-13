@@ -539,6 +539,7 @@ body.is-editor .icon-btn[title^="Xóa khoản"],body.is-editor .icon-btn[title^=
 .lead-scroll thead th{top:0 !important;}
 .lead-table{width:100%;border-collapse:collapse;font-size:13px;}
 .lead-table th{text-align:left;font-size:11.5px;color:#6B7686;padding:6px 8px;border-bottom:1px solid #E4E8EE;white-space:nowrap;background:#fff;position:sticky;top:0;}
+.sk-scroll thead th{top:0 !important;}
 .lead-table td{padding:6px 8px;border-bottom:1px solid #F0F2F5;vertical-align:middle;}
 .lead-table input.ld-stk{width:88px;text-transform:uppercase;}
 .lead-table input.ld-name{min-width:150px;}
@@ -755,7 +756,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.55</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.59</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -777,7 +778,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.55</div>
+        <div class="brand-sub">Chứng khoán · v08.59</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -2955,6 +2956,12 @@ function initials(name){
 }
 
 // ---------------- BIẾN ĐỘNG KH ----------------
+// Sắp xếp danh sách theo ngày chuyển mới nhất ở trên (cùng ngày: nhập sau ở trên)
+function byDateDesc(a,b){
+  const da = parseDdMmYyyy(a.date), db = parseDdMmYyyy(b.date);
+  const ta = da ? da.getTime() : 0, tb = db ? db.getTime() : 0;
+  return (tb - ta) || (b.id - a.id);
+}
 function buildMoveEvents(){
   const byId = {}; customers.forEach(c=>byId[c.id]=c);
   const ev = []; const seen = new Set();
@@ -2963,15 +2970,16 @@ function buildMoveEvents(){
     const k = type+'|'+date+'|'+c.id; if(seen.has(k)) return; seen.add(k);
     ev.push({type, date, c});
   };
+  // KH mới: chỉ tính KH thêm bằng "+ Thêm khách hàng" (Nguồn KH = Khách mới). Import Excel = dữ liệu ban đầu, không tính.
   roomHistoryRows.forEach(r=>{
     const c = byId[r.customer_id]; const d = fromDbDate(r.entered_at);
-    if(r.reason === 'Tạo khách hàng') add(c && c.intakeType==='transfer_in' ? 'in' : 'new', d, c);
-    else if(r.reason === 'Khách quay lại sau khi Remove') add('in', d, c);
-    else if(r.special_room === 'Remove') add('out', d, c);
+    if(r.reason === 'Tạo khách hàng' && c && c.intakeType!=='transfer_in') add('new', d, c);
   });
-  // Bổ sung: KH đã chuyển đi nhưng chưa có dòng lịch sử
-  customers.forEach(c=>{ if(c.mgmtEnd && !ev.some(e=>e.type==='out' && e.c===c)) add('out', c.mgmtEnd, c); });
-  // Import Excel = dữ liệu ban đầu, không tính là KH mới / chuyển về
+  // KH chuyển về / chuyển đi: CHỈ lấy từ 2 danh sách nhập tay (không tính theo Danh sách KH)
+  // Danh sách KH chuyển về / chuyển đi (nhập tay từ mail) là nguồn chính: hiện cả KH chưa có trong DS
+    const stub = (t, mgr)=> custByStk(t.stk) || { id:'stk:'+t.stk, stk:t.stk, name:t.name||'', telegram:'', nav:0, room:'', managerId:mgr||'', ctype:'KH thường' };
+  transferOuts.forEach(t=>{ if(t.date) add('out', t.date, stub(t, t.newId)); });
+  transferIns.forEach(t=>{ if(t.date){ const c = stub(t, t.newId); add('in', t.date, c); } });
   return ev;
 }
 function mvItemHtml(e){
@@ -3009,9 +3017,9 @@ function exportMovesExcel(){
     add('KH tiềm năng', ['STT','Ngày tiếp nhận','Tên KH','Người liên hệ','Tình trạng liên hệ','Tình trạng KH','STK','Trong DS KH','Ghi chú'],
       zaloLeads.map(l=>[l.id, l.date||'', l.name, l.person, l.contact, l.outcome, l.stk, l.stk ? custStatusText(l.stk) : '', l.note]), [6,14,26,18,18,16,12,18,30]);
     add('KH chuyển về', ['Ngày chuyển','STK','Tên KH','NAV','ID chuyển về','STT KH (Zalo)','Tên KH (Zalo)','Tình trạng trong DS KH','Ghi chú'],
-      transferIns.slice().sort((a,b)=>b.id-a.id).map(t=>{ const c = custByStk(t.stk), l = t.leadId ? zaloLeads.find(x=>x.id===t.leadId) : null; return [t.date||'', t.stk, t.name||(c?c.name:''), c?(c.nav||0):'', t.newId, t.leadId||'', l?l.name:'', custStatusText(t.stk), t.note]; }), [12,12,26,16,14,14,26,22,30]);
+      transferIns.slice().sort(byDateDesc).map(t=>{ const c = custByStk(t.stk), l = t.leadId ? zaloLeads.find(x=>x.id===t.leadId) : null; return [t.date||'', t.stk, t.name||(c?c.name:''), c?(c.nav||0):'', t.newId, t.leadId||'', l?l.name:'', custStatusText(t.stk), t.note]; }), [12,12,26,16,14,14,26,22,30]);
     add('KH chuyển đi', ['Ngày chuyển','STK','Tên KH','NAV','ID chuyển đi','Tình trạng','Ghi chú'],
-      transferOuts.slice().sort((a,b)=>b.id-a.id).map(t=>{ const c = custByStk(t.stk); return [t.date||'', t.stk, t.name || (c?c.name:''), c?(c.nav||0):'', t.newId, !c ? 'Chưa có trong DS' : (c.status==='Đã chuyển đi' ? 'Đã Remove & cập nhật' : 'Chưa Remove'), t.note]; }), [12,12,26,16,14,24,30]);
+      transferOuts.slice().sort(byDateDesc).map(t=>{ const c = custByStk(t.stk); return [t.date||'', t.stk, t.name || (c?c.name:''), c?(c.nav||0):'', t.newId, !c ? 'Chưa có trong DS' : (c.status==='Đã chuyển đi' ? 'Đã Remove & cập nhật' : 'Chưa Remove'), t.note]; }), [12,12,26,16,14,24,30]);
     XLSX.writeFile(wb, `Bien_dong_KH_${todayDdMmYyyy().replace(/\//g,'-')}.xlsx`);
     showToast('Đã xuất file Excel Biến động KH.');
   } catch(err){ alert('Lỗi khi xuất Excel: ' + err.message); }
@@ -3052,7 +3060,7 @@ function renderMoves(){
   wrap.innerHTML = dates.map((d,i)=>{
     const g = byDate[d];
     const col = (title, arr, cls)=>`<div class="mv-col ${cls||''}"><h4>${title} (${arr.length})</h4>${arr.length ? arr.map(mvItemHtml).join('') : '<div class="mv-empty">Không có</div>'}</div>`;
-    return `<details class="mv-day" data-d="${d}" ${(mvOpenState[d]===undefined ? i<3 : mvOpenState[d])?'open':''}>
+    return `<details class="mv-day" data-d="${d}" ${mvOpenState[d]?'open':''}>
       <summary><span>${d}${d===today?' (Hôm nay)':''}</span>
         <span class="mv-chip new">Mới ${g.new.length}</span><span class="mv-chip in">Chuyển về ${g.in.length}</span><span class="mv-chip out" style="margin-left:auto;">Chuyển đi ${g.out.length}</span></summary>
       <div class="mv-cols">${col('🆕 Khách hàng mới', g.new)}${col('⬇️ Chuyển về', g.in)}${col('⬆️ Chuyển đi', g.out, 'out')}</div>
@@ -3244,7 +3252,7 @@ async function deleteLead(id){
 let editingTinId = null;
 function renderTins(){
   const body = document.getElementById('tinBody'); if(!body) return;
-  const rows = transferIns.slice().sort((a,b)=>b.id-a.id);
+  const rows = transferIns.slice().sort(byDateDesc);
   body.innerHTML = rows.length ? rows.map(t=>{
     const c = custByStk(t.stk); const lead = t.leadId ? zaloLeads.find(x=>x.id===t.leadId) : null;
     return `<tr data-tid="${t.id}"><td>${t.date||''}</td><td><b class="cp-stt" title="Bấm để copy số tài khoản" onclick="copyStk('${escHtml(t.stk)}')">${escHtml(t.stk)}</b></td><td>${escHtml(t.name || (c?c.name:''))}</td><td class="num-col">${c ? fmt(c.nav||0) : '<span style="color:#9AA5B4;">—</span>'}</td><td>${escHtml(t.newId)}</td>
@@ -3332,7 +3340,7 @@ function toutStatusBadge(t){
 }
 function renderTouts(){
   const body = document.getElementById('toutBody'); if(!body) return;
-  const rows = transferOuts.slice().sort((a,b)=>b.id-a.id);
+  const rows = transferOuts.slice().sort(byDateDesc);
   body.innerHTML = rows.length ? rows.map(t=>{
     const c = custByStk(t.stk);
     return `<tr data-oid="${t.id}"><td>${t.date||''}</td><td><b class="cp-stt" title="Bấm để copy số tài khoản" onclick="copyStk('${escHtml(t.stk)}')">${escHtml(t.stk)}</b></td><td>${escHtml(t.name || (c?c.name:''))}</td><td class="num-col">${c ? fmt(c.nav||0) : '<span style="color:#9AA5B4;">—</span>'}</td><td>${escHtml(t.newId)}</td><td>${clickableBadge(t.stk, toutStatusBadge(t))}</td>
@@ -4643,12 +4651,25 @@ async function updateLoanNote(id, newNote){
   if(error){ alert('Lỗi khi lưu ghi chú: ' + error.message); if(l) l.note = oldNote; }
   else { showToast('Đã lưu ghi chú thành công.'); if(oldNote !== newNote) logLoanHistory(id, 'sua_ghi_chu', `"${oldNote||'(trống)'}" → "${newNote||'(trống)'}"`); }
 }
+// Vẽ lại danh sách nhưng giữ nguyên vị trí màn hình: dòng đang sửa đứng yên đúng chỗ, không bị nhảy.
+function keepRender(fn, sel){
+  const el = sel ? document.querySelector(sel) : null;
+  const sc = el ? el.closest('.loan-table-scroll') : null;
+  const top = el ? el.getBoundingClientRect().top : null;
+  const wy = window.scrollY, sl = sc ? sc.scrollLeft : 0;
+  fn();
+  const n = sel ? document.querySelector(sel) : null;
+  const nsc = n ? n.closest('.loan-table-scroll') : null;
+  if(nsc) nsc.scrollLeft = sl;
+  window.scrollTo(window.scrollX, wy);
+  if(n && top!==null){ const d = n.getBoundingClientRect().top - top; if(Math.abs(d)>1) window.scrollBy(0, d); }
+}
 async function updateLoanAmount(id, newValue){
   const num = parseFloat(String(newValue).replace(/[^\d]/g,'')) || 0;
   const l = loans.find(x=>x.id===id);
   const oldAmount = l ? l.amount : 0;
   if(l) l.amount = num;
-  renderLoans();
+  keepRender(()=>renderLoans(), 'tr[data-lid="'+id+'"]');
   renderDashboard();
   try {
     const { error } = await sb.from('loans').update({ amount: num, updated_at: new Date().toISOString() }).eq('loan_id', id);
@@ -4658,7 +4679,7 @@ async function updateLoanAmount(id, newValue){
   } catch(err){
     alert('Lỗi khi lưu số tiền: ' + err.message);
     if(l) l.amount = oldAmount;
-    renderLoans();
+    keepRender(()=>renderLoans(), 'tr[data-lid="'+id+'"]');
     renderDashboard();
   }
 }
@@ -4666,19 +4687,19 @@ async function updateLoanDueDate(id, newValue, stk){
   const newDate = newValue.trim();
   if(!/^\d{2}\/\d{2}\/\d{4}$/.test(newDate)){
     alert('Vui lòng nhập đúng định dạng dd/mm/yyyy.');
-    renderLoans();
+    keepRender(()=>renderLoans(), 'tr[data-lid="'+id+'"]');
     return;
   }
   const LOAN_RESOLVED_STATUSES = ['KH xử lý xong','Công ty đã xử lý'];
   const conflict = loans.find(l => l.id!==id && l.account.slice(0,6)===stk && l.dueDate===newDate && !LOAN_RESOLVED_STATUSES.includes(l.status));
   if(conflict){
     const ok = confirm(`Khách hàng này đã có 1 khoản vay khác đang mở cùng ngày ${newDate} (STK ${conflict.account}). Bạn vẫn muốn lưu?`);
-    if(!ok){ renderLoans(); return; }
+    if(!ok){ keepRender(()=>renderLoans(), 'tr[data-lid="'+id+'"]'); return; }
   }
   const l = loans.find(x=>x.id===id);
   const oldDate = l ? l.dueDate : null;
   if(l) l.dueDate = newDate;
-  renderLoans();
+  keepRender(()=>renderLoans(), 'tr[data-lid="'+id+'"]');
   renderDashboard();
   try {
     const { error } = await sb.from('loans').update({ due_date: toDbDate(newDate), updated_at: new Date().toISOString() }).eq('loan_id', id);
@@ -4688,7 +4709,7 @@ async function updateLoanDueDate(id, newValue, stk){
   } catch(err){
     alert('Lỗi khi lưu ngày đến hạn: ' + err.message);
     if(l) l.dueDate = oldDate;
-    renderLoans();
+    keepRender(()=>renderLoans(), 'tr[data-lid="'+id+'"]');
     renderDashboard();
   }
 }
@@ -5143,7 +5164,7 @@ function renderLoans(){
           const days = daysUntil(l.dueDate);
           const dueColor = days < 0 ? 'var(--red)' : days <= 3 ? 'var(--amber)' : 'var(--text)';
           const dueIcon = days < 0 || days <= 3 ? '⚠️ ' : '';
-          rowsHtml += `<tr>
+          rowsHtml += `<tr data-lid="${l.id}">
             ${bulkSelectMode ? `<td><input type="checkbox" class="bulk-checkbox" ${bulkSelectedLoanIds.has(l.id)?'checked':''} onchange="toggleBulkSelectLoan(${l.id})"></td>` : ''}
             <td>${stt}</td>
             <td><span style="cursor:pointer;" title="Bấm để copy số tài khoản" onclick="copyToClipboard('${account}', this)">${account} <span style="opacity:.45;">📋</span></span></td>
@@ -5276,7 +5297,7 @@ async function updateMarginCallAmount(id, newValue){
   const m = marginCalls.find(x=>x.id===id);
   const oldAmount = m ? m.amount : 0;
   if(m) m.amount = num;
-  renderMarginCalls();
+  keepRender(()=>renderMarginCalls(), 'tr[data-mid="'+id+'"]');
   renderDashboard();
   try {
     const { error } = await sb.from('margin_calls').update({ amount: num, updated_at: new Date().toISOString() }).eq('margin_call_id', id);
@@ -5286,7 +5307,7 @@ async function updateMarginCallAmount(id, newValue){
   } catch(err){
     alert('Lỗi khi lưu số tiền: ' + err.message);
     if(m) m.amount = oldAmount;
-    renderMarginCalls();
+    keepRender(()=>renderMarginCalls(), 'tr[data-mid="'+id+'"]');
     renderDashboard();
   }
 }
@@ -5294,19 +5315,19 @@ async function updateMarginCallDueDate(id, newValue, stk){
   const newDate = newValue.trim();
   if(!/^\d{2}\/\d{2}\/\d{4}$/.test(newDate)){
     alert('Vui lòng nhập đúng định dạng dd/mm/yyyy.');
-    renderMarginCalls();
+    keepRender(()=>renderMarginCalls(), 'tr[data-mid="'+id+'"]');
     return;
   }
   const MC_RESOLVED_STATUSES = ['KH xử lý xong','Công ty đã xử lý'];
   const conflict = marginCalls.find(m => m.id!==id && m.account.slice(0,6)===stk && m.dueDate===newDate && !MC_RESOLVED_STATUSES.includes(m.status));
   if(conflict){
     const ok = confirm(`Khách hàng này đã có 1 khoản RRUB/Call Margin khác đang mở cùng hạn ${newDate} (STK ${conflict.account}). Bạn vẫn muốn lưu?`);
-    if(!ok){ renderMarginCalls(); return; }
+    if(!ok){ keepRender(()=>renderMarginCalls(), 'tr[data-mid="'+id+'"]'); return; }
   }
   const m = marginCalls.find(x=>x.id===id);
   const oldDate = m ? m.dueDate : null;
   if(m) m.dueDate = newDate;
-  renderMarginCalls();
+  keepRender(()=>renderMarginCalls(), 'tr[data-mid="'+id+'"]');
   renderDashboard();
   try {
     const { error } = await sb.from('margin_calls').update({ due_date: toDbDate(newDate), updated_at: new Date().toISOString() }).eq('margin_call_id', id);
@@ -5316,7 +5337,7 @@ async function updateMarginCallDueDate(id, newValue, stk){
   } catch(err){
     alert('Lỗi khi lưu hạn xử lý: ' + err.message);
     if(m) m.dueDate = oldDate;
-    renderMarginCalls();
+    keepRender(()=>renderMarginCalls(), 'tr[data-mid="'+id+'"]');
     renderDashboard();
   }
 }
@@ -5324,10 +5345,10 @@ async function updateMarginCallStatus(id, newStatus){
   const m = marginCalls.find(x=>x.id===id);
   const oldStatus = m ? m.status : '';
   if(m) m.status = newStatus;
-  renderMarginCalls();
+  keepRender(()=>renderMarginCalls(), 'tr[data-mid="'+id+'"]');
   renderDashboard();
   const { error } = await sb.from('margin_calls').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('margin_call_id', id);
-  if(error){ alert('Lỗi khi cập nhật trạng thái: ' + error.message); await loadAllData(); renderMarginCalls(); renderDashboard(); }
+  if(error){ alert('Lỗi khi cập nhật trạng thái: ' + error.message); await loadAllData(); keepRender(()=>renderMarginCalls(), 'tr[data-mid="'+id+'"]'); renderDashboard(); }
   else { showToast('Đã cập nhật trạng thái: ' + newStatus); if(oldStatus !== newStatus) logMarginCallHistory(id, 'doi_trang_thai', `${oldStatus} → ${newStatus}`); }
 }
 async function deleteMarginCallEntry(id){
@@ -5717,7 +5738,7 @@ function renderMarginCalls(){
           const days = daysUntil(m.dueDate);
           const dueColor = days < 0 ? 'var(--red)' : days <= 3 ? 'var(--amber)' : 'var(--text)';
           const dueIcon = days < 0 || days <= 3 ? '⚠️ ' : '';
-          rowsHtml += `<tr>
+          rowsHtml += `<tr data-mid="${m.id}">
             ${mcBulkSelectMode ? `<td><input type="checkbox" class="bulk-checkbox" ${bulkSelectedMarginCallIds.has(m.id)?'checked':''} onchange="toggleBulkSelectMarginCall(${m.id})"></td>` : ''}
             <td>${stt}</td>
             <td><span style="cursor:pointer;" title="Bấm để copy số tài khoản" onclick="copyToClipboard('${account}', this)">${account} <span style="opacity:.45;">📋</span></span></td>
@@ -6574,7 +6595,7 @@ function renderSkippedSpecialPanel(plan){
     <div class="panel-header" style="background:#FFF4E5;"><div class="panel-title" style="color:#9A5B13;">⚠️ ${sk.length} STK bị LOẠI vì không thuộc ID đặc biệt — vui lòng kiểm tra lại</div>
       <button class="btn btn-secondary btn-sm" onclick="downloadSkippedSpecial()">⬇️ Tải danh sách bị loại (Excel)</button></div>
     <div class="panel-body" style="padding:10px 14px;font-size:12.5px;color:var(--text-muted);">Các STK dưới đây <b>sẽ không được import</b>.${noId?` Trong đó ${noId} dòng không có ID quản lý.`:''} Nếu STK nào cần giữ, hãy thêm ID của nó vào mục Quản lý ID đặc biệt rồi import lại file.</div>
-    <div style="max-height:260px;overflow:auto;"><table><thead><tr><th>Dòng</th><th>STK</th><th>ID trong file</th></tr></thead><tbody>
+    <div class="sk-scroll" style="max-height:260px;overflow:auto;"><table><thead><tr><th>Dòng</th><th>STK</th><th>ID trong file</th></tr></thead><tbody>
       ${sk.slice(0,500).map(x=>`<tr><td>${x.line}</td><td>${escHtml(x.account)}</td><td>${x.managerId?escHtml(x.managerId):'<span class="badge badge-red">Trống</span>'}</td></tr>`).join('')}
       ${sk.length>500?`<tr><td colspan="3" style="text-align:center;color:var(--text-muted);">… và ${sk.length-500} dòng khác — tải file Excel để xem đủ</td></tr>`:''}
     </tbody></table></div></div>`;
