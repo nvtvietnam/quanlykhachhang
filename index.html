@@ -354,7 +354,16 @@ tbody tr:hover .row-actions{opacity:1;}
 .overall-badge-soon{background:var(--amber-soft);color:var(--amber);}
 .overall-badge-ok{background:var(--green-soft);color:var(--green);}
 
+@media (min-width:901px){
+  /* Cố định cột lọc bên trái + hàng công cụ + tiêu đề bảng; tự co theo chiều cao màn hình nên chia đôi màn hình vẫn dùng được */
+  #view-loans .loan-sidebar,#view-margincalls .loan-sidebar{position:sticky;top:calc(var(--topbar-h,68px) + 12px);max-height:calc(100vh - var(--topbar-h,68px) - 24px);overflow-y:auto;}
+  #view-loans .loan-main > .toolbar,#view-margincalls .loan-main > .toolbar{position:sticky;top:var(--topbar-h,68px);z-index:15;}
+  #loansContainer .loan-table-scroll,#marginCallsContainer .loan-table-scroll{overflow:auto;max-height:calc(100vh - var(--topbar-h,68px) - var(--loan-tb,64px) - 40px);}
+  #loansContainer .loan-summary-table,#marginCallsContainer .loan-summary-table{overflow:visible;}
+  #loansContainer .loan-summary-table > thead > tr > th,#marginCallsContainer .loan-summary-table > thead > tr > th{position:sticky;top:0;z-index:12;}
+}
 .loan-page-layout{display:grid;grid-template-columns:260px 1fr;gap:18px;align-items:start;}
+@media (min-width:901px) and (max-width:1250px){ .loan-page-layout{grid-template-columns:205px 1fr;gap:12px;} #view-loans .loan-sidebar,#view-margincalls .loan-sidebar{padding:10px;} }
 @media (max-width:900px){
   .loan-page-layout{grid-template-columns:1fr;}
 }
@@ -765,7 +774,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.72</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.75</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -787,7 +796,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.72</div>
+        <div class="brand-sub">Chứng khoán · v08.75</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -979,7 +988,7 @@ body{-webkit-text-size-adjust:100%;}
         <div class="toolbar">
           <div class="search-box">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" placeholder="Tìm theo mã KH, STK, tên hoặc Telegram…" oninput="renderCustomers()" id="searchInput">
+            <input type="text" placeholder="Tìm theo mã KH, STK, tên hoặc Telegram…" oninput="debouncedRenderCustomers()" id="searchInput">
           </div>
           <select class="filter-select" id="filterRoom" onchange="renderCustomers()">
             <option value="">Tất cả Room</option>
@@ -2304,8 +2313,10 @@ async function checkAuthAndInit(){
   renderLoans();
   renderMarginCalls();
   renderRights();
-  setImportType('nav');
+  setImportType('update');
   goImportStep(1);
+  switchView('dashboard');   // đăng nhập xong luôn vào Dashboard
+  window.scrollTo(0,0);
 
   subscribeRealtime();
   loadLoanTemplate();
@@ -2627,6 +2638,7 @@ function statusBadge(s){
 
 // ---------------- NAV / VIEW SWITCH ----------------
 function switchView(name){
+  setTimeout(()=>{ try{ syncStickyOffsets(); }catch(e){} }, 0);
   if(name === 'accounts' && currentRole !== 'owner'){
     alert('Chỉ Owner mới truy cập được mục Quản lý tài khoản.');
     name = 'dashboard';
@@ -2708,15 +2720,16 @@ async function loadColumnPrefs(){
     if(data && data.value){ const p = JSON.parse(data.value);
       if(Array.isArray(p.core)) visibleCols = new Set(p.core);
       if(Array.isArray(p.nav)) visibleNavDates = new Set(p.nav);
-      feeMonthsSel = Array.isArray(p.fee) ? new Set(p.fee) : null; }
+      feeMonthsSel = Array.isArray(p.fee) ? new Set(p.fee) : null;
+      if(!sortPrefApplied){ sortPrefApplied = true; if(p.sort && p.sort.key){ sortState = {key:p.sort.key, dir:p.sort.dir===-1?-1:1}; } } }
   } catch(e){}
 }
-let _colSaveT = null;
+let _colSaveT = null; let sortPrefApplied = false;
 function saveColumnPrefs(){
   if(currentRole!=='owner') return;
   clearTimeout(_colSaveT);
   _colSaveT = setTimeout(async ()=>{
-    const val = JSON.stringify({core:[...visibleCols], nav:[...visibleNavDates], fee:effectiveFeeMonths()});
+    const val = JSON.stringify({core:[...visibleCols], nav:[...visibleNavDates], fee:effectiveFeeMonths(), sort:{key:sortState.key, dir:sortState.dir}});
     const { error } = await sb.from('app_settings').upsert({ key:'column_prefs', value:val, updated_at:new Date().toISOString() });
     if(error) showToast('Lưu cấu hình cột thất bại: '+error.message,'error',2500); else showToast('Đã lưu cột hiển thị cho mọi tài khoản','success',1200);
   }, 500);
@@ -2819,6 +2832,7 @@ function syncStickyOffsets(){
   const root = document.documentElement.style;
   if(tp) root.setProperty('--topbar-h', tp.offsetHeight + 'px');
   if(tb && tb.offsetHeight) root.setProperty('--cust-tb', tb.offsetHeight + 'px');
+  const lt = document.querySelector('.view.active .loan-main > .toolbar'); if(lt && lt.offsetHeight) root.setProperty('--loan-tb', lt.offsetHeight + 'px');
 }
 window.addEventListener('resize', ()=>{ try{ syncStickyOffsets(); }catch(e){} });
 function renderCustomersHead(){
@@ -2955,7 +2969,7 @@ function isNumSortKey(k){ return NUM_SORT_KEYS.includes(k) || k.startsWith('navd
 function sortBy(key){
   if(sortState.key===key) sortState.dir = -sortState.dir;
   else { sortState.key = key; sortState.dir = isNumSortKey(key) ? -1 : 1; }   // số: lớn→nhỏ trước; chữ: A→Z trước
-  renderCustomers();
+  renderCustomers(); saveColumnPrefs();
 }
 function sortValue(key, c){
   if(key==='nav_latest') return c.nav;
@@ -2990,18 +3004,14 @@ function getFilteredSortedList(){
   }
   return list;
 }
-function renderCustomers(){
-  renderCustomersHead();
-  syncStickyOffsets();
-  updateAdvFilterBadge();
-  const list = getFilteredSortedList();
-  document.getElementById('resultCount').textContent = list.length + ' khách hàng';
-  const cols = activeColumns();
-  document.getElementById('customersBody').innerHTML = list.map((c,idx)=>{
-    const tds = cols.map(col=>{
-      const numCls = col.num ? ' class="num-col num"' : '';
-      return `<td${numCls}>${cellValue(col, c, idx)}</td>`;
-    }).join('');
+const CUST_PAGE = 120;
+let custRows = [], custShown = 0, custCols = [], custSig = '';
+function custRowHtml(c, idx){
+  const cols = custCols;
+  const tds = cols.map(col=>{
+    const numCls = col.num ? ' class="num-col num"' : '';
+    return `<td${numCls}>${cellValue(col, c, idx)}</td>`;
+  }).join('');
     return `
     <tr onclick="openDetail('${c.code}')">
       ${tds}
@@ -3014,8 +3024,48 @@ function renderCustomers(){
         </div>
       </td>
     </tr>`;
-  }).join('');
 }
+function custScroller(){ return document.querySelector('#view-customers > .panel:last-child'); }
+function custMoreRow(){
+  return custShown < custRows.length ? `<tr id="custMoreRow"><td colspan="${custCols.length+1}" style="text-align:center;color:var(--text-muted);padding:14px;">Đang hiển thị ${custShown} / ${custRows.length} khách — kéo xuống để xem thêm (hoặc dùng ô Tìm kiếm / Bộ lọc)</td></tr>` : '';
+}
+function renderCustomers(){
+  renderCustomersHead();
+  syncStickyOffsets();
+  updateAdvFilterBadge();
+  const list = getFilteredSortedList();
+  document.getElementById('resultCount').textContent = list.length + ' khách hàng';
+  const cols = activeColumns();
+  const sig = list.length + '|' + (list[0] ? list[0].id : '') + '|' + (sortState.key||'') + sortState.dir + '|' + cols.map(c=>c.key).join(',');
+  const fresh = sig !== custSig; custSig = sig;
+  custRows = list; custCols = cols;
+  custShown = Math.min(list.length, fresh ? CUST_PAGE : Math.max(CUST_PAGE, custShown));
+  const sc = custScroller(); const st = sc ? sc.scrollTop : 0;
+  document.getElementById('customersBody').innerHTML = list.slice(0, custShown).map((c,idx)=>custRowHtml(c, idx)).join('') + custMoreRow();
+  if(sc) sc.scrollTop = fresh ? 0 : st;
+}
+function loadMoreCustomers(){
+  if(custShown >= custRows.length) return;
+  const body = document.getElementById('customersBody');
+  const mr = document.getElementById('custMoreRow'); if(mr) mr.remove();
+  const end = Math.min(custRows.length, custShown + CUST_PAGE*2);
+  body.insertAdjacentHTML('beforeend', custRows.slice(custShown, end).map((c,i)=>custRowHtml(c, custShown+i)).join(''));
+  custShown = end;
+  body.insertAdjacentHTML('beforeend', custMoreRow());
+}
+function checkLoadMoreCustomers(){
+  if(custShown >= custRows.length) return;
+  const v = document.getElementById('view-customers'); if(!v || !v.classList.contains('active')) return;
+  const sc = custScroller();
+  const innerNear = sc && sc.scrollHeight > sc.clientHeight + 2 && (sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 500);
+  const last = document.getElementById('custMoreRow');
+  const pageNear = last && last.getBoundingClientRect().top < window.innerHeight + 500;
+  if(innerNear || pageNear) loadMoreCustomers();
+}
+window.addEventListener('scroll', checkLoadMoreCustomers, {passive:true});
+document.addEventListener('scroll', (e)=>{ const sc = custScroller(); if(sc && e.target===sc) checkLoadMoreCustomers(); }, true);
+let _custDebT = null;
+function debouncedRenderCustomers(){ clearTimeout(_custDebT); _custDebT = setTimeout(renderCustomers, 180); }
 
 // ---------------- XUẤT EXCEL ----------------
 function rawCellValue(c, cust, idx){
@@ -4760,6 +4810,8 @@ async function updateLoanNote(id, newNote){
   else { showToast('Đã lưu ghi chú thành công.'); if(oldNote !== newNote) logLoanHistory(id, 'sua_ghi_chu', `"${oldNote||'(trống)'}" → "${newNote||'(trống)'}"`); }
 }
 // Vẽ lại danh sách nhưng giữ nguyên vị trí màn hình: dòng đang sửa đứng yên đúng chỗ, không bị nhảy.
+function saveInnerScroll(id){ const sc = document.querySelector('#'+id+' .loan-table-scroll'); return {id, t: sc?sc.scrollTop:0, l: sc?sc.scrollLeft:0}; }
+function restoreInnerScroll(sv){ const n = document.querySelector('#'+sv.id+' .loan-table-scroll'); if(n){ n.scrollTop = sv.t; n.scrollLeft = sv.l; } try{ syncStickyOffsets(); }catch(e){} }
 function keepRender(fn, sel){
   const el = sel ? document.querySelector(sel) : null;
   const sc = el ? el.closest('.loan-table-scroll') : null;
@@ -4770,7 +4822,7 @@ function keepRender(fn, sel){
   const nsc = n ? n.closest('.loan-table-scroll') : null;
   if(nsc) nsc.scrollLeft = sl;
   window.scrollTo(window.scrollX, wy);
-  if(n && top!==null){ const d = n.getBoundingClientRect().top - top; if(Math.abs(d)>1) window.scrollBy(0, d); }
+  if(n && top!==null){ const d = n.getBoundingClientRect().top - top; if(Math.abs(d)>1){ if(nsc && nsc.scrollHeight>nsc.clientHeight+2) nsc.scrollTop += d; else window.scrollBy(0, d); } }
 }
 async function updateLoanAmount(id, newValue){
   const num = parseFloat(String(newValue).replace(/[^\d]/g,'')) || 0;
@@ -5314,7 +5366,9 @@ function renderLoans(){
   });
   html += `</tbody></table></div>`;
 
+  const __sv_loansContainer = saveInnerScroll('loansContainer');
   document.getElementById('loansContainer').innerHTML = html || (bulkBar + '<div style="color:var(--text-muted);font-size:13px;padding:20px;text-align:center;">Không có khoản vay nào khớp bộ lọc.</div>');
+  restoreInnerScroll(__sv_loansContainer);
   document.querySelectorAll('.loan-summary-row input[data-indeterminate="1"]').forEach(el=>{ el.indeterminate = true; });
 }
 
@@ -5888,7 +5942,9 @@ function renderMarginCalls(){
   });
   html += `</tbody></table></div>`;
 
+  const __sv_marginCallsContainer = saveInnerScroll('marginCallsContainer');
   document.getElementById('marginCallsContainer').innerHTML = html || (bulkBar + '<div style="color:var(--text-muted);font-size:13px;padding:20px;text-align:center;">Không có khoản RRUB/Call Margin nào khớp bộ lọc.</div>');
+  restoreInnerScroll(__sv_marginCallsContainer);
   document.querySelectorAll('.loan-summary-row input[data-indeterminate="1"]').forEach(el=>{ el.indeterminate = true; });
 }
 
