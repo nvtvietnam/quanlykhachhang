@@ -774,7 +774,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.75</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.76</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -796,7 +796,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.75</div>
+        <div class="brand-sub">Chứng khoán · v08.76</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -3174,7 +3174,7 @@ function exportMovesExcel(){
     add('KH tiềm năng', ['STT','Ngày tiếp nhận','Tên KH','Người liên hệ','Tình trạng liên hệ','Tình trạng KH','STK','Trong DS KH','Ghi chú'],
       zaloLeads.map(l=>[l.id, l.date||'', l.name, l.person, l.contact, l.outcome, l.stk, l.stk ? custStatusText(l.stk) : '', l.note]), [6,14,26,18,18,16,12,18,30]);
     add('KH chuyển về', ['Ngày chuyển','STK','Tên KH','NAV','ID chuyển về','STT KH (Zalo)','Tên KH (Zalo)','Tình trạng trong DS KH','Ghi chú'],
-      transferIns.slice().sort(byDateDesc).map(t=>{ const c = custByStk(t.stk), l = t.leadId ? zaloLeads.find(x=>x.id===t.leadId) : null; return [t.date||'', t.stk, t.name||(c?c.name:''), c?(c.nav||0):'', t.newId, t.leadId||'', l?l.name:'', custStatusText(t.stk), t.note]; }), [12,12,26,16,14,14,26,22,30]);
+      transferIns.slice().sort(byDateDesc).map(t=>{ const c = custByStk(t.stk), l = t.leadId ? zaloLeads.find(x=>x.id===t.leadId) : null; return [t.date||'', t.stk, t.name||(c?c.name:''), c?(c.nav||0):'', t.newId, t.leadId?leadStt(t.leadId):'', l?l.name:'', custStatusText(t.stk), t.note]; }), [12,12,26,16,14,14,26,22,30]);
     add('KH chuyển đi', ['Ngày chuyển','STK','Tên KH','NAV','ID chuyển đi','Tình trạng','Ghi chú'],
       transferOuts.slice().sort(byDateDesc).map(t=>{ const c = custByStk(t.stk); return [t.date||'', t.stk, t.name || (c?c.name:''), c?(c.nav||0):'', t.newId, !c ? 'Chưa có trong DS' : (c.status==='Đã chuyển đi' ? 'Đã Remove & cập nhật' : 'Chưa Remove'), t.note]; }), [12,12,26,16,14,24,30]);
     XLSX.writeFile(wb, `Bien_dong_KH_${todayDdMmYyyy().replace(/\//g,'-')}.xlsx`);
@@ -3309,10 +3309,13 @@ function renderLeadSummary(){
     + stat(n(l=>l.outcome==='Đã chuyển về'),'Đã chuyển về','good')
     + stat(n(l=>l.outcome==='Không quan tâm'),'Không quan tâm');
 }
+function leadSttMap(){ const m={}; zaloLeads.slice().sort((a,b)=>a.id-b.id).forEach((l,i)=>{ m[l.id]=i+1; }); return m; }
+function leadStt(id){ return leadSttMap()[id] || id; }
+function leadIdByStt(n){ const l=zaloLeads.slice().sort((a,b)=>a.id-b.id)[n-1]; return l?l.id:null; }
 function leadRowHtml(l){
   const done = l.outcome==='Đã mở TK' || l.outcome==='Đã chuyển về';
   return `<tr class="${done?'ld-done':''}" data-lid="${l.id}">
-    <td><b>${l.id}</b></td>
+    <td><b>${l.stt||l.id}</b></td>
     <td>${l.date||''}</td>
     <td><input type="text" class="loan-note-input ld-name" value="${escHtml(l.name)}" placeholder="Tên KH" onchange="updateLead(${l.id},'name',this.value)"></td>
     <td><input type="text" class="loan-note-input ld-person" list="ldPersonList" value="${escHtml(l.person)}" placeholder="Người liên hệ" onchange="updateLead(${l.id},'person',this.value)"></td>
@@ -3329,7 +3332,8 @@ function renderLeads(){
   const dl = document.getElementById('ldPersonList');
   if(dl){ const names = new Set(zaloLeads.map(l=>l.person).filter(Boolean)); (typeof accounts!=='undefined'?accounts:[]).forEach(a=>{ if(a.name) names.add(a.name); }); dl.innerHTML = [...names].map(n=>`<option value="${escHtml(n)}">`).join(''); }
   renderLeadSummary();
-  body.innerHTML = zaloLeads.length ? zaloLeads.map(leadRowHtml).join('') : '<tr><td colspan="10" class="lead-empty">Chưa có KH nào. Bấm "Dán danh sách tên" hoặc "+ Thêm KH".</td></tr>';
+  const _sm=leadSttMap();
+  body.innerHTML = zaloLeads.length ? zaloLeads.slice().sort(byDateDesc).map(l=>leadRowHtml(Object.assign({},l,{stt:_sm[l.id]}))).join('') : '<tr><td colspan="10" class="lead-empty">Chưa có KH nào. Bấm "Dán danh sách tên" hoặc "+ Thêm KH".</td></tr>';
   labelMobTable('leadBody');
 }
 async function updateLead(id, field, value){
@@ -3397,7 +3401,7 @@ async function saveLeadBulk(){
 async function deleteLead(id){
   if(currentRole !== 'owner'){ alert('Chỉ tài khoản Owner mới có quyền xóa. Tài khoản Editor chỉ được sửa, không xóa được.'); return; }
   const l = zaloLeads.find(x=>x.id===id); if(!l) return;
-  if(!confirm(`Xóa KH STT ${l.id}${l.name?' ('+l.name+')':''}? Thao tác này không thể hoàn tác.`)) return;
+  if(!confirm(`Xóa KH STT ${leadStt(l.id)}${l.name?' ('+l.name+')':''}? Thao tác này không thể hoàn tác.`)) return;
   try {
     const { data: _del, error } = await sb.from('zalo_leads').delete().eq('lead_id', id).select();
     if(error) throw error;
@@ -3414,7 +3418,7 @@ function renderTins(){
   body.innerHTML = rows.length ? rows.map(t=>{
     const c = custByStk(t.stk); const lead = t.leadId ? zaloLeads.find(x=>x.id===t.leadId) : null;
     return `<tr data-tid="${t.id}"><td>${t.date||''}</td><td><b class="cp-stt" title="Bấm để copy số tài khoản" onclick="copyStk('${escHtml(t.stk)}')">${escHtml(t.stk)}</b></td><td>${escHtml(t.name || (c?c.name:''))}</td><td class="num-col">${c ? fmt(c.nav||0) : '<span style="color:#9AA5B4;">—</span>'}</td><td>${escHtml(t.newId)}</td>
-      <td>${t.leadId ? `<b>${t.leadId}</b>${lead&&lead.name?' · '+escHtml(lead.name):''}` : '<span style="color:#9AA5B4;">—</span>'}</td>
+      <td>${t.leadId ? `<b>${leadStt(t.leadId)}</b>${lead&&lead.name?' · '+escHtml(lead.name):''}` : '<span style="color:#9AA5B4;">—</span>'}</td>
       <td>${c ? clickableBadge(t.stk, custStatusBadge(t.stk)) : `<span class="badge-click" style="cursor:pointer;" title="Bấm để thêm KH này vào danh sách" onclick="addCustFromTin(${t.id})"><span class="badge badge-gray">Chưa có trong DS</span> <span style="color:#2358E8;font-size:12px;font-weight:600;">＋ Thêm KH</span></span>`}</td>
       <td style="white-space:nowrap;"><button class="icon-btn" title="Sửa" onclick="openTinModal(${t.id})">${ICON_EDIT}</button>${delBtn('deleteTin',t.id)}</td></tr>`;
   }).join('') : '<tr><td colspan="8" class="lead-empty">Chưa có KH chuyển về nào. Nhận mail xong bấm "+ Thêm KH chuyển về".</td></tr>';
@@ -3426,7 +3430,7 @@ function openTinModal(id){
   document.getElementById('tin_stk').value = t ? t.stk : '';
   document.getElementById('tin_newid').value = t ? t.newId : '';
   document.getElementById('tin_name').value = t ? (t.name||'') : '';
-  document.getElementById('tin_lead').value = t && t.leadId ? t.leadId : '';
+  document.getElementById('tin_lead').value = t && t.leadId ? leadStt(t.leadId) : '';
   document.getElementById('tin_note').value = t ? t.note : '';
   tinLeadAuto = false; document.getElementById('tin_lead_hint').textContent = ''; delete document.getElementById('tin_name').dataset.auto;
   document.getElementById('tinModalOverlay').classList.add('active');
@@ -3444,8 +3448,8 @@ function autoFillTinLead(){
   const m = stk.length>=6 ? zaloLeads.filter(l=>l.stk && String(l.stk).trim().toLowerCase()===stk) : [];
   if(m.length){
     const l = m.sort((a,b)=>b.id-a.id)[0];
-    inp.value = l.id; tinLeadAuto = true; autoFillTinName(stk, l);
-    hint.style.color = '#0E9F6E'; hint.textContent = `✓ Khớp KH Zalo STT ${l.id}${l.name?' · '+l.name:''}${l.date?' · tiếp nhận '+l.date:''}`;
+    inp.value = leadStt(l.id); tinLeadAuto = true; autoFillTinName(stk, l);
+    hint.style.color = '#0E9F6E'; hint.textContent = `✓ Khớp KH Zalo STT ${leadStt(l.id)}${l.name?' · '+l.name:''}${l.date?' · tiếp nhận '+l.date:''}`;
   } else {
     if(tinLeadAuto){ inp.value = ''; tinLeadAuto = false; }
     autoFillTinName(stk, null);
@@ -3463,7 +3467,7 @@ async function saveTin(){
   if(!parseDdMmYyyy(dateStr)){ alert('Ngày chuyển không hợp lệ (dd/mm/yyyy).'); return; }
   const leadRaw = document.getElementById('tin_lead').value.trim();
   let leadId = null;
-  if(leadRaw){ leadId = parseInt(leadRaw,10); if(!zaloLeads.some(x=>x.id===leadId)){ alert(`Không có KH STT ${leadRaw} trong danh sách Zalo (mục 1). Kiểm tra lại hoặc để trống.`); return; } }
+  if(leadRaw){ leadId = leadIdByStt(parseInt(leadRaw,10)); if(!leadId){ alert(`Không có KH STT ${leadRaw} trong danh sách Zalo (mục 1). Kiểm tra lại hoặc để trống.`); return; } }
   if(transferIns.some(x=>x.id!==editingTinId && x.stk.toLowerCase()===stk.toLowerCase() && x.date===dateStr)){ alert(`STK ${stk} đã có trong danh sách chuyển về ngày ${dateStr}.`); return; }
   const row = { transfer_date: toDbDate(dateStr), account_number: stk, new_id: document.getElementById('tin_newid').value.trim().toUpperCase(), customer_name: document.getElementById('tin_name').value.trim(), lead_id: leadId, note: document.getElementById('tin_note').value.trim(), updated_at: new Date().toISOString() };
   try {
