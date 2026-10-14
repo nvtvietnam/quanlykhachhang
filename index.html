@@ -115,6 +115,14 @@ select.filter-select{padding:8px 10px;border:1px solid var(--border);border-radi
 table{width:100%;border-collapse:collapse;}
 thead th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--text-muted);font-weight:600;padding:11px 14px;border-bottom:1px solid var(--border);background:#FAFBFC;white-space:nowrap;position:sticky;top:60px;z-index:10;}
 .loan-detail-table thead th{position:static;top:auto;z-index:auto;}
+#view-customers > .toolbar{position:sticky;top:var(--topbar-h,60px);z-index:15;}
+#view-customers > .panel:last-child{overflow:auto !important;max-height:calc(100vh - var(--topbar-h,60px) - var(--cust-tb,0px) - 36px);}
+#view-customers #customersHead th{position:sticky !important;top:0 !important;z-index:12;}
+#view-customers #customersHead th:last-child{z-index:13;}
+#customersHead th.sortable{cursor:pointer;user-select:none;}
+#customersHead th.sortable:hover{color:var(--text);}
+#customersHead th .sort-ind{opacity:.45;font-size:11px;margin-left:3px;}
+#customersHead th .sort-ind.on{opacity:1;color:var(--primary,#2563EB);}
 thead th.num-col{text-align:right;}
 tbody td{padding:12px 14px;border-bottom:1px solid #F0F2F5;font-size:14px;vertical-align:middle;}
 tbody td.num-col{text-align:right;}
@@ -548,6 +556,7 @@ body.is-editor .icon-btn[title^="Xóa khoản"],body.is-editor .icon-btn[title^=
 .lead-table td .icon-btn{display:inline-flex;vertical-align:middle;margin-right:4px;}
 .lead-empty{text-align:center;color:#9AA5B4;padding:16px;}
 .mv-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+#mvTabs{position:sticky;top:var(--topbar-h,60px);z-index:15;background:var(--bg);padding:10px 0 8px;margin-bottom:6px;}
 .mv-tab{flex:1 1 170px;max-width:260px;text-align:left;background:#fff;border:1px solid #E4E8EE;border-radius:10px;padding:8px 12px;cursor:pointer;font-family:inherit;transition:border-color .15s,box-shadow .15s;}
 .mv-tab:hover{box-shadow:0 2px 8px rgba(20,40,80,.1);}
 .mv-tab .t{font-size:13px;font-weight:700;color:#1F2A3C;}
@@ -756,7 +765,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.68</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.72</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -778,7 +787,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.68</div>
+        <div class="brand-sub">Chứng khoán · v08.72</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -2527,8 +2536,18 @@ function fmt(n){ return n.toLocaleString('vi-VN'); }
 // Tự động chèn dấu chấm ngăn cách hàng nghìn khi gõ số tiền (500000000 -> 500.000.000).
 // Gõ tới đâu định dạng tới đó — chỉ giữ lại chữ số, con trỏ luôn về cuối ô (đơn giản, phù hợp gõ số tiền từ trái sang phải).
 function formatMoneyInput(el){
-  const digits = el.value.replace(/[^\d]/g,'');
-  el.value = digits ? Number(digits).toLocaleString('vi-VN') : '';
+  // Định dạng bằng chuỗi (KHÔNG chuyển qua Number) để gõ nhiều số 0 / gõ nhanh không bị làm tròn thành số 9.
+  // Giới hạn 15 chữ số (tới 999 nghìn tỷ), giữ nguyên vị trí con trỏ khi sửa giữa chừng.
+  const raw = el.value;
+  const pos = (el.selectionStart==null) ? raw.length : el.selectionStart;
+  const digitsBefore = raw.slice(0,pos).replace(/[^\d]/g,'').length;
+  let d = raw.replace(/[^\d]/g,'').replace(/^0+(?=\d)/,'').slice(0,15);
+  const out = d.replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+  if(out !== raw) el.value = out;
+  const target = Math.min(digitsBefore, d.length);
+  let i = 0;
+  if(target>0){ let cnt=0; for(i=0;i<out.length;i++){ if(/\d/.test(out[i])) cnt++; if(cnt===target){ i++; break; } } }
+  try{ el.setSelectionRange(i,i); }catch(e){}
 }
 
 // ---------------- ẨN/HIỆN THANH MENU (SIDEBAR) ----------------
@@ -2795,14 +2814,21 @@ function cellValue(c, cust, idx){
   }
 }
 
+function syncStickyOffsets(){
+  const tp = document.querySelector('.topbar'); const tb = document.querySelector('#view-customers > .toolbar');
+  const root = document.documentElement.style;
+  if(tp) root.setProperty('--topbar-h', tp.offsetHeight + 'px');
+  if(tb && tb.offsetHeight) root.setProperty('--cust-tb', tb.offsetHeight + 'px');
+}
+window.addEventListener('resize', ()=>{ try{ syncStickyOffsets(); }catch(e){} });
 function renderCustomersHead(){
   const cols = activeColumns();
   const ths = cols.map(c=>{
     const numCls = c.num ? ' num-col' : '';
-    if(c.sortable){
-      return `<th class="${numCls.trim()}" style="cursor:pointer;" onclick="sortBy('${c.key}')">${c.label} ↕</th>`;
-    }
-    return `<th class="${numCls.trim()}">${c.label}</th>`;
+    if(c.key==='stt') return `<th class="${numCls.trim()}">${c.label}</th>`;
+    const on = sortState.key===c.key;
+    const ind = on ? (sortState.dir===1 ? '↑' : '↓') : '↕';
+    return `<th class="${(numCls+' sortable').trim()}" onclick="sortBy('${c.key}')">${c.label}<span class="sort-ind ${on?'on':''}">${ind}</span></th>`;
   }).join('');
   document.getElementById('customersHead').innerHTML = `<tr>${ths}<th></th></tr>`;
 }
@@ -2924,10 +2950,21 @@ function matchesAdvancedFilters(c){
 
 // ---------------- CUSTOMERS TABLE ----------------
 let sortState = {key:null, dir:1};
+const NUM_SORT_KEYS = ['nav_latest','fee_latest','updated'];
+function isNumSortKey(k){ return NUM_SORT_KEYS.includes(k) || k.startsWith('navdate:') || k.startsWith('feem:'); }
 function sortBy(key){
-  sortState.dir = (sortState.key===key) ? -sortState.dir : -1;
-  sortState.key = key;
+  if(sortState.key===key) sortState.dir = -sortState.dir;
+  else { sortState.key = key; sortState.dir = isNumSortKey(key) ? -1 : 1; }   // số: lớn→nhỏ trước; chữ: A→Z trước
   renderCustomers();
+}
+function sortValue(key, c){
+  if(key==='nav_latest') return c.nav;
+  if(key==='fee_latest') return c.fee;
+  if(key==='updated'){ const k = dateSortKey(c.updated||''); return k && k!=='' ? Number(k.replace(/\D/g,'')) || null : null; }
+  if(key.startsWith('navdate:')){ const v = (c.navHistory||{})[key.slice(8)]; return v===undefined ? null : v; }
+  if(key.startsWith('feem:')){ const v = feeOfMonth(c, key.slice(5)); return v===undefined ? null : v; }
+  if(key==='room') return roomLabel(c.room) === '—' ? null : roomLabel(c.room);
+  const v = c[key==='stk'?'stk':key]; return (v===undefined || v===null || v==='') ? null : String(v);
 }
 function getFilteredSortedList(){
   const q = (document.getElementById('searchInput').value||'').toLowerCase();
@@ -2942,14 +2979,20 @@ function getFilteredSortedList(){
     return matchQ && matchRoom && matchStatus && matchCtype && matchesAdvancedFilters(c);
   });
   if(sortState.key){
-    const fieldMap = {nav_latest:'nav', fee_latest:'fee'};
-    const field = fieldMap[sortState.key] || sortState.key;
-    list = [...list].sort((a,b)=> (a[field]-b[field]) * sortState.dir);
+    const k = sortState.key, d = sortState.dir;
+    list = list.map(c=>({c, v:sortValue(k,c)})).sort((a,b)=>{
+      if(a.v===null && b.v===null) return 0;
+      if(a.v===null) return 1;           // ô trống luôn xuống cuối, bất kể chiều sắp xếp
+      if(b.v===null) return -1;
+      const r = (typeof a.v==='number' && typeof b.v==='number') ? (a.v-b.v) : String(a.v).localeCompare(String(b.v),'vi',{numeric:true,sensitivity:'base'});
+      return r * d;
+    }).map(x=>x.c);
   }
   return list;
 }
 function renderCustomers(){
   renderCustomersHead();
+  syncStickyOffsets();
   updateAdvFilterBadge();
   const list = getFilteredSortedList();
   document.getElementById('resultCount').textContent = list.length + ' khách hàng';
@@ -3110,6 +3153,7 @@ document.getElementById('mvTabs')?.addEventListener('click', e=>{ const b = e.ta
 let mvOpenState = {};
 document.getElementById('mvDays')?.addEventListener('toggle', e=>{ const d = e.target.dataset && e.target.dataset.d; if(d) mvOpenState[d] = e.target.open; }, true);
 function renderMoves(){
+  try{ syncStickyOffsets(); }catch(e){}
   const wrap = document.getElementById('mvDays'); if(!wrap) return;
   const ev = buildMoveEvents();
   const today = todayDdMmYyyy();
