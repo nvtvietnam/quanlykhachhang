@@ -582,6 +582,7 @@ body.is-editor .icon-btn[title^="Xóa khoản"],body.is-editor .icon-btn[title^=
 .mv-link:hover{background:#F3F7FF;border-radius:8px;}
 #transferTableBody{cursor:pointer;}
 .mv-export{margin-left:auto;align-self:center;}
+.mv-export + .mv-export{margin-left:0;}
 /* Màn hình hẹp / chia đôi màn hình: cột ID không bị cắt "...", tiêu đề không đè nhau */
 .loan-summary-row td{word-break:normal;}
 .loan-summary-row td.td-mgr{overflow:visible;text-overflow:clip;white-space:nowrap;}
@@ -779,7 +780,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.79</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.88</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -801,7 +802,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.79</div>
+        <div class="brand-sub">Chứng khoán · v08.88</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -1009,6 +1010,7 @@ body{-webkit-text-size-adjust:100%;}
             <option value="">Tất cả loại hình</option>
             <option value="KH thường">KH thường</option>
             <option value="KH chia sẻ">KH chia sẻ</option>
+            <option value="KH cũ">KH cũ</option>
           </select>
           <div class="spacer"></div>
 
@@ -2109,7 +2111,7 @@ body{-webkit-text-size-adjust:100%;}
         <div class="form-field"><label>NAV hiện tại (VNĐ) *</label><input type="text" inputmode="numeric" placeholder="500.000.000" id="f_nav" oninput="formatMoneyInput(this);updateTelegramPreview()"></div>
         <div class="form-field"><label>Phí tháng hiện tại (VNĐ) *</label><input type="text" inputmode="numeric" placeholder="2.000.000" id="f_fee" oninput="formatMoneyInput(this)"></div>
         <div class="form-field"><label>Ngày bắt đầu quản lý</label><input type="text" placeholder="dd/mm/yyyy — để trống = hôm nay" id="f_mgmtstart"></div>
-        <div class="form-field"><label>Loại hình KH</label><select id="f_ctype"><option value="KH thường">KH thường</option><option value="KH chia sẻ">KH chia sẻ</option></select></div>
+        <div class="form-field"><label>Loại hình KH</label><select id="f_ctype"><option value="KH thường">KH thường</option><option value="KH chia sẻ">KH chia sẻ</option><option value="KH cũ">KH cũ</option></select></div>
         <div class="form-field"><label>Nguồn KH</label><select id="f_intake"><option value="new">Khách mới (mở tài khoản mới)</option><option value="transfer_in">Chuyển về (đã có TK / từng chuyển đi)</option></select></div>
         <div class="form-field">
           <label>Nhóm / Room *</label>
@@ -2128,12 +2130,17 @@ body{-webkit-text-size-adjust:100%;}
           <label>Ngày remove <span style="font-weight:500;color:var(--text-muted);">(hệ thống tự ghi nhận)</span></label>
           <input type="text" id="f_removed_date" readonly style="background:#F5F7FA;color:var(--text-muted);">
           <div class="field-hint">Ghi lý do/chi tiết KH chuyển đi vào ô "Ghi chú" bên dưới.</div>
+          <div style="margin-top:12px;background:#F0F6FF;border:1.5px solid #B9D0F7;border-radius:10px;padding:10px 12px;">
+            <label style="font-weight:700;color:#1D4ED8;">💬 Tin nhắn chúc KH chuyển đi <span style="font-weight:500;color:var(--text-muted);">(tự theo xưng hô, sửa được)</span></label>
+            <textarea id="f_outmsg" rows="2" oninput="outMsgEdited=true" style="margin-top:6px;"></textarea>
+            <div style="margin-top:6px;display:flex;gap:8px;"><button type="button" class="btn btn-primary btn-sm" onclick="copyOutMsg()">📋 Copy tin nhắn</button><button type="button" class="btn btn-secondary btn-sm" onclick="outMsgEdited=false;refreshOutMsg()">↺ Về mẫu</button></div>
+          </div>
         </div>
         <div class="form-field full"><label>Ghi chú</label><textarea placeholder="VD: KH ưu tiên, KH NV…" id="f_note"></textarea></div>
         <div class="form-field full" style="background:var(--amber-soft);border:1.5px solid var(--amber);border-radius:10px;padding:12px 14px;margin:2px 0;">
           <label style="color:var(--amber);font-weight:700;">★ Tên Telegram <span style="font-weight:500;color:var(--text-muted);">(gõ tay — đây là trường dữ liệu riêng, không tự sinh; ô bên dưới chỉ hiện gợi ý mờ theo cấu trúc, bạn gõ hoặc sửa lại tuỳ ý)</span></label>
           <div style="display:flex;gap:8px;align-items:center;position:relative;">
-            <select id="f_pronoun" style="width:110px;flex-shrink:0;" onchange="updateTelegramPreview()"></select>
+            <select id="f_pronoun" style="width:110px;flex-shrink:0;" onchange="updateTelegramPreview();refreshOutMsg()"></select>
             <button type="button" class="icon-btn" title="Thêm / bớt lựa chọn xưng hô" onclick="togglePronounManager()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             </button>
@@ -2291,7 +2298,8 @@ async function checkAuthAndInit(){
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('loadingScreen').style.display = 'flex';
 
-  // Tra vai trò từ user_roles — nếu email chưa được cấp quyền, chặn truy cập
+  // Tải dữ liệu song song với việc kiểm tra quyền (không chờ nhau)
+  const dataP = loadAllData().catch(e=>{ console.error(e); });
   const { data: roleRow, error: roleErr } = await sb.from('user_roles').select('*').eq('email', currentUserEmail).maybeSingle();
   if(!roleRow){
     document.getElementById('loadingScreen').style.display = 'none';
@@ -2306,7 +2314,7 @@ async function checkAuthAndInit(){
   // Ghi nhật ký đăng nhập
   sb.from('access_log').insert({ email: currentUserEmail, user_agent: navigator.userAgent }).then(()=>{});
 
-  await loadAllData();
+  await dataP;
 
   document.getElementById('loadingScreen').style.display = 'none';
   document.getElementById('appRoot').style.display = 'flex';
@@ -2317,11 +2325,7 @@ async function checkAuthAndInit(){
   applyRoleVisibility();
 
   renderDashboard();
-  renderCustomers();
-  renderRooms();
-  renderLoans();
-  renderMarginCalls();
-  renderRights();
+  markViewsDirty('dashboard');   // các màn khác chỉ vẽ khi mở lần đầu → vào app nhanh hơn
   setImportType('update');
   goImportStep(1);
   switchView('dashboard');   // đăng nhập xong luôn vào Dashboard
@@ -2368,6 +2372,11 @@ function subscribeRealtime(){
   ['customers','loans','margin_calls','rights_offerings','rooms','user_roles','special_ids'].forEach(table=>{
     realtimeChannel.on('postgres_changes', { event:'*', schema:'public', table }, ()=>{
       scheduleRealtimeRefresh();
+    });
+  });
+  ['zalo_leads','transfer_in_list','transfer_out_list'].forEach(table=>{
+    realtimeChannel.on('postgres_changes', { event:'*', schema:'public', table }, ()=>{
+      clearTimeout(window.__mvRt); window.__mvRt = setTimeout(async ()=>{ try{ await loadMoveLists(); renderMoveLists(); }catch(e){} }, 500);
     });
   });
   realtimeChannel.subscribe();
@@ -2488,6 +2497,7 @@ async function loadAllData(){
   expandedMarginCallGroups = new Set();
 
   renderRoomFilterOptions();
+  { const _av = document.querySelector('.view.active'); markViewsDirty(_av ? _av.id.replace('view-','') : ''); }   // dữ liệu mới → các màn khác vẽ lại khi mở
 }
 
 // Dựng lại danh sách Room trong bộ lọc "Room" ở Danh sách khách hàng — gọi lại mỗi khi dữ liệu Room
@@ -2608,6 +2618,18 @@ function statusBadge(s){
 }
 
 // ---------------- NAV / VIEW SWITCH ----------------
+const LAZY_VIEWS = ['customers','rooms','loans','margincalls','rights'];
+let dirtyViews = new Set(LAZY_VIEWS);
+function markViewsDirty(except){ dirtyViews = new Set(LAZY_VIEWS.filter(v=>v!==except)); }
+function renderViewIfDirty(name){
+  if(!dirtyViews.has(name)) return;
+  dirtyViews.delete(name);
+  if(name==='customers') renderCustomers();
+  else if(name==='rooms') renderRooms();
+  else if(name==='loans') renderLoans();
+  else if(name==='margincalls') renderMarginCalls();
+  else if(name==='rights') renderRights();
+}
 function switchView(name){
   setTimeout(()=>{ try{ syncStickyOffsets(); }catch(e){} }, 0);
   if(name === 'accounts' && currentRole !== 'owner'){
@@ -2617,6 +2639,7 @@ function switchView(name){
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active', el.dataset.view===name));
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
   document.getElementById('view-'+name).classList.add('active');
+  renderViewIfDirty(name);
   const titles = {
     dashboard:["Dashboard","Tổng quan hoạt động quản lý khách hàng"],
     customers:["Danh sách khách hàng","Toàn bộ khách hàng đang được quản lý"],
@@ -2652,8 +2675,6 @@ const FIXED_COLUMNS = [
 const CORE_COLUMNS = [
   {key:'name', label:'Họ và tên KH'},
   {key:'telegram', label:'Tên Telegram'},
-  {key:'nav_latest', label:'NAV (mới nhất)', sortable:true, num:true},
-  {key:'fee_latest', label:'Phí (mới nhất)', sortable:true, num:true},
   {key:'gender',  label:'Giới tính'},
   {key:'room',    label:'Room'},
   {key:'updated', label:'Ngày cập nhật'},
@@ -2681,8 +2702,8 @@ function feeOfMonth(c, mk){
   return best===null ? undefined : c.feeHistory[best];
 }
 function latestFeeMonth(c){ let m=''; for(const d of Object.keys(c.feeHistory||{})){ const k=monthKeyOf(d); if(k>m) m=k; } return m; }
-let feeMonthsSel = null;   // null = mặc định 3 tháng gần nhất
-function effectiveFeeMonths(){ ensureAxes(); const base = feeMonthsSel ? FEE_MONTHS.filter(k=>feeMonthsSel.has(k)) : FEE_MONTHS.slice(0,3); return base.slice().sort(); }
+let feeMonthsSel = null;   // null = mặc định 1 tháng gần nhất
+function effectiveFeeMonths(){ ensureAxes(); const base = feeMonthsSel ? FEE_MONTHS.filter(k=>feeMonthsSel.has(k)) : FEE_MONTHS.slice(0,1); return base.slice().sort(); }
 function dateOptLabel(d){ return String(d).includes('/') ? shortDate(d) : monthLabel(d); }
 // ---- Lưu cấu hình cột dùng chung (chỉ Owner chọn, mọi tài khoản đều thấy như vậy) ----
 async function loadColumnPrefs(){
@@ -2690,8 +2711,8 @@ async function loadColumnPrefs(){
     const { data } = await sb.from('app_settings').select('value').eq('key','column_prefs').maybeSingle();
     if(data && data.value){ const p = JSON.parse(data.value);
       if(Array.isArray(p.core)) visibleCols = new Set(p.core);
-      if(Array.isArray(p.nav)) visibleNavDates = new Set(p.nav);
-      feeMonthsSel = Array.isArray(p.fee) ? new Set(p.fee) : null;
+      visibleNavDates = (Array.isArray(p.nav) && p.nav.length) ? new Set(p.nav) : null;   // rỗng = mặc định 1 ngày gần nhất
+      feeMonthsSel = (Array.isArray(p.fee) && p.fee.length) ? new Set(p.fee) : null;   // rỗng = mặc định 1 tháng gần nhất
       if(!sortPrefApplied){ sortPrefApplied = true; if(p.sort && p.sort.key){ sortState = {key:p.sort.key, dir:p.sort.dir===-1?-1:1}; } } }
   } catch(e){}
 }
@@ -2700,14 +2721,15 @@ function saveColumnPrefs(){
   if(currentRole!=='owner') return;
   clearTimeout(_colSaveT);
   _colSaveT = setTimeout(async ()=>{
-    const val = JSON.stringify({core:[...visibleCols], nav:[...visibleNavDates], fee:effectiveFeeMonths(), sort:{key:sortState.key, dir:sortState.dir}});
+    const val = JSON.stringify({core:[...visibleCols], nav:(visibleNavDates ? [...visibleNavDates] : null), fee:(feeMonthsSel ? [...feeMonthsSel] : null), sort:{key:sortState.key, dir:sortState.dir}});
     const { error } = await sb.from('app_settings').upsert({ key:'column_prefs', value:val, updated_at:new Date().toISOString() });
     if(error) showToast('Lưu cấu hình cột thất bại: '+error.message,'error',2500); else showToast('Đã lưu cột hiển thị cho mọi tài khoản','success',1200);
   }, 500);
 }
 
 let visibleCols = new Set(CORE_COLUMNS.filter(c=>c.key!=='gender' && c.key!=='updated').map(c=>c.key));   // mặc định ẩn Giới tính + Ngày cập nhật, hiện các cột còn lại
-let visibleNavDates = new Set();                          // mặc định chưa hiện cột NAV theo ngày
+let visibleNavDates = null;                              // null = mặc định 1 ngày NAV gần nhất
+function effectiveNavDates(){ ensureAxes(); return visibleNavDates ? NAV_DATES.filter(d=>visibleNavDates.has(d)) : NAV_DATES.slice(0,1); }
 
 function shortDate(d){ const [dd,mm] = d.split('/'); return `${dd}/${mm}`; }
 
@@ -2722,8 +2744,9 @@ function renderColumnManagerList(){
     return `<label class="col-check-row"><input type="checkbox" ${checked} onchange="toggleColumn('${c.key}')"> ${c.label}</label>`;
   }).join('');
   ensureAxes();
+  const _effNav = new Set(effectiveNavDates());
   const navHtml = NAV_DATES.length ? NAV_DATES.map(d=>{
-    const checked = visibleNavDates.has(d) ? 'checked' : '';
+    const checked = _effNav.has(d) ? 'checked' : '';
     return `<label class="col-check-row"><input type="checkbox" ${checked} onchange="toggleNavDate('${d}')"> NAV ${shortDate(d)}</label>`;
   }).join('') : '<div class="field-hint">Chưa có dữ liệu NAV theo ngày</div>';
   ensureAxes();
@@ -2746,13 +2769,13 @@ function toggleColumn(key){
   renderCustomers(); saveColumnPrefs();
 }
 function toggleNavDate(d){
-  if(visibleNavDates.has(d)) visibleNavDates.delete(d); else visibleNavDates.add(d);
+  const cur = new Set(effectiveNavDates()); if(cur.has(d)) cur.delete(d); else cur.add(d); visibleNavDates = cur.size ? cur : null;
   renderCustomers(); saveColumnPrefs();
 }
 function toggleFeeMonth(k){
   const cur = new Set(effectiveFeeMonths());
   if(cur.has(k)) cur.delete(k); else cur.add(k);
-  feeMonthsSel = cur;
+  feeMonthsSel = cur.size ? cur : null;
   renderCustomers(); saveColumnPrefs();
 }
 document.addEventListener('click', function(e){
@@ -2765,9 +2788,11 @@ document.addEventListener('click', function(e){
 
 function activeColumns(){
   ensureAxes();
+  if(sortState.key==='nav_latest') sortState.key = NAV_DATES[0] ? 'navdate:'+NAV_DATES[0] : null;
+  else if(sortState.key==='fee_latest') sortState.key = FEE_MONTHS[0] ? 'feem:'+FEE_MONTHS[0] : null;
   const cols = [...FIXED_COLUMNS];
   CORE_COLUMNS.forEach(c=>{ if(visibleCols.has(c.key)) cols.push(c); });
-  NAV_DATES.forEach(d=>{ if(visibleNavDates.has(d)) cols.push({key:'navdate:'+d, label:'NAV '+shortDate(d), num:true, date:d, type:'nav'}); });
+  effectiveNavDates().forEach(d=>{ cols.push({key:'navdate:'+d, label:'NAV '+shortDate(d), num:true, date:d, type:'nav'}); });
   effectiveFeeMonths().forEach(k=>cols.push({key:'feem:'+k, label:'Phí '+monthLabel(k), num:true, month:k, type:'feem'}));
   return cols;
 }
@@ -2789,10 +2814,10 @@ function cellValue(c, cust, idx){
     case 'nav_latest': return `${fmt(cust.nav)} ${cust.mismatch?'<span title="NAV không phù hợp với Room hiện tại" class="warn-icon">⚠️</span>':''}`;
     case 'fee_latest': return fmt(cust.fee);
     case 'gender': return cust.gender || '—';
-    case 'room': return roomLabel(cust.room);
+    case 'room': return roomLabel(cust.room) + (cust.mismatch?' <span title="NAV không phù hợp với Room hiện tại" class="warn-icon">⚠️</span>':'');
     case 'updated': return cust.updated;
     case 'note': return `<span style="color:var(--text-muted);">${cust.note||'—'}</span>`;
-    case 'ctype': return cust.ctype==='KH chia sẻ' ? '<span class="badge badge-blue">KH chia sẻ</span>' : '<span style="color:var(--text-muted);">KH thường</span>';
+    case 'ctype': return cust.ctype==='KH chia sẻ' ? '<span class="badge badge-blue">KH chia sẻ</span>' : cust.ctype==='KH cũ' ? '<span class="badge badge-gray">KH cũ</span>' : '<span style="color:var(--text-muted);">KH thường</span>';
     case 'status': return statusBadge(cust.status);
     default: return '';
   }
@@ -2822,7 +2847,7 @@ function renderCustomersHead(){
 const FILTER_FIELDS = [
   {key:'room',       label:'Room',              type:'select', options: ()=>[...rooms.map(r=>({value:r.id,label:r.name})), ...SPECIAL_ROOMS.map(s=>({value:s,label:s}))]},
   {key:'status',     label:'Trạng thái',        type:'select', options: ()=>[{value:'Đang quản lý',label:'Đang quản lý'},{value:'Chờ xác nhận',label:'Chờ xác nhận'},{value:'Đã chuyển đi',label:'Đã chuyển đi'}]},
-  {key:'ctype',      label:'Loại hình KH',      type:'select', options: ()=>[{value:'KH thường',label:'KH thường'},{value:'KH chia sẻ',label:'KH chia sẻ'}]},
+  {key:'ctype',      label:'Loại hình KH',      type:'select', options: ()=>[{value:'KH thường',label:'KH thường'},{value:'KH chia sẻ',label:'KH chia sẻ'},{value:'KH cũ',label:'KH cũ'}]},
   {key:'gender',     label:'Giới tính',         type:'select', options: ()=>[{value:'Nam',label:'Nam'},{value:'Nữ',label:'Nữ'},{value:'Khác',label:'Khác'}]},
   {key:'nav_latest', label:'NAV (mới nhất)',    type:'number'},
   {key:'fee_latest', label:'Phí (mới nhất)',    type:'number'},
@@ -3145,7 +3170,7 @@ function exportMovesExcel(){
     add('KH tiềm năng', ['STT','Ngày tiếp nhận','Tên KH','Người liên hệ','Tình trạng liên hệ','Tình trạng KH','STK','Trong DS KH','Ghi chú'],
       zaloLeads.map(l=>[l.id, l.date||'', l.name, l.person, l.contact, l.outcome, l.stk, l.stk ? custStatusText(l.stk) : '', l.note]), [6,14,26,18,18,16,12,18,30]);
     add('KH chuyển về', ['Ngày chuyển','STK','Tên KH','NAV','ID chuyển về','STT KH (Zalo)','Tên KH (Zalo)','Tình trạng trong DS KH','Ghi chú'],
-      transferIns.slice().sort(byDateDesc).map(t=>{ const c = custByStk(t.stk), l = t.leadId ? zaloLeads.find(x=>x.id===t.leadId) : null; return [t.date||'', t.stk, t.name||(c?c.name:''), c?(c.nav||0):'', t.newId, t.leadId?leadStt(t.leadId):'', l?l.name:'', custStatusText(t.stk), t.note]; }), [12,12,26,16,14,14,26,22,30]);
+      transferIns.slice().sort(byDateDesc).map(t=>{ const c = custByStk(t.stk), l = tinLead(t); return [t.date||'', t.stk, t.name||(c?c.name:''), c?(c.nav||0):'', t.newId, l?leadStt(l.id):'', l?l.name:'', custStatusText(t.stk), t.note]; }), [12,12,26,16,14,14,26,22,30]);
     add('KH chuyển đi', ['Ngày chuyển','STK','Tên KH','NAV','ID chuyển đi','Tình trạng','Ghi chú'],
       transferOuts.slice().sort(byDateDesc).map(t=>{ const c = custByStk(t.stk); return [t.date||'', t.stk, t.name || (c?c.name:''), c?(c.nav||0):'', t.newId, !c ? 'Chưa có trong DS' : (c.status==='Đã chuyển đi' ? 'Đã Remove & cập nhật' : 'Chưa Remove'), t.note]; }), [12,12,26,16,14,24,30]);
     XLSX.writeFile(wb, `Bien_dong_KH_${todayDdMmYyyy().replace(/\//g,'-')}.xlsx`);
@@ -3167,7 +3192,7 @@ function renderMvTabs(nNew, nOut, nIn){
     tab('leads','📞 KH tiềm năng', `<b>${zaloLeads.length}</b> KH${leadWait?` · <span class="w">${leadWait} chưa liên hệ</span>`:''}`) +
     tab('tin','⬇️ KH chuyển về', `<b>${transferIns.length}</b> KH · hôm nay <b>${nInList}</b>`) +
     tab('tout','⬆️ KH chuyển đi', `<b>${transferOuts.length}</b> KH${toutWait?` · <span class="w">${toutWait} chưa Remove</span>`:''} · hôm nay <b>${nOutList}</b>`) +
-    `<button type="button" class="btn btn-secondary btn-sm mv-export" onclick="exportMovesExcel()">📥 Xuất Excel</button>`;
+    `<button type="button" class="btn btn-secondary btn-sm mv-export" onclick="refreshMoveData(this)">🔄 Làm mới</button><button type="button" class="btn btn-secondary btn-sm mv-export" onclick="exportMovesExcel()">📥 Xuất Excel</button>`;
   applyMvTab();
 }
 document.getElementById('mvTabs')?.addEventListener('click', e=>{ const b = e.target.closest('.mv-tab'); if(b) setMvTab(b.dataset.t); });
@@ -3231,7 +3256,7 @@ function copyStk(stk){
 function addCustFromTin(tid){
   const t = transferIns.find(x=>x.id===tid); if(!t) return;
   openAddModal(t.stk);
-  const lead = t.leadId ? zaloLeads.find(x=>x.id===t.leadId) : null;
+  const lead = tinLead(t);
   document.getElementById('f_managerid').value = t.newId || '';
   const _nm = t.name || (lead && lead.name) || ''; if(_nm){ document.getElementById('f_name').value = _nm; }
   document.getElementById('f_intake').value = 'transfer_in';
@@ -3280,6 +3305,18 @@ function renderLeadSummary(){
     + stat(n(l=>l.outcome==='Đã mở TK'),'Đã mở TK','good')
     + stat(n(l=>l.outcome==='Đã chuyển về'),'Đã chuyển về','good')
     + stat(n(l=>l.outcome==='Không quan tâm'),'Không quan tâm');
+}
+function tinLead(t){
+  if(t.leadId){ const l = zaloLeads.find(x=>x.id===t.leadId); if(l) return l; }
+  const k = String(t.stk||'').trim().toLowerCase(); if(k.length<6) return null;
+  const m = zaloLeads.filter(l=>l.stk && String(l.stk).trim().toLowerCase()===k);
+  return m.length ? m.sort((a,b)=>b.id-a.id)[0] : null;
+}
+async function refreshMoveData(btn){
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ Đang làm mới…'; }
+  try{ await loadMoveLists(); renderMoveLists(); showToast('Đã làm mới dữ liệu.'); }
+  catch(e){ alert('Lỗi khi làm mới: '+e.message); }
+  if(btn){ btn.disabled = false; btn.textContent = '🔄 Làm mới'; }
 }
 function leadSttMap(){ const m={}; zaloLeads.slice().sort((a,b)=>a.id-b.id).forEach((l,i)=>{ m[l.id]=i+1; }); return m; }
 function leadStt(id){ return leadSttMap()[id] || id; }
@@ -3398,9 +3435,9 @@ function renderTins(){
   const body = document.getElementById('tinBody'); if(!body) return;
   const allRows = transferIns.slice().sort(byDateDesc); const rows = mvFilter(allRows,'tin');
   body.innerHTML = rows.length ? rows.map(t=>{
-    const c = custByStk(t.stk); const lead = t.leadId ? zaloLeads.find(x=>x.id===t.leadId) : null;
+    const c = custByStk(t.stk); const lead = tinLead(t);
     return `<tr data-tid="${t.id}"><td>${t.date||''}</td><td><b class="cp-stt" title="Bấm để copy số tài khoản" onclick="copyStk('${escHtml(t.stk)}')">${escHtml(t.stk)}</b></td><td>${escHtml(t.name || (c?c.name:''))}</td><td class="num-col">${c ? fmt(c.nav||0) : '<span style="color:#9AA5B4;">—</span>'}</td><td>${escHtml(t.newId)}</td>
-      <td>${t.leadId ? `<b>${leadStt(t.leadId)}</b>${lead&&lead.name?' · '+escHtml(lead.name):''}` : '<span style="color:#9AA5B4;">—</span>'}</td>
+      <td>${lead ? `<b>${leadStt(lead.id)}</b>${lead.name?' · '+escHtml(lead.name):''}` : '<span style="color:#9AA5B4;">—</span>'}</td>
       <td>${c ? clickableBadge(t.stk, custStatusBadge(t.stk)) : `<span class="badge-click" style="cursor:pointer;" title="Bấm để thêm KH này vào danh sách" onclick="addCustFromTin(${t.id})"><span class="badge badge-gray">Chưa có trong DS</span> <span style="color:#2358E8;font-size:12px;font-weight:600;">＋ Thêm KH</span></span>`}</td>
       <td style="white-space:nowrap;"><button class="icon-btn" title="Sửa" onclick="openTinModal(${t.id})">${ICON_EDIT}</button>${delBtn('deleteTin',t.id)}</td></tr>`;
   }).join('') : '<tr><td colspan="8" class="lead-empty">'+(allRows.length?'Không tìm thấy KH nào khớp.':'Chưa có KH chuyển về nào. Nhận mail xong bấm "+ Thêm KH chuyển về".')+'</td></tr>';
@@ -4162,7 +4199,7 @@ function openEditModal(stk){
   document.getElementById('f_room').value = c.room;
   document.getElementById('f_status').value = c.status;
   document.getElementById('f_note').value = c.note || '';
-  document.getElementById('f_pronoun').value = c.pronoun || '';
+  document.getElementById('f_pronoun').value = c.pronoun || computePronounFor(c.gender, c.birthYear);
   renderLinkedSelect(c.stk, c.linkedTo);
   const dateWrap = document.getElementById('f_removed_date_wrap');
   document.getElementById('f_telegram_preview').value = c.telegram || '';
@@ -4170,6 +4207,7 @@ function openEditModal(stk){
   if(c.status === 'Đã chuyển đi'){
     dateWrap.style.display = 'block';
     document.getElementById('f_removed_date').value = c.mgmtEnd || new Date().toLocaleDateString('vi-VN');
+    outMsgEdited = false; refreshOutMsg();
   } else {
     dateWrap.style.display = 'none';
   }
@@ -4248,7 +4286,7 @@ async function saveCustomer(){
     note,
     management_start_date: toDbDate(mgmtStart),
     intake_type: document.getElementById('f_intake').value === 'transfer_in' ? 'transfer_in' : 'new',
-    customer_type: document.getElementById('f_ctype').value === 'KH chia sẻ' ? 'KH chia sẻ' : 'KH thường',
+    customer_type: ['KH chia sẻ','KH cũ'].includes(document.getElementById('f_ctype').value) ? document.getElementById('f_ctype').value : 'KH thường',
     linked_to_customer_id: linkedCust ? linkedCust.id : null,
     updated_at: new Date().toISOString(),
   };
@@ -4341,6 +4379,19 @@ async function saveCustomer(){
   }
 }
 
+let outMsgEdited = false;
+function refreshOutMsg(){
+  const el = document.getElementById('f_outmsg'); if(!el || outMsgEdited) return;
+  const x = (document.getElementById('f_pronoun').value || 'Bạn').toLowerCase();
+  const self = ({em:'Chị', 'bạn':'Mình'})[x] || 'Em';   // KH là Em → Chị xưng; KH là Bạn → Mình; KH là Anh/Chị/… → Em xưng
+  el.value = `${self} thấy ${x} đã chuyển ID chúc ${x} giao dịch thành công nhé !`;
+}
+function copyOutMsg(){
+  const t = document.getElementById('f_outmsg').value;
+  const ok = ()=>showToast('Đã copy tin nhắn.', 'ok', 1000);
+  const fb = ()=>{ try{ const ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); ok(); }catch(e){ alert('Không tự copy được.'); } };
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(ok).catch(fb); else fb();
+}
 function onStatusChange(){
   const status = document.getElementById('f_status').value;
   const roomSel = document.getElementById('f_room');
@@ -4350,6 +4401,7 @@ function onStatusChange(){
     dateWrap.style.display = 'block';
     document.getElementById('f_removed_date').value = movedOutDateFor();
     applyMovedOutTelegram(true);
+    refreshOutMsg();
   } else {
     dateWrap.style.display = 'none';
     applyMovedOutTelegram(false);
@@ -4487,7 +4539,7 @@ function recomputePronoun(){
   }
   if(!pronounOptions.includes(pronoun)) pronoun = pronounOptions[0] || 'Bạn';
   document.getElementById('f_pronoun').value = pronoun;
-  updateTelegramPreview();
+  updateTelegramPreview(); refreshOutMsg();
 }
 
 // NAV quy ước: 100.000.000 = 0.1T  →  chia cho 1 tỷ, giữ 2 chữ số thập phân
@@ -6593,7 +6645,7 @@ function analyzeImportRows(type, rows, mapping){
         const tgIn = String(raw('telegram')||'').trim();
         if(!nameIn && !tgIn){ plan.errors.push({line:lineNo, content:`STK ${stk}`, error:'Thiếu cả Tên KH và Tên Telegram — không thêm'}); return; }
         const ctRaw = String(raw('ctype')||'').trim(); const ctN = ctRaw.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase();
-        let ctype='KH thường'; if(ctRaw){ if(/chia\s*se/.test(ctN)) ctype='KH chia sẻ'; else if(!/thuong/.test(ctN)){ plan.errors.push({line:lineNo, content:`STK ${stk} — Loại hình: ${ctRaw}`, error:'Loại hình không hợp lệ (chỉ nhận: KH thường / KH chia sẻ)'}); return; } }
+        let ctype='KH thường'; if(ctRaw){ if(/chia\s*se/.test(ctN)) ctype='KH chia sẻ'; else if(/(^|\s)cu$/.test(ctN)) ctype='KH cũ'; else if(!/thuong/.test(ctN)){ plan.errors.push({line:lineNo, content:`STK ${stk} — Loại hình: ${ctRaw}`, error:'Loại hình không hợp lệ (chỉ nhận: KH thường / KH chia sẻ / KH cũ)'}); return; } }
         const byM = String(raw('birthYear')||'').match(/(19|20)\d{2}/);
         const msRaw = has(raw('mgmtStart')) ? parseDateCell(raw('mgmtStart')) : '';
         seenStks.add(stk);
@@ -6620,8 +6672,8 @@ function analyzeImportRows(type, rows, mapping){
       if(mapping.note && has(raw('note'))){ const v=String(raw('note')).trim(); item.note=v; if(v!==(existing.note||'')) ch('noteChanged','Ghi chú',existing.note,v); }
       if(mapping.ctype && has(raw('ctype'))){
         const n=String(raw('ctype')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase();
-        const v = /chia\s*se/.test(n) ? 'KH chia sẻ' : (/thuong/.test(n) ? 'KH thường' : null);
-        if(!v){ plan.errors.push({line:lineNo, content:`STK ${stk} — Loại hình: ${raw('ctype')}`, error:'Loại hình không hợp lệ (chỉ nhận: KH thường / KH chia sẻ) — dòng này bỏ qua'}); return; }
+        const v = /chia\s*se/.test(n) ? 'KH chia sẻ' : /(^|\s)cu$/.test(n) ? 'KH cũ' : (/thuong/.test(n) ? 'KH thường' : null);
+        if(!v){ plan.errors.push({line:lineNo, content:`STK ${stk} — Loại hình: ${raw('ctype')}`, error:'Loại hình không hợp lệ (chỉ nhận: KH thường / KH chia sẻ / KH cũ) — dòng này bỏ qua'}); return; }
         item.ctype=v; if(v!==(existing.ctype||'KH thường')) ch('ctypeChanged','Loại hình',existing.ctype,v);
       }
       if(mapping.mgmtStart && has(raw('mgmtStart'))){ const v=parseDateCell(raw('mgmtStart')); if(/^\d{2}\/\d{2}\/\d{4}$/.test(v)){ item.mgmtStart=v; if(v!==existing.mgmtStart) ch('mgmtStartChanged','Ngày QL',existing.mgmtStart,v); } else { plan.errors.push({line:lineNo, content:`STK ${stk} — Ngày: ${raw('mgmtStart')}`, error:'Ngày bắt đầu quản lý sai định dạng (cần dd/mm/yyyy) — dòng này bỏ qua'}); return; } }
@@ -6678,13 +6730,13 @@ function analyzeImportRows(type, rows, mapping){
       const ctRaw = String(getMapped(row,mapping,'ctype')||'').trim();
       const ctNorm = ctRaw.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase();
       let ctype = 'KH thường', ctypeBad = false;
-      if(ctRaw){ if(/chia\s*se/.test(ctNorm)) ctype='KH chia sẻ'; else if(/thuong/.test(ctNorm)) ctype='KH thường'; else ctypeBad = true; }
+      if(ctRaw){ if(/chia\s*se/.test(ctNorm)) ctype='KH chia sẻ'; else if(/(^|\s)cu$/.test(ctNorm)) ctype='KH cũ'; else if(/thuong/.test(ctNorm)) ctype='KH thường'; else ctypeBad = true; }
       const mgmtStart = String(getMapped(row,mapping,'mgmtStart')).trim();
       const note = String(getMapped(row,mapping,'note')).trim();
       // LƯU Ý: "Tên KH" và "Tên Telegram" là 2 trường tách biệt — không copy Telegram vào Tên KH.
       // Nếu thiếu Tên KH nhưng có Tên Telegram, vẫn cho qua: Tên KH để trống (—), Tên Telegram giữ riêng.
       const stkInvalid = !stk || stk.length!==6;
-      if(ctypeBad){ plan.errors.push({line:lineNo, content:`STK ${stk||'(trống)'} — Loại hình: ${ctRaw}`, error:'Loại hình không hợp lệ (chỉ nhận: KH thường / KH chia sẻ)'}); return; }
+      if(ctypeBad){ plan.errors.push({line:lineNo, content:`STK ${stk||'(trống)'} — Loại hình: ${ctRaw}`, error:'Loại hình không hợp lệ (chỉ nhận: KH thường / KH chia sẻ / KH cũ)'}); return; }
       if(!name && !telegram){ plan.errors.push({line:lineNo, content:`STK ${stk||'(trống)'}`, error:'Thiếu cả Tên KH và Tên Telegram — không có gì để hiển thị cho KH này'}); return; }
 
       // Dòng không có STK hợp lệ (VD: "Admin", ô trống, lỗi gõ) —
