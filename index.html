@@ -753,6 +753,11 @@ body{-webkit-text-size-adjust:100%;}
 .cp-stt{cursor:pointer;padding:2px 7px;margin:-2px -7px;border-radius:6px;transition:background .15s,color .15s;}
 .cp-stt:hover{background:#E6EEFF;color:#2358E8;}
 .cp-stt:active{background:#CFE0FF;}
+.mv-search{position:relative;display:flex;align-items:center;gap:8px;}
+.mv-search input{width:250px;max-width:100%;padding:7px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;background:#fff;}
+.mv-search input:focus{outline:none;border-color:#2358E8;box-shadow:0 0 0 3px rgba(35,88,232,.12);}
+.mv-search-count{font-size:12px;color:var(--text-muted);white-space:nowrap;}
+@media(max-width:700px){.mv-search{width:100%;}.mv-search input{width:100%;font-size:16px;}}
 </style>
 </head>
 <body>
@@ -774,7 +779,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.76</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.79</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -796,7 +801,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.76</div>
+        <div class="brand-sub">Chứng khoán · v08.79</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -1357,7 +1362,7 @@ body{-webkit-text-size-adjust:100%;}
             <div style="font-size:38px;">✅</div>
             <div style="font-size:16px;font-weight:700;margin-top:10px;" id="importResultTitle">Đã cập nhật thành công</div>
             <div style="font-size:13px;color:var(--text-muted);margin-top:6px;" id="importResultSub"></div>
-            <button class="btn btn-primary" style="margin-top:18px;" onclick="switchView('customers')">Xem danh sách khách hàng</button>
+            <button class="btn btn-primary" id="importResultGoBtn" style="margin-top:18px;" onclick="switchView('customers')">Xem danh sách khách hàng</button>
           </div></div>
         </div>
       </div>
@@ -1389,7 +1394,9 @@ body{-webkit-text-size-adjust:100%;}
         <div class="panel" data-mvtab="tin" style="margin-bottom:18px;">
           <div class="panel-header">
             <div class="panel-title">KH CHUYỂN VỀ</div>
-            <button class="btn btn-primary btn-sm" onclick="openTinModal()">+ Thêm KH chuyển về</button>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <div class="mv-search"><input type="search" id="tinSearch" placeholder="🔍 Tìm theo STK hoặc tên KH…" oninput="renderMoveSearch('tin')"><span class="mv-search-count" id="tinSearchCount"></span></div>
+              <button class="btn btn-primary btn-sm" onclick="openTinModal()">+ Thêm KH chuyển về</button></div>
           </div>
           <div class="panel-body">
             <div class="lead-scroll"><table class="lead-table">
@@ -1403,7 +1410,9 @@ body{-webkit-text-size-adjust:100%;}
         <div class="panel" data-mvtab="tout" style="margin-bottom:18px;">
           <div class="panel-header">
             <div class="panel-title">KH CHUYỂN ĐI</div>
-            <button class="btn btn-primary btn-sm" onclick="openToutModal()">+ Thêm KH chuyển đi</button>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <div class="mv-search"><input type="search" id="toutSearch" placeholder="🔍 Tìm theo STK hoặc tên KH…" oninput="renderMoveSearch('tout')"><span class="mv-search-count" id="toutSearchCount"></span></div>
+              <button class="btn btn-primary btn-sm" onclick="openToutModal()">+ Thêm KH chuyển đi</button></div>
           </div>
           <div class="panel-body">
             <div class="lead-scroll"><table class="lead-table">
@@ -2380,38 +2389,48 @@ function applyRoleVisibility(){
 // ================================================================
 let roomHistoryRows = [];
 let zaloLeads = [], transferIns = [], transferOuts = [];
+async function fetchAllRows(table, cols, order){
+  const PS = 1000;
+  const page = async (i)=>{
+    for(let t=0;t<2;t++){
+      const r = await sb.from(table).select(cols, i===0 ? {count:'exact'} : undefined).order(order).range(i*PS, (i+1)*PS-1);
+      if(!r.error) return r;
+      console.error('load '+table+' page '+i, r.error);
+    }
+    return {data:null, count:null, error:true};
+  };
+  const first = await page(0);
+  let rows = first.data || [];
+  if(rows.length < PS) return rows;
+  if(typeof first.count === 'number'){
+    const n = Math.ceil(first.count / PS), jobs = [];
+    for(let i=1;i<n;i++) jobs.push(page(i));
+    (await Promise.all(jobs)).forEach(r=>{ rows = rows.concat(r.data||[]); });
+    return rows;
+  }
+  for(let i=1;;i++){ const r = await page(i); rows = rows.concat(r.data||[]); if(!r.data || r.data.length < PS) break; }
+  return rows;
+}
 async function loadAllData(){
-  // --- Rooms ---
-  const { data: roomRows } = await sb.from('rooms').select('*').order('room_id');
-  rooms = (roomRows||[]).map(r=>({ id:r.room_id, name:r.room_name, min:r.nav_min, max:r.nav_max===null?Infinity:r.nav_max, desc:r.description, adminCount:r.admin_count||0 }));
-
-  // --- Customers (phân trang tránh giới hạn 1000 dòng mặc định của PostgREST) ---
-  let allCust = [];
-  let from = 0; const pageSize = 1000;
-  while(true){
-    const { data: page, error } = await sb.from('customers').select('*').order('customer_id').range(from, from+pageSize-1);
-    if(error){ console.error('load customers error', error); break; }
-    allCust = allCust.concat(page||[]);
-    if(!page || page.length < pageSize) break;
-    from += pageSize;
-  }
-
-  // --- NAV / Fee history (gộp theo customer_id) ---
-  let navRows = [], feeRows = [];
-  from = 0;
-  while(true){
-    const { data: page } = await sb.from('nav_history').select('customer_id, update_date, nav').order('history_id').range(from, from+pageSize-1);
-    navRows = navRows.concat(page||[]);
-    if(!page || page.length < pageSize) break;
-    from += pageSize;
-  }
-  from = 0;
-  while(true){
-    const { data: page } = await sb.from('fee_history').select('customer_id, update_date, fee').order('history_id').range(from, from+pageSize-1);
-    feeRows = feeRows.concat(page||[]);
-    if(!page || page.length < pageSize) break;
-    from += pageSize;
-  }
+  // Tải SONG SONG toàn bộ bảng (và các trang của từng bảng) để đăng nhập nhanh hơn
+  const safe = (fn, dflt)=>fn().catch(e=>{ console.error(e); return dflt; });
+  const [roomRows, allCust, navRows, feeRows, loanRows, marginCallRows, rightRows, accRows, rhRows, spRows] = await Promise.all([
+    sb.from('rooms').select('*').order('room_id').then(r=>r.data||[]),
+    fetchAllRows('customers','*','customer_id'),
+    fetchAllRows('nav_history','customer_id, update_date, nav','history_id'),
+    fetchAllRows('fee_history','customer_id, update_date, fee','history_id'),
+    fetchAllRows('loans','*','loan_id'),
+    fetchAllRows('margin_calls','*','margin_call_id'),
+    fetchAllRows('rights_offerings','*','right_id'),
+    sb.from('user_roles').select('*').order('created_at').then(r=>r.data||[]),
+    safe(()=>fetchAllRows('room_history','history_id, customer_id, special_room, entered_at, reason','history_id'), []),
+    safe(()=>sb.from('special_ids').select('*').order('manager_id').then(r=>r.data||[]), []),
+    safe(loadMoveLists), safe(loadColumnPrefs)
+  ]);
+  rooms = roomRows.map(r=>({ id:r.room_id, name:r.room_name, min:r.nav_min, max:r.nav_max===null?Infinity:r.nav_max, desc:r.description, adminCount:r.admin_count||0 }));
+  roomHistoryRows = rhRows;
+  specialIds = spRows.map(r=>({ id:r.manager_id, name:r.manager_name||'', room:r.room_name||'', head:r.head_name||'', note:r.note||'' }));
+  accounts = accRows.map(a=>({ id:a.email, email:a.email, name:a.display_name||a.email, role:a.role, createdAt: a.created_at ? fromDbDate(a.created_at.slice(0,10)) : '' }));
   const navByCust = {}, feeByCust = {};
   navRows.forEach(r=>{ (navByCust[r.customer_id] = navByCust[r.customer_id]||{})[fromDbDate(r.update_date)] = r.nav; });
   feeRows.forEach(r=>{ (feeByCust[r.customer_id] = feeByCust[r.customer_id]||{})[fromDbDate(r.update_date)] = r.fee; });
@@ -2453,64 +2472,16 @@ async function loadAllData(){
   });
 
   // --- Loans ---
-  let loanRows = [];
-  from = 0;
-  while(true){
-    const { data: page } = await sb.from('loans').select('*').order('loan_id').range(from, from+pageSize-1);
-    loanRows = loanRows.concat(page||[]);
-    if(!page || page.length < pageSize) break;
-    from += pageSize;
-  }
   loans = loanRows.map(l=>({ id:l.loan_id, account:l.account_number, amount:l.amount, dueDate:fromDbDate(l.due_date), status:l.status, note:l.note||'', managerId:l.manager_id||'' }));
 
   // --- RRUB / Call Margin ---
-  let marginCallRows = [];
-  from = 0;
-  while(true){
-    const { data: page } = await sb.from('margin_calls').select('*').order('margin_call_id').range(from, from+pageSize-1);
-    marginCallRows = marginCallRows.concat(page||[]);
-    if(!page || page.length < pageSize) break;
-    from += pageSize;
-  }
   marginCalls = marginCallRows.map(m=>({ id:m.margin_call_id, account:m.account_number, amount:m.amount, dueDate:fromDbDate(m.due_date), status:m.status, note:m.note||'', managerId:m.manager_id||'' }));
 
   // --- Rights ---
-  let rightRows = [];
-  from = 0;
-  while(true){
-    const { data: page } = await sb.from('rights_offerings').select('*').order('right_id').range(from, from+pageSize-1);
-    rightRows = rightRows.concat(page||[]);
-    if(!page || page.length < pageSize) break;
-    from += pageSize;
-  }
   const stkToName = {}; customers.forEach(c=>{ stkToName[c.stk] = c.name; });
   rights = rightRows.map(r=>({ id:r.right_id, stk:r.account_number, name: stkToName[r.account_number]||'', symbol:r.symbol, ratio:`${r.ratio_num}:${r.ratio_denom}`, price:r.price, qty:r.qty, recordDate:fromDbDate(r.record_date), deadline:fromDbDate(r.deadline), status:r.status }));
 
-  // --- Accounts (user_roles) ---
-  const { data: accRows } = await sb.from('user_roles').select('*').order('created_at');
-  accounts = (accRows||[]).map(a=>({ id:a.email, email:a.email, name:a.display_name||a.email, role:a.role, createdAt: a.created_at ? fromDbDate(a.created_at.slice(0,10)) : '' }));
-
-  // --- Lịch sử biến động KH (mới / chuyển đi / chuyển về) ---
-  try {
-    let rh = []; let f2 = 0;
-    while(true){
-      const { data: page, error: e } = await sb.from('room_history').select('history_id, customer_id, special_room, entered_at, reason').order('history_id').range(f2, f2+999);
-      if(e) throw e;
-      rh = rh.concat(page||[]);
-      if(!page || page.length < 1000) break;
-      f2 += 1000;
-    }
-    roomHistoryRows = rh;
-  } catch(e){ roomHistoryRows = []; }
-  await loadMoveLists();
-  await loadColumnPrefs();
-  // --- ID đặc biệt ---
-  try {
-    const { data: spRows } = await sb.from('special_ids').select('*').order('manager_id');
-    specialIds = (spRows||[]).map(r=>({ id:r.manager_id, name:r.manager_name||'', room:r.room_name||'', head:r.head_name||'', note:r.note||'' }));
-  } catch(e){ specialIds = []; }
   if(typeof renderSpecialIds === 'function') renderSpecialIds();
-
   loansGroupsInitialized = false;
   expandedLoanGroups = new Set();
   marginCallsGroupsInitialized = false;
@@ -3235,9 +3206,10 @@ function renderMoves(){
 // ---------------- 3 DANH SÁCH: KH ZALO / CHUYỂN VỀ / CHUYỂN ĐI ----------------
 async function loadMoveLists(){
   const ld = async (table, order)=>{ try{ const { data, error } = await sb.from(table).select('*').order(order); if(error) throw error; return data||[]; }catch(e){ console.error('load '+table, e); return []; } };
-  zaloLeads = (await ld('zalo_leads','lead_id')).map(r=>({ id:r.lead_id, date:fromDbDate(r.received_date), name:r.lead_name||'', person:r.contact_person||'', contact:r.contact_status, outcome:r.outcome, stk:r.account_number||'', note:r.note||'' }));
-  transferIns = (await ld('transfer_in_list','id')).map(r=>({ id:r.id, date:fromDbDate(r.transfer_date), stk:r.account_number||'', newId:r.new_id||'', name:r.customer_name||'', leadId:r.lead_id, note:r.note||'' }));
-  transferOuts = (await ld('transfer_out_list','id')).map(r=>({ id:r.id, date:fromDbDate(r.transfer_date), stk:r.account_number||'', name:r.customer_name||'', newId:r.new_id||'', note:r.note||'' }));
+  const [_zl,_ti,_to] = await Promise.all([ld('zalo_leads','lead_id'), ld('transfer_in_list','id'), ld('transfer_out_list','id')]);
+  zaloLeads = _zl.map(r=>({ id:r.lead_id, date:fromDbDate(r.received_date), name:r.lead_name||'', person:r.contact_person||'', contact:r.contact_status, outcome:r.outcome, stk:r.account_number||'', note:r.note||'' }));
+  transferIns = _ti.map(r=>({ id:r.id, date:fromDbDate(r.transfer_date), stk:r.account_number||'', newId:r.new_id||'', name:r.customer_name||'', leadId:r.lead_id, note:r.note||'' }));
+  transferOuts = _to.map(r=>({ id:r.id, date:fromDbDate(r.transfer_date), stk:r.account_number||'', name:r.customer_name||'', newId:r.new_id||'', note:r.note||'' }));
 }
 function custByStk(stk){
   const k = String(stk||'').trim().toLowerCase().slice(0,6);
@@ -3412,16 +3384,26 @@ async function deleteLead(id){
 }
 // --- 2. KH chuyển về ---
 let editingTinId = null;
+function mvNorm(x){ return String(x||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').trim(); }
+function mvFilter(rows, key){
+  const el = document.getElementById(key+'Search'); const q = mvNorm(el?el.value:'');
+  const cnt = document.getElementById(key+'SearchCount');
+  let out = rows;
+  if(q){ out = rows.filter(t=>{ const c = custByStk(t.stk); return mvNorm(t.stk).includes(q) || mvNorm(t.name || (c?c.name:'')).includes(q) || (c && mvNorm(c.name).includes(q)); }); }
+  if(cnt) cnt.textContent = q ? `${out.length}/${rows.length} KH` : '';
+  return out;
+}
+function renderMoveSearch(key){ if(key==='tin') renderTins(); else renderTouts(); }
 function renderTins(){
   const body = document.getElementById('tinBody'); if(!body) return;
-  const rows = transferIns.slice().sort(byDateDesc);
+  const allRows = transferIns.slice().sort(byDateDesc); const rows = mvFilter(allRows,'tin');
   body.innerHTML = rows.length ? rows.map(t=>{
     const c = custByStk(t.stk); const lead = t.leadId ? zaloLeads.find(x=>x.id===t.leadId) : null;
     return `<tr data-tid="${t.id}"><td>${t.date||''}</td><td><b class="cp-stt" title="Bấm để copy số tài khoản" onclick="copyStk('${escHtml(t.stk)}')">${escHtml(t.stk)}</b></td><td>${escHtml(t.name || (c?c.name:''))}</td><td class="num-col">${c ? fmt(c.nav||0) : '<span style="color:#9AA5B4;">—</span>'}</td><td>${escHtml(t.newId)}</td>
       <td>${t.leadId ? `<b>${leadStt(t.leadId)}</b>${lead&&lead.name?' · '+escHtml(lead.name):''}` : '<span style="color:#9AA5B4;">—</span>'}</td>
       <td>${c ? clickableBadge(t.stk, custStatusBadge(t.stk)) : `<span class="badge-click" style="cursor:pointer;" title="Bấm để thêm KH này vào danh sách" onclick="addCustFromTin(${t.id})"><span class="badge badge-gray">Chưa có trong DS</span> <span style="color:#2358E8;font-size:12px;font-weight:600;">＋ Thêm KH</span></span>`}</td>
       <td style="white-space:nowrap;"><button class="icon-btn" title="Sửa" onclick="openTinModal(${t.id})">${ICON_EDIT}</button>${delBtn('deleteTin',t.id)}</td></tr>`;
-  }).join('') : '<tr><td colspan="8" class="lead-empty">Chưa có KH chuyển về nào. Nhận mail xong bấm "+ Thêm KH chuyển về".</td></tr>';
+  }).join('') : '<tr><td colspan="8" class="lead-empty">'+(allRows.length?'Không tìm thấy KH nào khớp.':'Chưa có KH chuyển về nào. Nhận mail xong bấm "+ Thêm KH chuyển về".')+'</td></tr>';
 }
 function openTinModal(id){
   editingTinId = id||null; const t = id ? transferIns.find(x=>x.id===id) : null;
@@ -3502,12 +3484,12 @@ function toutStatusBadge(t){
 }
 function renderTouts(){
   const body = document.getElementById('toutBody'); if(!body) return;
-  const rows = transferOuts.slice().sort(byDateDesc);
+  const allRows = transferOuts.slice().sort(byDateDesc); const rows = mvFilter(allRows,'tout');
   body.innerHTML = rows.length ? rows.map(t=>{
     const c = custByStk(t.stk);
     return `<tr data-oid="${t.id}"><td>${t.date||''}</td><td><b class="cp-stt" title="Bấm để copy số tài khoản" onclick="copyStk('${escHtml(t.stk)}')">${escHtml(t.stk)}</b></td><td>${escHtml(t.name || (c?c.name:''))}</td><td class="num-col">${c ? fmt(c.nav||0) : '<span style="color:#9AA5B4;">—</span>'}</td><td>${escHtml(t.newId)}</td><td>${clickableBadge(t.stk, toutStatusBadge(t))}</td>
       <td style="white-space:nowrap;"><button class="icon-btn" title="Sửa" onclick="openToutModal(${t.id})">${ICON_EDIT}</button>${delBtn('deleteTout',t.id)}</td></tr>`;
-  }).join('') : '<tr><td colspan="7" class="lead-empty">Chưa có KH chuyển đi nào. Nhận mail xong bấm "+ Thêm KH chuyển đi".</td></tr>';
+  }).join('') : '<tr><td colspan="7" class="lead-empty">'+(allRows.length?'Không tìm thấy KH nào khớp.':'Chưa có KH chuyển đi nào. Nhận mail xong bấm "+ Thêm KH chuyển đi".')+'</td></tr>';
 }
 function openToutModal(id){
   editingToutId = id||null; const t = id ? transferOuts.find(x=>x.id===id) : null;
@@ -6174,6 +6156,11 @@ function renderImportSteps(current){
 }
 function goImportStep(step){
   for(let i=1;i<=5;i++){ document.getElementById('importStep'+i).style.display = (i===step) ? 'block' : 'none'; }
+  if(step===5){
+    const T = {loan:['loans','Xem quản lý khoản vay'], margincall:['margincalls','Xem RRUB / Call Margin'], right:['rights','Xem quyền mua'], specialid:['specialids','Xem ID đặc biệt']}[currentImportType] || ['customers','Xem danh sách khách hàng'];
+    const gb = document.getElementById('importResultGoBtn');
+    if(gb){ gb.textContent = T[1]; gb.onclick = ()=>switchView(T[0]); }
+  }
   renderImportSteps(step);
 }
 
