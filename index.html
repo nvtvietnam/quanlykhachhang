@@ -780,7 +780,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.88</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.89</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -802,7 +802,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.88</div>
+        <div class="brand-sub">Chứng khoán · v08.89</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -2426,7 +2426,7 @@ async function loadAllData(){
   const [roomRows, allCust, navRows, feeRows, loanRows, marginCallRows, rightRows, accRows, rhRows, spRows] = await Promise.all([
     sb.from('rooms').select('*').order('room_id').then(r=>r.data||[]),
     fetchAllRows('customers','*','customer_id'),
-    fetchAllRows('nav_history','customer_id, update_date, nav','history_id'),
+    fetchAllRows('nav_history','customer_id, update_date, nav, source','history_id'),
     fetchAllRows('fee_history','customer_id, update_date, fee','history_id'),
     fetchAllRows('loans','*','loan_id'),
     fetchAllRows('margin_calls','*','margin_call_id'),
@@ -2441,6 +2441,7 @@ async function loadAllData(){
   specialIds = spRows.map(r=>({ id:r.manager_id, name:r.manager_name||'', room:r.room_name||'', head:r.head_name||'', note:r.note||'' }));
   accounts = accRows.map(a=>({ id:a.email, email:a.email, name:a.display_name||a.email, role:a.role, createdAt: a.created_at ? fromDbDate(a.created_at.slice(0,10)) : '' }));
   const navByCust = {}, feeByCust = {};
+  NAV_IMPORT_DATES = new Set(navRows.filter(r=>String(r.source||'').startsWith('import')).map(r=>fromDbDate(r.update_date)));
   navRows.forEach(r=>{ (navByCust[r.customer_id] = navByCust[r.customer_id]||{})[fromDbDate(r.update_date)] = r.nav; });
   feeRows.forEach(r=>{ (feeByCust[r.customer_id] = feeByCust[r.customer_id]||{})[fromDbDate(r.update_date)] = r.fee; });
 
@@ -2689,10 +2690,11 @@ function monthKeyOf(d){ const p = String(d).split('/'); return p.length===3 ? `$
 function monthLabel(mk){ const [y,m] = mk.split('-'); return `T${parseInt(m,10)}.${String(y).slice(2)}`; }
 function dateSortKey(d){ return String(d).split('/').reverse().join(''); }
 let axesFor = null;
+let NAV_IMPORT_DATES = new Set();   // chỉ các ngày NAV có từ import mới sinh cột (sửa tay không tạo cột)
 function ensureAxes(){
   if(axesFor === customers) return; axesFor = customers;
   const nd = new Set(), fm = new Set();
-  customers.forEach(c=>{ Object.keys(c.navHistory||{}).forEach(d=>nd.add(d)); Object.keys(c.feeHistory||{}).forEach(d=>{ const k=monthKeyOf(d); if(k) fm.add(k); }); });
+  customers.forEach(c=>{ Object.keys(c.navHistory||{}).forEach(d=>{ if(NAV_IMPORT_DATES.has(d)) nd.add(d); }); Object.keys(c.feeHistory||{}).forEach(d=>{ const k=monthKeyOf(d); if(k) fm.add(k); }); });
   NAV_DATES.length = 0; [...nd].sort((a,b)=>dateSortKey(b).localeCompare(dateSortKey(a))).slice(0,15).forEach(d=>NAV_DATES.push(d));
   FEE_MONTHS.length = 0; [...fm].sort().reverse().forEach(k=>FEE_MONTHS.push(k));
 }
