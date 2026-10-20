@@ -780,7 +780,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.89</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.90</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -802,7 +802,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.89</div>
+        <div class="brand-sub">Chứng khoán · v08.90</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -2632,6 +2632,7 @@ function renderViewIfDirty(name){
   else if(name==='rights') renderRights();
 }
 function switchView(name){
+  if(name!=='loans') loanOrderFreeze = null;
   setTimeout(()=>{ try{ syncStickyOffsets(); }catch(e){} }, 0);
   if(name === 'accounts' && currentRole !== 'owner'){
     alert('Chỉ Owner mới truy cập được mục Quản lý tài khoản.');
@@ -4898,6 +4899,7 @@ async function updateLoanDueDate(id, newValue, stk){
   }
   const l = loans.find(x=>x.id===id);
   const oldDate = l ? l.dueDate : null;
+  freezeLoanOrder();
   if(l) l.dueDate = newDate;
   keepRender(()=>renderLoans(), 'tr[data-lid="'+id+'"]');
   renderDashboard();
@@ -5260,6 +5262,33 @@ function describeCurrentLoanFilters(){
   return parts.join('<br>');
 }
 
+// Giữ nguyên thứ tự hiển thị khi sửa ngày đến hạn: khoản vay đứng yên tại chỗ, không nhảy sang vị trí khác.
+// Thứ tự chỉ được sắp lại khi đổi bộ lọc / tìm kiếm / chuyển màn hình / tải lại trang.
+let loanOrderFreeze = null;
+function loanFilterSig(){
+  const q = (document.getElementById('loanSearchInput')||{}).value||'';
+  const sa = document.getElementById('loanShowAll'); 
+  return [q, sa&&sa.checked, loanStatusPillFilter, loanDatePillFilter].join('|');
+}
+function orderLoanGroups(byCustomer, fz){
+  const gr = fz ? fz.g : null, lr = fz ? fz.l : null, BIG = 1e9;
+  Object.values(byCustomer).forEach(arr=>arr.sort((a,b)=>{
+    if(lr){ const d=(lr[a.id]??BIG)-(lr[b.id]??BIG); if(d) return d; }
+    return daysUntil(a.dueDate)-daysUntil(b.dueDate);
+  }));
+  return Object.entries(byCustomer).sort((a,b)=>{
+    if(gr){ const d=(gr[a[0]]??BIG)-(gr[b[0]]??BIG); if(d) return d; }
+    return daysUntil(a[1][0].dueDate) - daysUntil(b[1][0].dueDate) || a[0].localeCompare(b[0]);
+  });
+}
+function freezeLoanOrder(){
+  if(loanOrderFreeze && loanOrderFreeze.sig===loanFilterSig()) return;   // đã khoá sẵn
+  const by = {};
+  getFilteredLoansList().forEach(l=>{ const k=l.account.slice(0,6); (by[k]=by[k]||[]).push(l); });
+  const g = {}, lo = {}; let gi=0, li=0;
+  orderLoanGroups(by, null).forEach(([stk, arr])=>{ g[stk]=gi++; arr.forEach(l=>{ lo[l.id]=li++; }); });
+  loanOrderFreeze = {sig:loanFilterSig(), g, l:lo};
+}
 function renderLoans(){
   // Đếm số liệu cho các pill (tính trên toàn bộ loans, không phụ thuộc bộ lọc khác — giống hệ thống cũ)
   const statusCounts = {};
@@ -5315,9 +5344,9 @@ function renderLoans(){
     </tr></thead>
     <tbody>`;
   // Sắp xếp: KH có khoản đến hạn gần nhất (kể cả quá hạn) lên đầu; trong mỗi KH, khoản nào đến hạn trước xếp trước.
-  Object.values(byCustomer).forEach(arr=>arr.sort((a,b)=>daysUntil(a.dueDate)-daysUntil(b.dueDate)));
-  const sortedLoanGroups = Object.entries(byCustomer).sort((a,b)=>
-    daysUntil(a[1][0].dueDate) - daysUntil(b[1][0].dueDate) || a[0].localeCompare(b[0]));
+  const _sig = loanFilterSig();
+  if(loanOrderFreeze && loanOrderFreeze.sig!==_sig) loanOrderFreeze = null;
+  const sortedLoanGroups = orderLoanGroups(byCustomer, loanOrderFreeze);
   sortedLoanGroups.forEach(([stk, custLoans])=>{
     const isOpen = bulkSelectMode || expandedLoanGroups.has(stk);
     const nearest = Math.min(...custLoans.map(l=>daysUntil(l.dueDate)));
