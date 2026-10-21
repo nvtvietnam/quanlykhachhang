@@ -780,7 +780,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.90</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.91</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -802,7 +802,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.90</div>
+        <div class="brand-sub">Chứng khoán · v08.91</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -7388,7 +7388,7 @@ function buildMsgTokens(context, stk){
   }
   if(context === 'loan_multi'){
     const c = customers.find(x=>x.stk===stk);
-    const custLoans = loans.filter(l=>l.account.slice(0,6)===stk)
+    const custLoans = (()=>{ let f = []; try{ f = getFilteredLoansList().filter(l=>l.account.slice(0,6)===stk); }catch(e){} return f.length ? f : loans.filter(l=>l.account.slice(0,6)===stk); })()   // theo bộ lọc đang chọn
       .sort((a,b)=> daysUntil(a.dueDate)-daysUntil(b.dueDate));
     const danhSach = custLoans.map((l,i)=>{
       const overdue = daysUntil(l.dueDate) < 0 ? ' (quá hạn)' : '';
@@ -7420,7 +7420,7 @@ function buildMsgTokens(context, stk){
   }
   if(context === 'margincall_multi'){
     const c = customers.find(x=>x.stk===stk);
-    const custCalls = marginCalls.filter(m=>m.account.slice(0,6)===stk)
+    const custCalls = (()=>{ let f = []; try{ f = getFilteredMarginCallsList().filter(m=>m.account.slice(0,6)===stk); }catch(e){} return f.length ? f : marginCalls.filter(m=>m.account.slice(0,6)===stk); })()   // theo bộ lọc đang chọn
       .sort((a,b)=> daysUntil(a.dueDate)-daysUntil(b.dueDate));
     const danhSach = custCalls.map((m,i)=>{
       const overdue = daysUntil(m.dueDate) < 0 ? ' (quá hạn)' : '';
