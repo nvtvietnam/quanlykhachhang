@@ -780,7 +780,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.91</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.92</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -802,7 +802,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.91</div>
+        <div class="brand-sub">Chứng khoán · v08.92</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -1008,9 +1008,9 @@ body{-webkit-text-size-adjust:100%;}
           </select>
           <select class="filter-select" id="filterCtype" onchange="renderCustomers()">
             <option value="">Tất cả loại hình</option>
-            <option value="KH thường">KH thường</option>
-            <option value="KH chia sẻ">KH chia sẻ</option>
-            <option value="KH cũ">KH cũ</option>
+            <option value="Tài khoản mới">Tài khoản mới</option>
+            <option value="Tài khoản chia sẻ">Tài khoản chia sẻ</option>
+            <option value="Tài khoản cũ">Tài khoản cũ</option>
           </select>
           <div class="spacer"></div>
 
@@ -2111,7 +2111,7 @@ body{-webkit-text-size-adjust:100%;}
         <div class="form-field"><label>NAV hiện tại (VNĐ) *</label><input type="text" inputmode="numeric" placeholder="500.000.000" id="f_nav" oninput="formatMoneyInput(this);updateTelegramPreview()"></div>
         <div class="form-field"><label>Phí tháng hiện tại (VNĐ) *</label><input type="text" inputmode="numeric" placeholder="2.000.000" id="f_fee" oninput="formatMoneyInput(this)"></div>
         <div class="form-field"><label>Ngày bắt đầu quản lý</label><input type="text" placeholder="dd/mm/yyyy — để trống = hôm nay" id="f_mgmtstart"></div>
-        <div class="form-field"><label>Loại hình KH</label><select id="f_ctype"><option value="KH thường">KH thường</option><option value="KH chia sẻ">KH chia sẻ</option><option value="KH cũ">KH cũ</option></select></div>
+        <div class="form-field"><label>Loại hình KH</label><select id="f_ctype"><option value="Tài khoản mới">Tài khoản mới</option><option value="Tài khoản chia sẻ">Tài khoản chia sẻ</option><option value="Tài khoản cũ">Tài khoản cũ</option></select></div>
         <div class="form-field"><label>Nguồn KH</label><select id="f_intake"><option value="new">Khách mới (mở tài khoản mới)</option><option value="transfer_in">Chuyển về (đã có TK / từng chuyển đi)</option></select></div>
         <div class="form-field">
           <label>Nhóm / Room *</label>
@@ -2468,7 +2468,7 @@ async function loadAllData(){
     note: c.note || '',
     status: c.status,
     intakeType: c.intake_type || 'new',
-    ctype: c.customer_type || 'KH thường',
+    ctype: ({'KH thường':'Tài khoản mới','KH chia sẻ':'Tài khoản chia sẻ','KH cũ':'Tài khoản cũ'})[c.customer_type] || c.customer_type || 'Tài khoản mới',
     linkedTo: c.linked_to_customer_id ? idToStk[c.linked_to_customer_id] : null,
     navHistory: navByCust[c.customer_id] || {},
     feeHistory: feeByCust[c.customer_id] || {},
@@ -2820,7 +2820,7 @@ function cellValue(c, cust, idx){
     case 'room': return roomLabel(cust.room) + (cust.mismatch?' <span title="NAV không phù hợp với Room hiện tại" class="warn-icon">⚠️</span>':'');
     case 'updated': return cust.updated;
     case 'note': return `<span style="color:var(--text-muted);">${cust.note||'—'}</span>`;
-    case 'ctype': return cust.ctype==='KH chia sẻ' ? '<span class="badge badge-blue">KH chia sẻ</span>' : cust.ctype==='KH cũ' ? '<span class="badge badge-gray">KH cũ</span>' : '<span style="color:var(--text-muted);">KH thường</span>';
+    case 'ctype': return cust.ctype==='Tài khoản chia sẻ' ? '<span class="badge badge-blue">Tài khoản chia sẻ</span>' : cust.ctype==='Tài khoản cũ' ? '<span class="badge badge-gray">Tài khoản cũ</span>' : '<span style="color:var(--text-muted);">Tài khoản mới</span>';
     case 'status': return statusBadge(cust.status);
     default: return '';
   }
@@ -2850,7 +2850,7 @@ function renderCustomersHead(){
 const FILTER_FIELDS = [
   {key:'room',       label:'Room',              type:'select', options: ()=>[...rooms.map(r=>({value:r.id,label:r.name})), ...SPECIAL_ROOMS.map(s=>({value:s,label:s}))]},
   {key:'status',     label:'Trạng thái',        type:'select', options: ()=>[{value:'Đang quản lý',label:'Đang quản lý'},{value:'Chờ xác nhận',label:'Chờ xác nhận'},{value:'Đã chuyển đi',label:'Đã chuyển đi'}]},
-  {key:'ctype',      label:'Loại hình KH',      type:'select', options: ()=>[{value:'KH thường',label:'KH thường'},{value:'KH chia sẻ',label:'KH chia sẻ'},{value:'KH cũ',label:'KH cũ'}]},
+  {key:'ctype',      label:'Loại hình KH',      type:'select', options: ()=>[{value:'Tài khoản mới',label:'Tài khoản mới'},{value:'Tài khoản chia sẻ',label:'Tài khoản chia sẻ'},{value:'Tài khoản cũ',label:'Tài khoản cũ'}]},
   {key:'gender',     label:'Giới tính',         type:'select', options: ()=>[{value:'Nam',label:'Nam'},{value:'Nữ',label:'Nữ'},{value:'Khác',label:'Khác'}]},
   {key:'nav_latest', label:'NAV (mới nhất)',    type:'number'},
   {key:'fee_latest', label:'Phí (mới nhất)',    type:'number'},
@@ -2988,7 +2988,7 @@ function getFilteredSortedList(){
     const matchQ = !q || c.code.toLowerCase().includes(q) || c.stk.toLowerCase().includes(q) || c.name.toLowerCase().includes(q) || (c.telegram||'').toLowerCase().includes(q);
     const matchRoom = !roomF || String(c.room)===roomF;
     const matchStatus = !statusF || c.status===statusF;
-    const matchCtype = !ctypeF || (c.ctype||'KH thường')===ctypeF;
+    const matchCtype = !ctypeF || (c.ctype||'Tài khoản mới')===ctypeF;
     return matchQ && matchRoom && matchStatus && matchCtype && matchesAdvancedFilters(c);
   });
   if(sortState.key){
@@ -3081,7 +3081,7 @@ function rawCellValue(c, cust, idx){
     case 'room': return roomLabel(cust.room);
     case 'updated': return cust.updated;
     case 'note': return cust.note || '';
-    case 'ctype': return cust.ctype || 'KH thường';
+    case 'ctype': return cust.ctype || 'Tài khoản mới';
     case 'status': return cust.status;
     default: return '';
   }
@@ -3133,7 +3133,7 @@ function buildMoveEvents(){
   });
   // KH chuyển về / chuyển đi: CHỈ lấy từ 2 danh sách nhập tay (không tính theo Danh sách KH)
   // Danh sách KH chuyển về / chuyển đi (nhập tay từ mail) là nguồn chính: hiện cả KH chưa có trong DS
-    const stub = (t, mgr)=> custByStk(t.stk) || { id:'stk:'+t.stk, stk:t.stk, name:t.name||'', telegram:'', nav:0, room:'', managerId:mgr||'', ctype:'KH thường' };
+    const stub = (t, mgr)=> custByStk(t.stk) || { id:'stk:'+t.stk, stk:t.stk, name:t.name||'', telegram:'', nav:0, room:'', managerId:mgr||'', ctype:'Tài khoản mới' };
   transferOuts.forEach(t=>{ if(t.date) add('out', t.date, stub(t, t.newId)); });
   transferIns.forEach(t=>{ if(t.date){ const c = stub(t, t.newId); add('in', t.date, c); } });
   return ev;
@@ -3142,7 +3142,7 @@ function mvItemHtml(e){
   const c = e.c;
   const nm = c.name || c.telegram || '';
   const roomTxt = (c.room===undefined||c.room===null||c.room==='') ? '' : (typeof c.room==='number' ? 'Room '+c.room : c.room);
-  return `<div class="mv-item"><b>${escHtml(c.stk)}</b> · ${escHtml(nm)}<br><span style="color:#6B7686;">${c.ctype==='KH chia sẻ'?'<b style="color:#2358E8;">[Chia sẻ]</b> ':''}NAV ${fmt(c.nav||0)}${roomTxt?' · '+escHtml(String(roomTxt)):''}${c.managerId?' · ID '+escHtml(String(c.managerId)):''}</span></div>`;
+  return `<div class="mv-item"><b>${escHtml(c.stk)}</b> · ${escHtml(nm)}<br><span style="color:#6B7686;">${c.ctype==='Tài khoản chia sẻ'?'<b style="color:#2358E8;">[Chia sẻ]</b> ':''}NAV ${fmt(c.nav||0)}${roomTxt?' · '+escHtml(String(roomTxt)):''}${c.managerId?' · ID '+escHtml(String(c.managerId)):''}</span></div>`;
 }
 let mvTab = 'daily';
 function setMvTab(t){ mvTab = t; applyMvTab(); }
@@ -3169,7 +3169,7 @@ function exportMovesExcel(){
     const typeLbl = {new:'KH mới', out:'Chuyển đi', in:'Chuyển về'};
     const ev = buildMoveEvents().sort((a,b)=>toDate(b.date)-toDate(a.date));
     add('Theo ngày', ['Ngày','Loại','STK','Tên KH','Loại hình','NAV','Room','ID quản lý'],
-      ev.map(e=>[e.date, typeLbl[e.type], e.c.stk, e.c.name||e.c.telegram||'', e.c.ctype||'KH thường', e.c.nav||0, typeof e.c.room==='number' ? 'Room '+e.c.room : (e.c.room||''), e.c.managerId||'']), [12,12,12,30,14,18,12,12]);
+      ev.map(e=>[e.date, typeLbl[e.type], e.c.stk, e.c.name||e.c.telegram||'', e.c.ctype||'Tài khoản mới', e.c.nav||0, typeof e.c.room==='number' ? 'Room '+e.c.room : (e.c.room||''), e.c.managerId||'']), [12,12,12,30,14,18,12,12]);
     add('KH tiềm năng', ['STT','Ngày tiếp nhận','Tên KH','Người liên hệ','Tình trạng liên hệ','Tình trạng KH','STK','Trong DS KH','Ghi chú'],
       zaloLeads.map(l=>[l.id, l.date||'', l.name, l.person, l.contact, l.outcome, l.stk, l.stk ? custStatusText(l.stk) : '', l.note]), [6,14,26,18,18,16,12,18,30]);
     add('KH chuyển về', ['Ngày chuyển','STK','Tên KH','NAV','ID chuyển về','STT KH (Zalo)','Tên KH (Zalo)','Tình trạng trong DS KH','Ghi chú'],
@@ -4024,7 +4024,7 @@ function openAddModal(prefillStk){
   document.getElementById('f_fee').value = '';
   document.getElementById('f_mgmtstart').value = '';
   document.getElementById('f_intake').value = 'new';
-  document.getElementById('f_ctype').value = 'KH thường';
+  document.getElementById('f_ctype').value = 'Tài khoản mới';
   renderRoomSelect();
   document.getElementById('f_room').value = rooms[0] ? rooms[0].id : '1';
   document.getElementById('f_status').value = 'Đang quản lý';
@@ -4197,7 +4197,7 @@ function openEditModal(stk){
   document.getElementById('f_fee').value = c.fee ? Number(c.fee).toLocaleString('vi-VN') : '';
   document.getElementById('f_mgmtstart').value = c.mgmtStart || '';
   document.getElementById('f_intake').value = c.intakeType || 'new';
-  document.getElementById('f_ctype').value = c.ctype || 'KH thường';
+  document.getElementById('f_ctype').value = c.ctype || 'Tài khoản mới';
   renderRoomSelect();
   document.getElementById('f_room').value = c.room;
   document.getElementById('f_status').value = c.status;
@@ -4289,7 +4289,7 @@ async function saveCustomer(){
     note,
     management_start_date: toDbDate(mgmtStart),
     intake_type: document.getElementById('f_intake').value === 'transfer_in' ? 'transfer_in' : 'new',
-    customer_type: ['KH chia sẻ','KH cũ'].includes(document.getElementById('f_ctype').value) ? document.getElementById('f_ctype').value : 'KH thường',
+    customer_type: ['Tài khoản chia sẻ','Tài khoản cũ'].includes(document.getElementById('f_ctype').value) ? document.getElementById('f_ctype').value : 'Tài khoản mới',
     linked_to_customer_id: linkedCust ? linkedCust.id : null,
     updated_at: new Date().toISOString(),
   };
@@ -6676,7 +6676,7 @@ function analyzeImportRows(type, rows, mapping){
         const tgIn = String(raw('telegram')||'').trim();
         if(!nameIn && !tgIn){ plan.errors.push({line:lineNo, content:`STK ${stk}`, error:'Thiếu cả Tên KH và Tên Telegram — không thêm'}); return; }
         const ctRaw = String(raw('ctype')||'').trim(); const ctN = ctRaw.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase();
-        let ctype='KH thường'; if(ctRaw){ if(/chia\s*se/.test(ctN)) ctype='KH chia sẻ'; else if(/(^|\s)cu$/.test(ctN)) ctype='KH cũ'; else if(!/thuong/.test(ctN)){ plan.errors.push({line:lineNo, content:`STK ${stk} — Loại hình: ${ctRaw}`, error:'Loại hình không hợp lệ (chỉ nhận: KH thường / KH chia sẻ / KH cũ)'}); return; } }
+        let ctype='Tài khoản mới'; if(ctRaw){ if(/chia\s*se/.test(ctN)) ctype='Tài khoản chia sẻ'; else if(/(^|\s)cu$/.test(ctN)) ctype='Tài khoản cũ'; else if(!/(thuong|(^|\s)moi$)/.test(ctN)){ plan.errors.push({line:lineNo, content:`STK ${stk} — Loại hình: ${ctRaw}`, error:'Loại hình không hợp lệ (chỉ nhận: Tài khoản mới / Tài khoản chia sẻ / Tài khoản cũ)'}); return; } }
         const byM = String(raw('birthYear')||'').match(/(19|20)\d{2}/);
         const msRaw = has(raw('mgmtStart')) ? parseDateCell(raw('mgmtStart')) : '';
         seenStks.add(stk);
@@ -6703,9 +6703,9 @@ function analyzeImportRows(type, rows, mapping){
       if(mapping.note && has(raw('note'))){ const v=String(raw('note')).trim(); item.note=v; if(v!==(existing.note||'')) ch('noteChanged','Ghi chú',existing.note,v); }
       if(mapping.ctype && has(raw('ctype'))){
         const n=String(raw('ctype')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase();
-        const v = /chia\s*se/.test(n) ? 'KH chia sẻ' : /(^|\s)cu$/.test(n) ? 'KH cũ' : (/thuong/.test(n) ? 'KH thường' : null);
-        if(!v){ plan.errors.push({line:lineNo, content:`STK ${stk} — Loại hình: ${raw('ctype')}`, error:'Loại hình không hợp lệ (chỉ nhận: KH thường / KH chia sẻ / KH cũ) — dòng này bỏ qua'}); return; }
-        item.ctype=v; if(v!==(existing.ctype||'KH thường')) ch('ctypeChanged','Loại hình',existing.ctype,v);
+        const v = /chia\s*se/.test(n) ? 'Tài khoản chia sẻ' : /(^|\s)cu$/.test(n) ? 'Tài khoản cũ' : (/(thuong|(^|\s)moi$)/.test(n) ? 'Tài khoản mới' : null);
+        if(!v){ plan.errors.push({line:lineNo, content:`STK ${stk} — Loại hình: ${raw('ctype')}`, error:'Loại hình không hợp lệ (chỉ nhận: Tài khoản mới / Tài khoản chia sẻ / Tài khoản cũ) — dòng này bỏ qua'}); return; }
+        item.ctype=v; if(v!==(existing.ctype||'Tài khoản mới')) ch('ctypeChanged','Loại hình',existing.ctype,v);
       }
       if(mapping.mgmtStart && has(raw('mgmtStart'))){ const v=parseDateCell(raw('mgmtStart')); if(/^\d{2}\/\d{2}\/\d{4}$/.test(v)){ item.mgmtStart=v; if(v!==existing.mgmtStart) ch('mgmtStartChanged','Ngày QL',existing.mgmtStart,v); } else { plan.errors.push({line:lineNo, content:`STK ${stk} — Ngày: ${raw('mgmtStart')}`, error:'Ngày bắt đầu quản lý sai định dạng (cần dd/mm/yyyy) — dòng này bỏ qua'}); return; } }
       if(mapping.room && has(raw('room'))){
@@ -6760,14 +6760,14 @@ function analyzeImportRows(type, rows, mapping){
       const status = statusRaw || 'Đang quản lý';
       const ctRaw = String(getMapped(row,mapping,'ctype')||'').trim();
       const ctNorm = ctRaw.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase();
-      let ctype = 'KH thường', ctypeBad = false;
-      if(ctRaw){ if(/chia\s*se/.test(ctNorm)) ctype='KH chia sẻ'; else if(/(^|\s)cu$/.test(ctNorm)) ctype='KH cũ'; else if(/thuong/.test(ctNorm)) ctype='KH thường'; else ctypeBad = true; }
+      let ctype = 'Tài khoản mới', ctypeBad = false;
+      if(ctRaw){ if(/chia\s*se/.test(ctNorm)) ctype='Tài khoản chia sẻ'; else if(/(^|\s)cu$/.test(ctNorm)) ctype='Tài khoản cũ'; else if(/(thuong|(^|\s)moi$)/.test(ctNorm)) ctype='Tài khoản mới'; else ctypeBad = true; }
       const mgmtStart = String(getMapped(row,mapping,'mgmtStart')).trim();
       const note = String(getMapped(row,mapping,'note')).trim();
       // LƯU Ý: "Tên KH" và "Tên Telegram" là 2 trường tách biệt — không copy Telegram vào Tên KH.
       // Nếu thiếu Tên KH nhưng có Tên Telegram, vẫn cho qua: Tên KH để trống (—), Tên Telegram giữ riêng.
       const stkInvalid = !stk || stk.length!==6;
-      if(ctypeBad){ plan.errors.push({line:lineNo, content:`STK ${stk||'(trống)'} — Loại hình: ${ctRaw}`, error:'Loại hình không hợp lệ (chỉ nhận: KH thường / KH chia sẻ / KH cũ)'}); return; }
+      if(ctypeBad){ plan.errors.push({line:lineNo, content:`STK ${stk||'(trống)'} — Loại hình: ${ctRaw}`, error:'Loại hình không hợp lệ (chỉ nhận: Tài khoản mới / Tài khoản chia sẻ / Tài khoản cũ)'}); return; }
       if(!name && !telegram){ plan.errors.push({line:lineNo, content:`STK ${stk||'(trống)'}`, error:'Thiếu cả Tên KH và Tên Telegram — không có gì để hiển thị cho KH này'}); return; }
 
       // Dòng không có STK hợp lệ (VD: "Admin", ô trống, lỗi gõ) —
@@ -6830,7 +6830,7 @@ function analyzeImportRows(type, rows, mapping){
         item.birthYearChanged = ow('birthYear') && birthYear !== existing.birthYear;
         item.statusChanged = ow('status') && !!statusRaw && statusRaw !== existing.status;
         item.noteChanged = ow('note') && note !== (existing.note||'');
-        item.ctypeChanged = ow('ctype') && !!ctRaw && ctype !== (existing.ctype||'KH thường');
+        item.ctypeChanged = ow('ctype') && !!ctRaw && ctype !== (existing.ctype||'Tài khoản mới');
 
         // Xác định Room mục tiêu từ file (nếu có) để so sánh với Room hiện tại của KH
         if(roomRaw){
@@ -7190,7 +7190,7 @@ async function confirmImportToDatabase(){
               nav_updated_at: toDbDate(it.dataDate||today), fee_updated_at: toDbDate(it.dataDate||today),
               note: it.note||null,
               management_start_date: toDbDate(it.mgmtStart||today),
-              customer_type: it.ctype || 'KH thường',
+              customer_type: it.ctype || 'Tài khoản mới',
             }).select().single();
             if(error) throw error;
             if(it.nav) await sb.from('nav_history').insert({customer_id:ins.customer_id, update_date:toDbDate(it.dataDate||today), nav:it.nav, source: plan.type==='bc12'?'import_bc12':'import_nav'});
