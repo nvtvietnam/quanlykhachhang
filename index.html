@@ -446,6 +446,10 @@ tbody tr:hover{background:#EEF3FF;}
 .loan-detail-row > td{background:#F7F9FD;box-shadow:inset 4px 0 0 #9DB6F2;}
 .loan-card-footer{background:#EEF3FB;border-top:1px solid #D2DBEA;color:#3A4C70;}
 .loan-group-header{background:#F1F5FC;}
+/* Dòng đầu mỗi tài khoản (nhóm khoản vay) — nền xanh đậm hơn để dễ phân biệt các tài khoản */
+.loan-summary-row > td{background:#D6E3FA !important;border-top:3px solid #2F5BC4;border-bottom:1px solid #9DB6F2;font-weight:700;}
+.loan-summary-row:hover > td{background:#C7D8F7 !important;}
+.loan-summary-row > td:first-child{box-shadow:inset 6px 0 0 #2F5BC4;}
 
 /* Bộ lọc bên trái trang khoản vay / RRUB */
 .loan-sidebar-title{color:var(--ink);font-weight:800;}
@@ -780,7 +784,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.92</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.99</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -802,7 +806,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.92</div>
+        <div class="brand-sub">Chứng khoán · v08.99</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -1092,6 +1096,7 @@ body{-webkit-text-size-adjust:100%;}
             <div class="loan-filter-group-title">Lọc theo ngày</div>
             <div id="loanDatePills"></div>
 
+            <button class="btn btn-primary btn-sm" style="width:100%;margin-top:10px;" onclick="openLoanModal()">＋ Thêm khoản vay</button>
             <div class="loan-sidebar-total" id="loanSidebarTotal"></div>
 
             <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:14px;" id="btnBulkSelect" onclick="toggleBulkSelectMode()">🗑 Chọn để xoá</button>
@@ -1901,6 +1906,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="form-grid">
         <div class="form-field full">
           <label>Khách hàng *</label>
+          <input type="text" id="loan_stk_search" placeholder="🔍 Gõ tên hoặc số tài khoản để tìm…" oninput="filterLoanCustomers(this.value)" style="margin-bottom:6px;">
           <select id="loan_stk"></select>
           <div class="field-hint">1 khách hàng có thể có nhiều khoản vay cùng lúc, với ngày đến hạn khác nhau.</div>
         </div>
@@ -2427,7 +2433,7 @@ async function loadAllData(){
     sb.from('rooms').select('*').order('room_id').then(r=>r.data||[]),
     fetchAllRows('customers','*','customer_id'),
     fetchAllRows('nav_history','customer_id, update_date, nav, source','history_id'),
-    fetchAllRows('fee_history','customer_id, update_date, fee','history_id'),
+    fetchAllRows('fee_history','customer_id, update_date, fee, source','history_id'),
     fetchAllRows('loans','*','loan_id'),
     fetchAllRows('margin_calls','*','margin_call_id'),
     fetchAllRows('rights_offerings','*','right_id'),
@@ -2442,6 +2448,10 @@ async function loadAllData(){
   accounts = accRows.map(a=>({ id:a.email, email:a.email, name:a.display_name||a.email, role:a.role, createdAt: a.created_at ? fromDbDate(a.created_at.slice(0,10)) : '' }));
   const navByCust = {}, feeByCust = {};
   NAV_IMPORT_DATES = new Set(navRows.filter(r=>String(r.source||'').startsWith('import')).map(r=>fromDbDate(r.update_date)));
+  const navLastImp = {}, feeLastImp = {};   // mốc import mới nhất của từng KH (không tính dòng nhập tay)
+  navRows.forEach(r=>{ if(String(r.source||'').startsWith('import')){ const k=String(r.update_date).replace(/-/g,''); if(k>(navLastImp[r.customer_id]||'')) navLastImp[r.customer_id]=k; } });
+  FEE_IMPORT_MONTHS = new Set();
+  feeRows.forEach(r=>{ if(String(r.source||'').startsWith('import')){ const m=String(r.update_date).slice(0,7); FEE_IMPORT_MONTHS.add(m); if(m>(feeLastImp[r.customer_id]||'')) feeLastImp[r.customer_id]=m; } });
   navRows.forEach(r=>{ (navByCust[r.customer_id] = navByCust[r.customer_id]||{})[fromDbDate(r.update_date)] = r.nav; });
   feeRows.forEach(r=>{ (feeByCust[r.customer_id] = feeByCust[r.customer_id]||{})[fromDbDate(r.update_date)] = r.fee; });
 
@@ -2470,6 +2480,8 @@ async function loadAllData(){
     intakeType: c.intake_type || 'new',
     ctype: ({'KH thường':'Tài khoản mới','KH chia sẻ':'Tài khoản chia sẻ','KH cũ':'Tài khoản cũ'})[c.customer_type] || c.customer_type || 'Tài khoản mới',
     linkedTo: c.linked_to_customer_id ? idToStk[c.linked_to_customer_id] : null,
+    navLastImport: navLastImp[c.customer_id] || '',
+    feeLastImport: feeLastImp[c.customer_id] || '',
     navHistory: navByCust[c.customer_id] || {},
     feeHistory: feeByCust[c.customer_id] || {},
   }));
@@ -2679,6 +2691,8 @@ const CORE_COLUMNS = [
   {key:'telegram', label:'Tên Telegram'},
   {key:'gender',  label:'Giới tính'},
   {key:'room',    label:'Room'},
+  {key:'nav_latest', label:'NAV ban đầu', sortable:true, num:true},
+  {key:'fee_latest', label:'Phí ban đầu', sortable:true, num:true},
   {key:'updated', label:'Ngày cập nhật'},
   {key:'note',    label:'Ghi chú'},
   {key:'ctype',   label:'Loại hình'},
@@ -2691,11 +2705,12 @@ function monthKeyOf(d){ const p = String(d).split('/'); return p.length===3 ? `$
 function monthLabel(mk){ const [y,m] = mk.split('-'); return `T${parseInt(m,10)}.${String(y).slice(2)}`; }
 function dateSortKey(d){ return String(d).split('/').reverse().join(''); }
 let axesFor = null;
+let FEE_IMPORT_MONTHS = new Set();
 let NAV_IMPORT_DATES = new Set();   // chỉ các ngày NAV có từ import mới sinh cột (sửa tay không tạo cột)
 function ensureAxes(){
   if(axesFor === customers) return; axesFor = customers;
   const nd = new Set(), fm = new Set();
-  customers.forEach(c=>{ Object.keys(c.navHistory||{}).forEach(d=>{ if(NAV_IMPORT_DATES.has(d)) nd.add(d); }); Object.keys(c.feeHistory||{}).forEach(d=>{ const k=monthKeyOf(d); if(k) fm.add(k); }); });
+  customers.forEach(c=>{ Object.keys(c.navHistory||{}).forEach(d=>{ if(NAV_IMPORT_DATES.has(d)) nd.add(d); }); Object.keys(c.feeHistory||{}).forEach(d=>{ const k=monthKeyOf(d); if(k && FEE_IMPORT_MONTHS.has(k)) fm.add(k); }); });
   NAV_DATES.length = 0; [...nd].sort((a,b)=>dateSortKey(b).localeCompare(dateSortKey(a))).slice(0,15).forEach(d=>NAV_DATES.push(d));
   FEE_MONTHS.length = 0; [...fm].sort().reverse().forEach(k=>FEE_MONTHS.push(k));
 }
@@ -2791,8 +2806,6 @@ document.addEventListener('click', function(e){
 
 function activeColumns(){
   ensureAxes();
-  if(sortState.key==='nav_latest') sortState.key = NAV_DATES[0] ? 'navdate:'+NAV_DATES[0] : null;
-  else if(sortState.key==='fee_latest') sortState.key = FEE_MONTHS[0] ? 'feem:'+FEE_MONTHS[0] : null;
   const cols = [...FIXED_COLUMNS];
   CORE_COLUMNS.forEach(c=>{ if(visibleCols.has(c.key)) cols.push(c); });
   effectiveNavDates().forEach(d=>{ cols.push({key:'navdate:'+d, label:'NAV '+shortDate(d), num:true, date:d, type:'nav'}); });
@@ -2852,8 +2865,8 @@ const FILTER_FIELDS = [
   {key:'status',     label:'Trạng thái',        type:'select', options: ()=>[{value:'Đang quản lý',label:'Đang quản lý'},{value:'Chờ xác nhận',label:'Chờ xác nhận'},{value:'Đã chuyển đi',label:'Đã chuyển đi'}]},
   {key:'ctype',      label:'Loại hình KH',      type:'select', options: ()=>[{value:'Tài khoản mới',label:'Tài khoản mới'},{value:'Tài khoản chia sẻ',label:'Tài khoản chia sẻ'},{value:'Tài khoản cũ',label:'Tài khoản cũ'}]},
   {key:'gender',     label:'Giới tính',         type:'select', options: ()=>[{value:'Nam',label:'Nam'},{value:'Nữ',label:'Nữ'},{value:'Khác',label:'Khác'}]},
-  {key:'nav_latest', label:'NAV (mới nhất)',    type:'number'},
-  {key:'fee_latest', label:'Phí (mới nhất)',    type:'number'},
+  {key:'nav_latest', label:'NAV ban đầu',    type:'number'},
+  {key:'fee_latest', label:'Phí ban đầu',    type:'number'},
   {key:'nav_date',   label:'NAV theo ngày',     type:'number_date', dates: NAV_DATES},
   {key:'fee_month',  label:'Phí theo tháng',    type:'number_date', dates: FEE_MONTHS},
   {key:'birth_year', label:'Năm sinh',          type:'number'},
@@ -4752,11 +4765,19 @@ function daysUntil(dateStr){
   const diff = Math.round((target - today) / (1000*60*60*24));
   return diff;
 }
-function customerOptionsHtml(){
-  return customers.map(c=>`<option value="${c.stk}">${c.name} — ${c.stk}</option>`).join('');
+function customerOptionsHtml(q){
+  const k = String(q||'').trim().toLowerCase();
+  const list = k ? customers.filter(c=>(String(c.name||'')+' '+c.stk).toLowerCase().includes(k)) : customers;
+  return list.slice(0,300).map(c=>`<option value="${c.stk}">${escHtml(c.name)} — ${c.stk}</option>`).join('') || '<option value="">(Không tìm thấy KH)</option>';
+}
+function filterLoanCustomers(q){
+  const el = document.getElementById('loan_stk'); const keep = el.value;
+  el.innerHTML = customerOptionsHtml(q);
+  if(keep && [...el.options].some(o=>o.value===keep)) el.value = keep;
 }
 function openLoanModal(preselectStk){
-  document.getElementById('loan_stk').innerHTML = customerOptionsHtml();
+  const _se = document.getElementById('loan_stk_search'); if(_se){ _se.value = ''; _se.style.display = preselectStk ? 'none' : ''; }
+  document.getElementById('loan_stk').innerHTML = customerOptionsHtml(preselectStk ? preselectStk : '');
   if(preselectStk) document.getElementById('loan_stk').value = preselectStk;
   document.getElementById('loan_tk').value = '6';
   document.getElementById('loan_amount').value = '';
@@ -4787,6 +4808,7 @@ function showToast(msg, type, ms){
 
 async function saveLoan(){
   const stk = document.getElementById('loan_stk').value;
+  if(!stk){ alert('Vui lòng chọn khách hàng.'); return; }
   const tk = document.getElementById('loan_tk').value;
   const account = stk + tk;
   const amount = parseFloat(document.getElementById('loan_amount').value.replace(/[^\d]/g,'')) || 0;
@@ -6695,8 +6717,12 @@ function analyzeImportRows(type, rows, mapping){
       if(mapping.name && has(raw('name')) && nameIn!==existing.name){ item.name=nameIn; ch('nameChanged','Tên KH',existing.name,nameIn); }
       if(mapping.telegram && has(raw('telegram'))){ const v=String(raw('telegram')).trim(); item.telegram=v; if(v!==(existing.telegram||'')) ch('telegramChanged','Telegram',existing.telegram,v); }
       if(mapping.managerId && has(raw('managerId'))){ const v=String(raw('managerId')).trim(); item.managerId=v; if(v!==(existing.managerId||'')) ch('managerIdChanged','ID QL',existing.managerId,v); }
-      if(mapping.nav && has(raw('nav'))){ const v=parseNum(raw('nav')); item.nav=v; if(v!==existing.nav) ch('navChanged','NAV',fmt(existing.nav),fmt(v)); }
-      if(mapping.fee && has(raw('fee'))){ const v=parseNum(raw('fee')); item.fee=v; item.feeMonth=feeMonthSel; const cur=feeOfMonth(existing,feeMonthSel); const lm=latestFeeMonth(existing); item.feeIsLatest = !lm || feeMonthSel>=lm; if(v!==cur) ch('feeChanged','Phí '+monthLabel(feeMonthSel), cur===undefined?'—':fmt(cur), fmt(v)); }
+      if(mapping.nav && has(raw('nav'))){ const v=parseNum(raw('nav')); item.nav=v;
+        const curD=(existing.navHistory||{})[dataDate];   // so sánh với NAV của CÙNG NGÀY dữ liệu, không phải NAV mới nhất
+        const lastK = existing.navLastImport || '';   // chỉ so với các lần IMPORT trước, không tính số sửa tay
+        item.navIsLatest = !lastK || dateSortKey(dataDate)>=lastK;
+        if(v!==curD) ch('navChanged','NAV '+shortDate(dataDate), curD===undefined?'—':fmt(curD), fmt(v)); }
+      if(mapping.fee && has(raw('fee'))){ const v=parseNum(raw('fee')); item.fee=v; item.feeMonth=feeMonthSel; const cur=feeOfMonth(existing,feeMonthSel); const lm=existing.feeLastImport || ''; item.feeIsLatest = !lm || feeMonthSel>=lm; if(v!==cur) ch('feeChanged','Phí '+monthLabel(feeMonthSel), cur===undefined?'—':fmt(cur), fmt(v)); }
       if(mapping.gender && has(raw('gender'))){ const v=String(raw('gender')).trim(); item.gender=v; if(v!==(existing.gender||'')) ch('genderChanged','Giới tính',existing.gender,v); }
       if(mapping.birthYear && has(raw('birthYear'))){ const m=String(raw('birthYear')).match(/(19|20)\d{2}/); const v=m?parseInt(m[0]):null; if(v){ item.birthYear=v; if(v!==existing.birthYear) ch('birthYearChanged','Năm sinh',existing.birthYear,v); } }
       if(mapping.status && has(raw('status'))){ const v=String(raw('status')).trim(); item.status=v; if(v!==existing.status) ch('statusChanged','Trạng thái',existing.status,v); }
@@ -7203,8 +7229,8 @@ async function confirmImportToDatabase(){
             const payload = { updated_at: new Date().toISOString() };
             if(it.ctypeChanged) payload.customer_type = it.ctype;
             if(it.mgmtStartChanged) payload.management_start_date = toDbDate(it.mgmtStart);
-            if(it.navChanged){ payload.current_nav = it.nav; payload.nav_updated_at = toDbDate(it.dataDate||today); }
-            if(it.feeChanged && (plan.type!=='update' || it.feeIsLatest)){ payload.current_fee = it.fee; payload.fee_updated_at = toDbDate(it.dataDate||today); }
+            if(it.navChanged && plan.type!=='update'){ payload.current_nav = it.nav; payload.nav_updated_at = toDbDate(it.dataDate||today); }
+            if(it.feeChanged && plan.type!=='update'){ payload.current_fee = it.fee; payload.fee_updated_at = toDbDate(it.dataDate||today); }
             // Cột nào ĐÃ MAP ở bước nhập thì luôn ghi đè bằng dữ liệu mới nhất trong file — kể cả khi ô đó
             // để trống (ghi thành rỗng/null, xóa dữ liệu cũ của trường này). Cột không map thì không đụng tới.
             if(it.nameChanged) payload.customer_name = it.name || '';
@@ -7222,7 +7248,11 @@ async function confirmImportToDatabase(){
             }
             const { error } = await sb.from('customers').update(payload).eq('customer_id', it.existing.id);
             if(error) throw error;
-            if(it.navChanged) await sb.from('nav_history').insert({customer_id:it.existing.id, update_date:toDbDate(it.dataDate||today), nav:it.nav, source: plan.type==='bc12'?'import_bc12':'import_nav'});
+            if(it.navChanged){
+              const _nd = toDbDate(it.dataDate||today); let _done = false;
+              if(plan.type==='update'){ const { data:_u } = await sb.from('nav_history').update({nav:it.nav, source:'import_nav'}).eq('customer_id',it.existing.id).eq('update_date',_nd).select('history_id'); _done = !!(_u && _u.length); }
+              if(!_done) await sb.from('nav_history').insert({customer_id:it.existing.id, update_date:_nd, nav:it.nav, source: plan.type==='bc12'?'import_bc12':'import_nav'});
+            }
             if(it.feeChanged){ if(plan.type==='update') await upsertMonthlyFee(it.existing.id, it.feeMonth, it.fee, 'import_nav'); else await sb.from('fee_history').insert({customer_id:it.existing.id, update_date:toDbDate(it.dataDate||today), fee:it.fee, source: plan.type==='bc12'?'import_bc12':'import_nav'}); }
             if(didSyncRoom){
               await sb.from('room_history').insert({
