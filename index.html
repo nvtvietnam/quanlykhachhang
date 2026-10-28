@@ -446,11 +446,14 @@ tbody tr:hover{background:#EEF3FF;}
 .loan-detail-row > td{background:#F7F9FD;box-shadow:inset 4px 0 0 #9DB6F2;}
 .loan-card-footer{background:#EEF3FB;border-top:1px solid #D2DBEA;color:#3A4C70;}
 .loan-group-header{background:#F1F5FC;}
-/* Dòng đầu mỗi tài khoản (nhóm khoản vay) — nền xanh đậm hơn để dễ phân biệt các tài khoản */
-.loan-summary-row > td{background:#D6E3FA !important;border-top:3px solid #2F5BC4;border-bottom:1px solid #9DB6F2;font-weight:700;}
-.loan-summary-row:hover > td{background:#C7D8F7 !important;}
-.loan-summary-row > td:first-child{box-shadow:inset 6px 0 0 #2F5BC4;}
+/* Dòng đầu mỗi tài khoản (nhóm khoản vay): nền xanh nhạt + vạch nhấn bên trái, nhẹ nhàng */
+#view-loans .loan-summary-row > td{background:#EDF2FB !important;border-top:1px solid #C9D6EE;border-bottom:1px solid #C9D6EE;}
+#view-loans .loan-summary-row:hover > td{background:#E2EAF8 !important;}
+#view-loans .loan-summary-row > td:first-child{box-shadow:inset 4px 0 0 #5B82D6;}
 
+/* Thanh nút Quay lại / Tiếp tục của trang Import: cố định ở đáy màn hình, không trôi theo nội dung */
+.imp-nav{position:sticky;bottom:0;z-index:30;display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:16px;padding:12px 4px;background:linear-gradient(to top,var(--bg,#F4F6FB) 82%,rgba(244,246,251,0));border-top:1px solid #D8E0EE;}
+.imp-nav .btn{min-width:150px;}
 /* Bộ lọc bên trái trang khoản vay / RRUB */
 .loan-sidebar-title{color:var(--ink);font-weight:800;}
 .loan-filter-group-title{background:var(--head-bg);color:#2A3B5C;border-radius:7px;padding:6px 10px;margin:16px 0 8px;font-weight:800;}
@@ -784,7 +787,7 @@ body{-webkit-text-size-adjust:100%;}
       </div>
       <button type="submit" id="loginSubmitBtn" style="width:100%;padding:11px;border-radius:8px;border:none;background:#2358E8;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Đăng nhập</button>
     </form>
-    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.99</div>
+    <div style="font-size:11px;color:#9AA5B4;margin-top:16px;">Phiên bản v08.101</div>
     <div id="loginError" style="color:#DC2626;font-size:12.5px;margin-top:14px;display:none;"></div>
     <div id="loginLoading" style="color:#6B7280;font-size:12.5px;margin-top:14px;display:none;">Đang đăng nhập…</div>
   </div>
@@ -806,7 +809,7 @@ body{-webkit-text-size-adjust:100%;}
       <div class="brand-mark">QL</div>
       <div>
         <div class="brand-name">Quản lý khách hàng</div>
-        <div class="brand-sub">Chứng khoán · v08.99</div>
+        <div class="brand-sub">Chứng khoán · v08.101</div>
       </div>
     </div>
     <div class="nav-group-label">Tổng quan</div>
@@ -888,7 +891,7 @@ body{-webkit-text-size-adjust:100%;}
           </div>
         </div>
         <button class="btn btn-secondary btn-sm" onclick="openImport()">Import dữ liệu</button>
-        <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Thêm <span class="hide-sm">khách hàng</span><span class="show-sm">KH</span></button>
+        <button class="btn btn-primary btn-sm" id="topAddBtn" onclick="topAddAction()">+ Thêm <span class="hide-sm">khách hàng</span><span class="show-sm">KH</span></button>
       </div>
     </div>
 
@@ -1313,7 +1316,7 @@ body{-webkit-text-size-adjust:100%;}
               <div class="field-hint" style="margin-top:4px;margin-left:24px;">Bật để dùng file này sửa hàng loạt Room sai — tắt nếu chỉ muốn cập nhật NAV/phí, giữ nguyên Room hiện tại.</div>
             </div>
           </div></div>
-          <div style="display:flex;justify-content:space-between;margin-top:16px;">
+          <div class="imp-nav">
             <button class="btn btn-secondary" onclick="goImportStep(1)">← Quay lại</button>
             <button class="btn btn-primary" onclick="proceedFromMapping()">Tiếp tục — Kiểm tra dữ liệu →</button>
           </div>
@@ -1341,7 +1344,7 @@ body{-webkit-text-size-adjust:100%;}
               <tbody id="unmatchedBody"></tbody></table>
             </div>
           </div>
-          <div style="display:flex;justify-content:space-between;margin-top:16px;">
+          <div class="imp-nav">
             <button class="btn btn-secondary" onclick="goImportStep(2)">← Quay lại</button>
             <button class="btn btn-primary" onclick="goToImportStep4()" id="btnToStep4">Tiếp tục — Xem trước thay đổi →</button>
           </div>
@@ -1357,7 +1360,7 @@ body{-webkit-text-size-adjust:100%;}
               </table>
             </div>
           </div>
-          <div style="display:flex;justify-content:space-between;margin-top:16px;">
+          <div class="imp-nav">
             <button class="btn btn-secondary" onclick="goImportStep(3)">← Quay lại</button>
             <button class="btn btn-primary" onclick="confirmImportToDatabase()" id="btnConfirmImport">Xác nhận cập nhật ✓</button>
           </div>
@@ -2643,6 +2646,11 @@ function renderViewIfDirty(name){
   else if(name==='margincalls') renderMarginCalls();
   else if(name==='rights') renderRights();
 }
+function topAddAction(){ const v=document.querySelector('.nav-item.active'); if(v && v.dataset.view==='loans') openLoanModal(); else openAddModal(); }
+function setTopAddBtn(name){
+  const b=document.getElementById('topAddBtn'); if(!b) return;
+  b.innerHTML = name==='loans' ? '+ Thêm <span class="hide-sm">khoản vay</span><span class="show-sm">KV</span>' : '+ Thêm <span class="hide-sm">khách hàng</span><span class="show-sm">KH</span>';
+}
 function switchView(name){
   if(name!=='loans') loanOrderFreeze = null;
   setTimeout(()=>{ try{ syncStickyOffsets(); }catch(e){} }, 0);
@@ -2669,6 +2677,7 @@ function switchView(name){
   const icons = {dashboard:'📊',customers:'👥',rooms:'🏠',loans:'💰',margincalls:'⚠️',rights:'📈',import:'📥',accounts:'🔐',specialids:'⭐',moves:'🔄'};
   const pi = document.getElementById('pageIcon'); if(pi) pi.textContent = icons[name] || '📄';
   document.title = titles[name][0] + ' — QLKH';
+  setTopAddBtn(name);
   document.getElementById('pageTitle').textContent = titles[name][0];
   document.getElementById('pageSubtitle').textContent = titles[name][1];
   if(name === 'accounts'){ renderAccounts(); loadAccessLog(false); }
