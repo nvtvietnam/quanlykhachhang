@@ -2523,8 +2523,8 @@ function renderRoomFilterOptions(){
   if(!sel) return;
   const current = sel.value;
   sel.innerHTML = '<option value="">Tất cả Room</option>'
-    + rooms.map(r=>`<option value="${r.id}">${r.name}</option>`).join('')
-    + SPECIAL_ROOMS.map(s=>`<option value="${s}">${s}</option>`).join('');
+    + rooms.map(r=>`<option value="${r.id}">${esc(r.name)}</option>`).join('')
+    + SPECIAL_ROOMS.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
   // Giữ lại lựa chọn đang chọn nếu Room đó vẫn còn tồn tại; nếu đã bị xóa thì về "Tất cả Room"
   if([...sel.options].some(o=>o.value===current)) sel.value = current;
 }
@@ -2588,7 +2588,7 @@ function copyToClipboard(text, el){
   navigator.clipboard.writeText(text).then(()=>{
     if(!el) return;
     const original = el.innerHTML;
-    el.innerHTML = `${text} <span style="color:var(--green);">✓ Đã copy</span>`;
+    el.innerHTML = `${esc(text)} <span style="color:var(--green);">✓ Đã copy</span>`;
     setTimeout(()=>{ el.innerHTML = original; }, 1200);
   }).catch(()=>{
     alert('Không thể tự động copy trên trình duyệt này — vui lòng bôi đen và copy thủ công.');
@@ -2774,7 +2774,7 @@ function renderColumnManagerList(){
   const _effNav = new Set(effectiveNavDates());
   const navHtml = NAV_DATES.length ? NAV_DATES.map(d=>{
     const checked = _effNav.has(d) ? 'checked' : '';
-    return `<label class="col-check-row"><input type="checkbox" ${checked} onchange="toggleNavDate('${d}')"> NAV ${shortDate(d)}</label>`;
+    return `<label class="col-check-row"><input type="checkbox" ${checked} onchange="toggleNavDate('${escJs(d)}')"> NAV ${shortDate(d)}</label>`;
   }).join('') : '<div class="field-hint">Chưa có dữ liệu NAV theo ngày</div>';
   ensureAxes();
   const _eff = new Set(effectiveFeeMonths());
@@ -2828,20 +2828,20 @@ function cellValue(c, cust, idx){
   switch(c.key){
     case 'stt': return idx+1;
     case 'name': return cust.name
-      ? `<div class="cust-name" title="${cust.name}">${cust.name}</div>`
+      ? `<div class="cust-name" title="${esc(cust.name)}">${esc(cust.name)}</div>`
       : `<div class="cust-name" style="color:var(--text-muted);font-weight:400;" title="Chưa có Họ và tên KH">—</div>`;
     case 'telegram': return cust.telegram
-      ? `<div class="cust-name" title="${cust.telegram}">${cust.telegram}</div>`
+      ? `<div class="cust-name" title="${esc(cust.telegram)}">${esc(cust.telegram)}</div>`
       : `<span style="color:var(--text-muted);">—</span>`;
-    case 'stk': { const _cp = `<span class="cp-stt" title="Bấm để copy số tài khoản" onclick="event.stopPropagation();copyStk('${String(cust.stk).replace(/'/g,'')}')">${cust.stk}</span>`; return cust.stk.startsWith('TMP')
+    case 'stk': { const _cp = `<span class="cp-stt" title="Bấm để copy số tài khoản" onclick="event.stopPropagation();copyStk('${escJs(cust.stk)}')">${esc(cust.stk)}</span>`; return cust.stk.startsWith('TMP')
       ? `${_cp} <span class="tag-chip" title="Chưa có STK thật">chưa mở TK</span>`
-      : `${_cp}${cust.linkedTo?` <span class="tag-chip" title="Tài khoản Phụ của STK ${cust.linkedTo}">🔗 Phụ</span>`:''}`; }
+      : `${_cp}${cust.linkedTo?` <span class="tag-chip" title="Tài khoản Phụ của STK ${esc(cust.linkedTo)}">🔗 Phụ</span>`:''}`; }
     case 'nav_latest': return `${fmt(cust.nav)} ${cust.mismatch?'<span title="NAV không phù hợp với Room hiện tại" class="warn-icon">⚠️</span>':''}`;
     case 'fee_latest': return fmt(cust.fee);
-    case 'gender': return cust.gender || '—';
-    case 'room': return roomLabel(cust.room) + (cust.mismatch?' <span title="NAV không phù hợp với Room hiện tại" class="warn-icon">⚠️</span>':'');
-    case 'updated': return cust.updated;
-    case 'note': return `<span style="color:var(--text-muted);">${cust.note||'—'}</span>`;
+    case 'gender': return esc(cust.gender || '—');
+    case 'room': return esc(roomLabel(cust.room)) + (cust.mismatch?' <span title="NAV không phù hợp với Room hiện tại" class="warn-icon">⚠️</span>':'');
+    case 'updated': return esc(cust.updated);
+    case 'note': return `<span style="color:var(--text-muted);">${esc(cust.note||'—')}</span>`;
     case 'ctype': return cust.ctype==='Tài khoản chia sẻ' ? '<span class="badge badge-blue">Tài khoản chia sẻ</span>' : cust.ctype==='Tài khoản cũ' ? '<span class="badge badge-gray">Tài khoản cũ</span>' : '<span style="color:var(--text-muted);">Tài khoản mới</span>';
     case 'status': return statusBadge(cust.status);
     default: return '';
@@ -2920,7 +2920,7 @@ function renderFilterRows(){
     const fieldOptions = FILTER_FIELDS.map(x=>`<option value="${x.key}" ${x.key===f.field?'selected':''}>${x.label}</option>`).join('');
     let dateHtml = '';
     if(cfg.type==='number_date'){
-      dateHtml = `<select class="filter-select" onchange="updateFilterDate(${f.id}, this.value)">${cfg.dates.map(d=>`<option value="${d}" ${d===f.date?'selected':''}>${dateOptLabel(d)}</option>`).join('')}</select>`;
+      dateHtml = `<select class="filter-select" onchange="updateFilterDate(${f.id}, this.value)">${cfg.dates.map(d=>`<option value="${esc(d)}" ${d===f.date?'selected':''}>${dateOptLabel(d)}</option>`).join('')}</select>`;
     }
     let opHtml, valHtml;
     if(cfg.type==='select'){
@@ -2928,12 +2928,12 @@ function renderFilterRows(){
       opHtml = `<span class="filter-op-label">là</span>`;
       valHtml = `<select class="filter-select" onchange="updateFilterValue(${f.id}, this.value)">
         <option value="">— chọn —</option>
-        ${opts.map(o=>`<option value="${o.value}" ${String(o.value)===String(f.value)?'selected':''}>${o.label}</option>`).join('')}
+        ${opts.map(o=>`<option value="${esc(o.value)}" ${String(o.value)===String(f.value)?'selected':''}>${esc(o.label)}</option>`).join('')}
       </select>`;
     } else {
       const ops = [['>','&gt;'],['>=','&ge;'],['<','&lt;'],['<=','&le;'],['=','=']];
       opHtml = `<select class="filter-select" style="width:64px;" onchange="updateFilterOperator(${f.id}, this.value)">${ops.map(([k,l])=>`<option value="${k}" ${k===f.operator?'selected':''}>${l}</option>`).join('')}</select>`;
-      valHtml = `<input type="text" class="filter-value-input" placeholder="VD: 100000000" value="${f.value}" oninput="updateFilterValue(${f.id}, this.value)">`;
+      valHtml = `<input type="text" class="filter-value-input" placeholder="VD: 100000000" value="${esc(f.value)}" oninput="updateFilterValue(${f.id}, this.value)">`;
     }
     return `<div class="filter-row">
       <select class="filter-select" onchange="updateFilterField(${f.id}, this.value)">${fieldOptions}</select>
@@ -3034,14 +3034,14 @@ function custRowHtml(c, idx){
     return `<td${numCls}>${cellValue(col, c, idx)}</td>`;
   }).join('');
     return `
-    <tr onclick="openDetail('${c.code}')">
+    <tr onclick="openDetail('${escJs(c.code)}')">
       ${tds}
       <td onclick="event.stopPropagation();">
         <div class="row-actions">
-          <button class="icon-btn" title="Soạn tin nhắn" onclick="event.stopPropagation();openMessageModal('room', '${c.stk}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
-          <button class="icon-btn" title="Sửa" onclick="event.stopPropagation();openEditModal('${c.stk}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>
-          <button class="icon-btn" title="Xem chi tiết" onclick="openDetail('${c.code}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg></button>
-          ${currentRole==='owner' ? `<button class="icon-btn" title="Xóa khách hàng này" style="color:var(--red);" onclick="event.stopPropagation();deleteSingleCustomer('${c.stk}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>` : ''}
+          <button class="icon-btn" title="Soạn tin nhắn" onclick="event.stopPropagation();openMessageModal('room', '${escJs(c.stk)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+          <button class="icon-btn" title="Sửa" onclick="event.stopPropagation();openEditModal('${escJs(c.stk)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>
+          <button class="icon-btn" title="Xem chi tiết" onclick="openDetail('${escJs(c.code)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          ${currentRole==='owner' ? `<button class="icon-btn" title="Xóa khách hàng này" style="color:var(--red);" onclick="event.stopPropagation();deleteSingleCustomer('${escJs(c.stk)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>` : ''}
         </div>
       </td>
     </tr>`;
@@ -3101,7 +3101,7 @@ function rawCellValue(c, cust, idx){
     case 'fee_latest': return cust.fee;
     case 'gender': return cust.gender || '';
     case 'room': return roomLabel(cust.room);
-    case 'updated': return cust.updated;
+    case 'updated': return esc(cust.updated);
     case 'note': return cust.note || '';
     case 'ctype': return cust.ctype || 'Tài khoản mới';
     case 'status': return cust.status;
@@ -3239,8 +3239,8 @@ function renderMoves(){
   wrap.innerHTML = dates.map((d,i)=>{
     const g = byDate[d];
     const col = (title, arr, cls)=>`<div class="mv-col ${cls||''}"><h4>${title} (${arr.length})</h4>${arr.length ? arr.map(mvItemHtml).join('') : '<div class="mv-empty">Không có</div>'}</div>`;
-    return `<details class="mv-day" data-d="${d}" ${mvOpenState[d]?'open':''}>
-      <summary><span>${d}${d===today?' (Hôm nay)':''}</span>
+    return `<details class="mv-day" data-d="${esc(d)}" ${mvOpenState[d]?'open':''}>
+      <summary><span>${esc(d)}${d===today?' (Hôm nay)':''}</span>
         <span class="mv-chip new">Mới ${g.new.length}</span><span class="mv-chip in">Chuyển về ${g.in.length}</span><span class="mv-chip out" style="margin-left:auto;">Chuyển đi ${g.out.length}</span></summary>
       <div class="mv-cols">${col('🆕 Khách hàng mới', g.new)}${col('⬇️ Chuyển về', g.in)}${col('⬆️ Chuyển đi', g.out, 'out')}</div>
     </details>`;
@@ -3292,7 +3292,7 @@ function addCustFromTin(tid){
   showToast('Đã điền sẵn từ dòng KH chuyển về — bổ sung NAV, phí… rồi bấm Lưu.');
 }
 function openCustFromMove(stk){ if(custByStk(stk)) openEditModal(stk); }
-function clickableBadge(stk, html){ return custByStk(stk) ? `<span class="badge-click" style="cursor:pointer;" title="Bấm để mở / sửa thông tin KH" onclick="openCustFromMove('${String(stk).replace(/'/g,'')}')">${html}</span>` : html; }
+function clickableBadge(stk, html){ return custByStk(stk) ? `<span class="badge-click" style="cursor:pointer;" title="Bấm để mở / sửa thông tin KH" onclick="openCustFromMove('${escJs(stk)}')">${html}</span>` : html; }
 function custStatusBadge(stk){
   const c = custByStk(stk);
   if(!c) return '<span class="badge badge-gray">Chưa có trong DS</span>';
@@ -3350,7 +3350,7 @@ function leadRowHtml(l){
   const done = l.outcome==='Đã mở TK' || l.outcome==='Đã chuyển về';
   return `<tr class="${done?'ld-done':''}" data-lid="${l.id}">
     <td><b>${l.stt||l.id}</b></td>
-    <td>${l.date||''}</td>
+    <td>${esc(l.date||'')}</td>
     <td><input type="text" class="loan-note-input ld-name" value="${escHtml(l.name)}" placeholder="Tên KH" onchange="updateLead(${l.id},'name',this.value)"></td>
     <td><input type="text" class="loan-note-input ld-person" list="ldPersonList" value="${escHtml(l.person)}" placeholder="Người liên hệ" onchange="updateLead(${l.id},'person',this.value)"></td>
     <td><select onchange="updateLead(${l.id},'contact',this.value)">${sel(CONTACT_OPTS,l.contact)}</select></td>
@@ -3461,7 +3461,7 @@ function renderTins(){
   const allRows = transferIns.slice().sort(byDateDesc); const rows = mvFilter(allRows,'tin');
   body.innerHTML = rows.length ? rows.map(t=>{
     const c = custByStk(t.stk); const lead = tinLead(t);
-    return `<tr data-tid="${t.id}"><td>${t.date||''}</td><td><b class="cp-stt" title="Bấm để copy số tài khoản" onclick="copyStk('${escHtml(t.stk)}')">${escHtml(t.stk)}</b></td><td>${escHtml(t.name || (c?c.name:''))}</td><td class="num-col">${c ? fmt(c.nav||0) : '<span style="color:#9AA5B4;">—</span>'}</td><td>${escHtml(t.newId)}</td>
+    return `<tr data-tid="${t.id}"><td>${esc(t.date||'')}</td><td><b class="cp-stt" title="Bấm để copy số tài khoản" onclick="copyStk('${escJs(t.stk)}')">${escHtml(t.stk)}</b></td><td>${escHtml(t.name || (c?c.name:''))}</td><td class="num-col">${c ? fmt(c.nav||0) : '<span style="color:#9AA5B4;">—</span>'}</td><td>${escHtml(t.newId)}</td>
       <td>${lead ? `<b>${leadStt(lead.id)}</b>${lead.name?' · '+escHtml(lead.name):''}` : '<span style="color:#9AA5B4;">—</span>'}</td>
       <td>${c ? clickableBadge(t.stk, custStatusBadge(t.stk)) : `<span class="badge-click" style="cursor:pointer;" title="Bấm để thêm KH này vào danh sách" onclick="addCustFromTin(${t.id})"><span class="badge badge-gray">Chưa có trong DS</span> <span style="color:#2358E8;font-size:12px;font-weight:600;">＋ Thêm KH</span></span>`}</td>
       <td style="white-space:nowrap;"><button class="icon-btn" title="Sửa" onclick="openTinModal(${t.id})">${ICON_EDIT}</button>${delBtn('deleteTin',t.id)}</td></tr>`;
@@ -3549,7 +3549,7 @@ function renderTouts(){
   const allRows = transferOuts.slice().sort(byDateDesc); const rows = mvFilter(allRows,'tout');
   body.innerHTML = rows.length ? rows.map(t=>{
     const c = custByStk(t.stk);
-    return `<tr data-oid="${t.id}"><td>${t.date||''}</td><td><b class="cp-stt" title="Bấm để copy số tài khoản" onclick="copyStk('${escHtml(t.stk)}')">${escHtml(t.stk)}</b></td><td>${escHtml(t.name || (c?c.name:''))}</td><td class="num-col">${c ? fmt(c.nav||0) : '<span style="color:#9AA5B4;">—</span>'}</td><td>${escHtml(t.newId)}</td><td>${clickableBadge(t.stk, toutStatusBadge(t))}</td>
+    return `<tr data-oid="${t.id}"><td>${esc(t.date||'')}</td><td><b class="cp-stt" title="Bấm để copy số tài khoản" onclick="copyStk('${escJs(t.stk)}')">${escHtml(t.stk)}</b></td><td>${escHtml(t.name || (c?c.name:''))}</td><td class="num-col">${c ? fmt(c.nav||0) : '<span style="color:#9AA5B4;">—</span>'}</td><td>${escHtml(t.newId)}</td><td>${clickableBadge(t.stk, toutStatusBadge(t))}</td>
       <td style="white-space:nowrap;"><button class="icon-btn" title="Sửa" onclick="openToutModal(${t.id})">${ICON_EDIT}</button>${delBtn('deleteTout',t.id)}</td></tr>`;
   }).join('') : '<tr><td colspan="7" class="lead-empty">'+(allRows.length?'Không tìm thấy KH nào khớp.':'Chưa có KH chuyển đi nào. Nhận mail xong bấm "+ Thêm KH chuyển đi".')+'</td></tr>';
 }
@@ -3603,19 +3603,19 @@ function renderDashboard(){
   document.getElementById('statTotalFee').textContent = fmt(active.reduce((s,c)=>s+c.fee,0));
   const recent = [...customers].sort((a,b)=> b.updated.split('/').reverse().join('').localeCompare(a.updated.split('/').reverse().join(''))).slice(0,5);
   document.getElementById('dashRecentBody').innerHTML = recent.map(c=>`
-    <tr onclick="openDetail('${c.code}')">
+    <tr onclick="openDetail('${escJs(c.code)}')">
       <td>
         <div class="recent-row-name">
-          <div class="avatar-sm" style="background:${avatarColor(c.name||c.telegram||c.stk)};">${initials(c.name||c.telegram)}</div>
-          <div class="cust-name">${c.name || `<span style="color:var(--text-muted);font-weight:400;">${c.telegram||'—'}</span>`}</div>
+          <div class="avatar-sm" style="background:${avatarColor(c.name||c.telegram||c.stk)};">${esc(initials(c.name||c.telegram))}</div>
+          <div class="cust-name">${c.name ? esc(c.name) : `<span style="color:var(--text-muted);font-weight:400;">${esc(c.telegram||'—')}</span>`}</div>
         </div>
       </td>
-      <td class="cust-code">${c.stk}</td>
+      <td class="cust-code">${esc(c.stk)}</td>
       <td class="num-col num">${fmt(c.nav)}</td>
       <td class="num-col num">${fmt(c.fee)}</td>
-      <td><span class="badge ${roomBadgeClass(c.room)}">${roomLabel(c.room)}</span></td>
-      <td>${c.updated}</td>
-      <td onclick="event.stopPropagation();"><button class="icon-btn" title="Thao tác" onclick="openDetail('${c.code}')">⋮</button></td>
+      <td><span class="badge ${roomBadgeClass(c.room)}">${esc(roomLabel(c.room))}</span></td>
+      <td>${esc(c.updated)}</td>
+      <td onclick="event.stopPropagation();"><button class="icon-btn" title="Thao tác" onclick="openDetail('${escJs(c.code)}')">⋮</button></td>
     </tr>
   `).join('');
 
@@ -3642,7 +3642,7 @@ function renderDashboard(){
   const rightsDueCard = document.getElementById('statRightsDueCard');
   document.getElementById('statRightsDueToday').textContent = rightsDueToday.length;
   document.getElementById('statRightsDueDelta').innerHTML = rightsDueToday.length
-    ? `<span style="color:var(--red);">${rightsDueToday.map(r=>r.symbol+' ('+r.stk+')').join(', ')}</span>`
+    ? `<span style="color:var(--red);">${esc(rightsDueToday.map(r=>r.symbol+' ('+r.stk+')').join(', '))}</span>`
     : `<span style="color:var(--text-muted);">Không có</span>`;
   rightsDueCard.style.borderColor = rightsDueToday.length ? 'var(--red)' : 'var(--border)';
 
@@ -3739,7 +3739,7 @@ function renderRoomComposition(){
   const legend = roomsWithData.map(d=>`
     <div class="donut-legend-row">
       <span class="dot" style="background:${d.color};"></span>
-      <span class="name">${d.r.name}</span>
+      <span class="name">${esc(d.r.name)}</span>
       <span class="val">${d.count} KH</span>
       <span class="pct">${Math.round(d.pct)}%</span>
     </div>`).join('');
@@ -3819,7 +3819,7 @@ function renderTransferPanel(){
   const rowsHtml = activeDays.length ? activeDays.map(e=>{
     const rong = e.inNav - e.outNav;
     return `<tr>
-      <td>${e.dateStr}</td>
+      <td>${esc(e.dateStr)}</td>
       <td class="num-col">${e.inCount}</td>
       <td class="num-col">${fmt(e.inNav)}</td>
       <td class="num-col">${e.outCount}</td>
@@ -3920,8 +3920,8 @@ function renderRooms(showRefreshFeedback){
     <div class="room-card" id="room-card-${r.id}">
       <div class="room-card-top">
         <div>
-          <div class="room-name">${r.name}</div>
-          <div class="room-range">${r.desc}</div>
+          <div class="room-name">${esc(r.name)}</div>
+          <div class="room-range">${esc(r.desc)}</div>
         </div>
         <button class="icon-btn" title="Chỉnh sửa Room" onclick="openRoomModal(${r.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>
       </div>
@@ -3929,7 +3929,7 @@ function renderRooms(showRefreshFeedback){
         <div class="room-stat"><div class="l">Số khách</div><div class="v">${members.length}</div></div>
         <div class="room-stat"><div class="l">Tổng NAV</div><div class="v num" style="font-size:13px;">${fmt(totalNav)}</div></div>
         <div class="room-stat"><div class="l">Tổng phí</div><div class="v num" style="font-size:13px;">${fmt(totalFee)}</div></div>
-        <div class="room-stat"><div class="l">Ngưỡng</div><div class="v" style="font-size:12px;font-weight:600;">${rangeLabel}</div></div>
+        <div class="room-stat"><div class="l">Ngưỡng</div><div class="v" style="font-size:12px;font-weight:600;">${esc(rangeLabel)}</div></div>
         <div class="room-stat">
           <div class="l">Số Admin trong nhóm</div>
           <input type="number" min="0" value="${adminCount}" class="v" style="width:64px;padding:3px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;font-weight:700;font-family:inherit;"
@@ -4062,7 +4062,7 @@ function renderRoomSelect(){
   const current = sel.value;
   const navOptions = rooms.map(r=>{
     const rangeLabel = r.max===Infinity ? `Trên ${fmt(r.min)}` : `${fmt(r.min)} – ${fmt(r.max)}`;
-    return `<option value="${r.id}">${r.name} (${rangeLabel})</option>`;
+    return `<option value="${r.id}">${esc(r.name)} (${esc(rangeLabel)})</option>`;
   }).join('');
   sel.innerHTML = `
     <optgroup label="Room theo NAV">${navOptions}</optgroup>
@@ -4077,7 +4077,7 @@ function renderRoomSelect(){
 function renderLinkedSelect(excludeStk, prefillStk){
   const datalist = document.getElementById('f_linked_datalist');
   datalist.innerHTML = customers.filter(c=>c.stk!==excludeStk)
-    .map(c=>`<option value="${c.name} (${c.stk})"></option>`).join('');
+    .map(c=>`<option value="${esc(c.name)} (${esc(c.stk)})"></option>`).join('');
   const input = document.getElementById('f_linked');
   if(prefillStk){
     const c = customers.find(x=>x.stk===prefillStk);
@@ -4122,7 +4122,7 @@ function openLinkModal(){
 
   // Datalist chọn tài khoản Chính (loại trừ chính nó và các tài khoản đã là Phụ của người khác)
   const eligiblePrimary = customers.filter(x=>x.stk!==c.stk);
-  document.getElementById('link_primary_datalist').innerHTML = eligiblePrimary.map(x=>`<option value="${x.name} (${x.stk})"></option>`).join('');
+  document.getElementById('link_primary_datalist').innerHTML = eligiblePrimary.map(x=>`<option value="${esc(x.name)} (${esc(x.stk)})"></option>`).join('');
   document.getElementById('link_primary_input').value = '';
 
   // Danh sách tài khoản Phụ đang trỏ về STK này
@@ -4130,13 +4130,13 @@ function openLinkModal(){
   const listEl = document.getElementById('link_secondary_list');
   listEl.innerHTML = secondaries.length ? secondaries.map(s=>`
     <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #F0F2F5;">
-      <span style="color:var(--text);font-weight:600;font-size:13px;">${s.name} <span style="color:var(--text-muted);font-weight:400;">(${s.stk})</span></span>
-      <button class="btn btn-secondary btn-sm" onclick="removeSecondary('${s.stk}')">Bỏ liên kết</button>
+      <span style="color:var(--text);font-weight:600;font-size:13px;">${esc(s.name)} <span style="color:var(--text-muted);font-weight:400;">(${esc(s.stk)})</span></span>
+      <button class="btn btn-secondary btn-sm" onclick="removeSecondary('${escJs(s.stk)}')">Bỏ liên kết</button>
     </div>`).join('') : 'Không có';
 
   // Datalist thêm tài khoản Phụ mới (loại trừ chính nó, các tài khoản đã là Phụ của người khác, và bản thân là Chính có Phụ khác)
   const eligibleSecondary = customers.filter(x=>x.stk!==c.stk && x.linkedTo!==c.stk);
-  document.getElementById('link_add_secondary_datalist').innerHTML = eligibleSecondary.map(x=>`<option value="${x.name} (${x.stk})"></option>`).join('');
+  document.getElementById('link_add_secondary_datalist').innerHTML = eligibleSecondary.map(x=>`<option value="${esc(x.name)} (${esc(x.stk)})"></option>`).join('');
   document.getElementById('link_add_secondary_input').value = '';
 
   document.getElementById('linkModalOverlay').classList.add('active');
@@ -4695,9 +4695,9 @@ async function openDetail(code){
   const secondaryAccounts = customers.filter(x=>x.linkedTo===c.stk);
   if(c.linkedTo){
     const primary = customers.find(x=>x.stk===c.linkedTo);
-    document.getElementById('so_linked').innerHTML = `Là <b>tài khoản Phụ</b> của: <b>${primary?primary.name:'—'}</b> (STK ${c.linkedTo})`;
+    document.getElementById('so_linked').innerHTML = `Là <b>tài khoản Phụ</b> của: <b>${esc(primary?primary.name:'—')}</b> (STK ${esc(c.linkedTo)})`;
   } else if(secondaryAccounts.length){
-    document.getElementById('so_linked').innerHTML = `Là <b>tài khoản Chính</b> — có ${secondaryAccounts.length} tài khoản Phụ: ${secondaryAccounts.map(x=>`${x.name} (${x.stk})`).join(', ')}`;
+    document.getElementById('so_linked').innerHTML = `Là <b>tài khoản Chính</b> — có ${secondaryAccounts.length} tài khoản Phụ: ${secondaryAccounts.map(x=>`${esc(x.name)} (${esc(x.stk)})`).join(', ')}`;
   } else {
     document.getElementById('so_linked').textContent = 'Không liên kết — tài khoản độc lập';
   }
@@ -4712,7 +4712,7 @@ async function openDetail(code){
   const allDates = [...new Set([...Object.keys(navH), ...Object.keys(feeH)])]
     .sort((a,b)=> b.split('/').reverse().join('').localeCompare(a.split('/').reverse().join('')));
   document.getElementById('so_history_body').innerHTML = allDates.length ? allDates.map(d=>`
-    <tr><td>${d}</td>
+    <tr><td>${esc(d)}</td>
       <td class="num-col num">${navH[d]!==undefined ? fmt(navH[d]) : '—'}</td>
       <td class="num-col num">${feeH[d]!==undefined ? fmt(feeH[d]) : '—'}</td>
     </tr>`).join('') : '<tr><td colspan="3" style="color:var(--text-muted);text-align:center;">Chưa có lịch sử</td></tr>';
@@ -4723,7 +4723,7 @@ async function openDetail(code){
 
   // Timeline thật — nhiều chu kỳ vào/ra Room qua room_history + thay đổi NAV/phí
   const tl = [];
-  if(c.mismatch) tl.push({date:c.updated, text:`NAV vượt ngưỡng ${roomLabel(c.room)} — cần xem xét đổi Room`});
+  if(c.mismatch) tl.push({date:c.updated, text:`NAV vượt ngưỡng ${esc(roomLabel(c.room))} — cần xem xét đổi Room`});
   allDates.slice(0,3).forEach(d=>{
     if(navH[d]!==undefined) tl.push({date:d, text:`Cập nhật NAV: <b>${fmt(navH[d])}</b>`});
     if(feeH[d]!==undefined) tl.push({date:d, text:`Cập nhật phí: <b>${fmt(feeH[d])}</b>`});
@@ -4732,7 +4732,7 @@ async function openDetail(code){
     const { data: rhRows } = await sb.from('room_history').select('room_id, special_room, entered_at, reason').eq('customer_id', c.id).order('entered_at', {ascending:false});
     (rhRows||[]).forEach(rh=>{
       const roomName = rh.special_room || roomLabel(rh.room_id);
-      tl.push({date: fromDbDate(rh.entered_at), text: `${rh.reason || 'Vào Room'} — <b>${roomName}</b>`});
+      tl.push({date: fromDbDate(rh.entered_at), text: `${esc(rh.reason || 'Vào Room')} — <b>${esc(roomName)}</b>`});
     });
   } catch(e){ /* bỏ qua nếu không tải được lịch sử Room */ }
 
@@ -4742,7 +4742,7 @@ async function openDetail(code){
     return db - da;
   });
   document.getElementById('so_timeline').innerHTML = tl.length ? tl.map(t=>`
-    <div class="tl-item"><div class="tl-date">${t.date}</div><div class="tl-text">${t.text}</div></div>`).join('')
+    <div class="tl-item"><div class="tl-date">${esc(t.date)}</div><div class="tl-text">${t.text}</div></div>`).join('')
     : '<div style="color:var(--text-muted);font-size:12.5px;">Chưa có lịch sử thay đổi.</div>';
 }
 function closeDetail(){
@@ -4765,7 +4765,7 @@ function loanStatusBadge(s){
     "Chưa xử lý":"badge-red", "Đã check":"badge-blue", "Đã liên hệ":"badge-amber",
     "KH xử lý xong":"badge-green", "Công ty đã xử lý":"badge-gray"
   };
-  return `<span class="badge ${map[s]||'badge-gray'}">${s}</span>`;
+  return `<span class="badge ${map[s]||'badge-gray'}">${esc(s)}</span>`;
 }
 function daysUntil(dateStr){
   const [d,m,y] = dateStr.split('/').map(Number);
@@ -4777,7 +4777,7 @@ function daysUntil(dateStr){
 function customerOptionsHtml(q){
   const k = String(q||'').trim().toLowerCase();
   const list = k ? customers.filter(c=>(String(c.name||'')+' '+c.stk).toLowerCase().includes(k)) : customers;
-  return list.slice(0,300).map(c=>`<option value="${c.stk}">${escHtml(c.name)} — ${c.stk}</option>`).join('') || '<option value="">(Không tìm thấy KH)</option>';
+  return list.slice(0,300).map(c=>`<option value="${esc(c.stk)}">${escHtml(c.name)} — ${esc(c.stk)}</option>`).join('') || '<option value="">(Không tìm thấy KH)</option>';
 }
 function filterLoanCustomers(q){
   const el = document.getElementById('loan_stk'); const keep = el.value;
@@ -5026,10 +5026,10 @@ async function openLoanHistoryModal(loanId, account){
     document.getElementById('loanHistoryList').innerHTML = data.map(h=>{
       const t = new Date(h.created_at);
       const timeStr = `${String(t.getDate()).padStart(2,'0')}/${String(t.getMonth()+1).padStart(2,'0')}/${t.getFullYear()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
-      return `<div class="tl-item"><div class="tl-date">${timeStr}</div><div class="tl-text"><b>${LOAN_HISTORY_ACTION_LABELS[h.action]||h.action}</b>${h.note?': '+h.note:''}<br><span style="color:var(--text-muted);font-size:11.5px;">bởi ${h.changed_by||'—'}</span></div></div>`;
+      return `<div class="tl-item"><div class="tl-date">${timeStr}</div><div class="tl-text"><b>${esc(LOAN_HISTORY_ACTION_LABELS[h.action]||h.action)}</b>${esc(h.note?': '+h.note:'')}<br><span style="color:var(--text-muted);font-size:11.5px;">bởi ${esc(h.changed_by||'—')}</span></div></div>`;
     }).join('');
   } catch(err){
-    document.getElementById('loanHistoryList').innerHTML = `<div style="color:var(--red);font-size:12.5px;">Lỗi khi tải lịch sử: ${err.message}</div>`;
+    document.getElementById('loanHistoryList').innerHTML = `<div style="color:var(--red);font-size:12.5px;">Lỗi khi tải lịch sử: ${esc(err.message)}</div>`;
   }
 }
 function closeLoanHistoryModal(){ document.getElementById('loanHistoryOverlay').classList.remove('active'); }
@@ -5171,7 +5171,7 @@ function openLoanPronounMenu(evt, stk){
   const btn = evt.currentTarget;
   const rect = btn.getBoundingClientRect();
   document.getElementById('loanPronounMenuList').innerHTML = LOAN_PRONOUN_PAIRS.map(p=>`
-    <div class="loan-pronoun-row" style="padding:9px 14px;font-size:13px;cursor:pointer;" onmouseover="this.style.background='#F5F7FA'" onmouseout="this.style.background=''" onclick="quickComposeLoanMessage('${stk}','${p.goi}|${p.tu}',this); setTimeout(closeLoanPronounMenu, 500);">
+    <div class="loan-pronoun-row" style="padding:9px 14px;font-size:13px;cursor:pointer;" onmouseover="this.style.background='#F5F7FA'" onmouseout="this.style.background=''" onclick="quickComposeLoanMessage('${escJs(stk)}','${p.goi}|${p.tu}',this); setTimeout(closeLoanPronounMenu, 500);">
       ${p.goi} <span style="color:var(--text-muted);">(xưng: ${p.tu})</span>
     </div>`).join('');
   placeFloatingMenu(menu, rect);
@@ -5282,7 +5282,7 @@ function describeCurrentLoanFilters(){
   const q = (document.getElementById('loanSearchInput').value||'').trim();
   const showAll = document.getElementById('loanShowAll').checked;
   const parts = [];
-  if(q) parts.push(`Tìm kiếm: "<b>${q}</b>"`);
+  if(q) parts.push(`Tìm kiếm: "<b>${esc(q)}</b>"`);
   if(!showAll) parts.push(`Đang <b>ẩn</b> các khoản đã xử lý (KH xử lý xong / Công ty đã xử lý)`);
   if(loanStatusPillFilter) parts.push(`Trạng thái: <b>${loanStatusPillFilter}</b>`);
   if(loanDatePillFilter){
@@ -5331,7 +5331,7 @@ function renderLoans(){
   const soonCount = loans.filter(l=>{const d=daysUntil(l.dueDate);return d>0 && d<=7;}).length;
 
   document.getElementById('loanStatusPills').innerHTML = ['Chưa xử lý','Đã check','Đã liên hệ'].map(s=>`
-    <div class="loan-pill ${statusPillClass(s)} ${loanStatusPillFilter===s?'active':''}" onclick="setLoanStatusPill('${s}')">${s} <span class="cnt">${statusCounts[s]}</span></div>
+    <div class="loan-pill ${statusPillClass(s)} ${loanStatusPillFilter===s?'active':''}" onclick="setLoanStatusPill('${escJs(s)}')">${esc(s)} <span class="cnt">${statusCounts[s]}</span></div>
   `).join('');
   document.getElementById('loanDatePills').innerHTML = `
     <div class="loan-pill lp-today ${loanDatePillFilter==='today'?'active':''}" onclick="setLoanDatePill('today')">Đến hạn hôm nay <span class="cnt">${todayCount}</span></div>
@@ -5390,25 +5390,25 @@ function renderLoans(){
     const managerIdForGroup = custLoans.find(l=>l.managerId)?.managerId || '—';
     const colspan = bulkSelectMode ? 8 : 7;
 
-    html += `<tr class="loan-summary-row row-${overall.cls}" onclick="toggleLoanGroup('${stk}')" style="cursor:pointer;">
-      ${bulkSelectMode ? `<td onclick="event.stopPropagation();"><input type="checkbox" class="bulk-checkbox" ${allSelected?'checked':''} ${!allSelected&&someSelected?'data-indeterminate="1"':''} title="Chọn tất cả khoản của KH này" onclick="toggleBulkSelectGroup('${stk}', this.checked)"></td>` : ''}
+    html += `<tr class="loan-summary-row row-${overall.cls}" onclick="toggleLoanGroup('${escJs(stk)}')" style="cursor:pointer;">
+      ${bulkSelectMode ? `<td onclick="event.stopPropagation();"><input type="checkbox" class="bulk-checkbox" ${allSelected?'checked':''} ${!allSelected&&someSelected?'data-indeterminate="1"':''} title="Chọn tất cả khoản của KH này" onclick="toggleBulkSelectGroup('${escJs(stk)}', this.checked)"></td>` : ''}
       <td>
         <div style="display:flex;align-items:center;gap:5px;">
           <span class="chevron ${isOpen?'open':''}">▸</span>
-          ${bulkSelectMode ? '' : `<button class="icon-btn" title="Soạn tin nhắn — chọn xưng hô" onclick="openLoanPronounMenu(event, '${stk}')">⋮</button>`}
-          <span class="loan-stk-pill" style="cursor:pointer;white-space:nowrap;" title="Bấm để copy STK" onclick="event.stopPropagation();copyToClipboard('${stk}', this)">${stk}</span>
+          ${bulkSelectMode ? '' : `<button class="icon-btn" title="Soạn tin nhắn — chọn xưng hô" onclick="openLoanPronounMenu(event, '${escJs(stk)}')">⋮</button>`}
+          <span class="loan-stk-pill" style="cursor:pointer;white-space:nowrap;" title="Bấm để copy STK" onclick="event.stopPropagation();copyToClipboard('${escJs(stk)}', this)">${esc(stk)}</span>
         </div>
       </td>
-      <td class="td-mgr">${managerIdForGroup}</td>
+      <td class="td-mgr">${esc(managerIdForGroup)}</td>
       <td>${custLoans.length}</td>
-      <td style="color:${nearest<0?'var(--red)':nearest<=3?'var(--amber)':'var(--text)'};">${nearest<0?'⚠️ ':nearest<=3?'⚠️ ':''}${nearestLoan.dueDate}</td>
+      <td style="color:${nearest<0?'var(--red)':nearest<=3?'var(--amber)':'var(--text)'};">${nearest<0?'⚠️ ':nearest<=3?'⚠️ ':''}${esc(nearestLoan.dueDate)}</td>
       <td class="num-col num">${fmt(totalAmount)}</td>
       <td><span class="badge ${overall.cls}">${overall.label}</span></td>
       <td onclick="event.stopPropagation();" style="white-space:nowrap;">
         ${bulkSelectMode ? '' : `
         <div style="display:flex;gap:6px;">
-          <button class="icon-btn" title="Thêm khoản vay cho KH này" onclick="openLoanModal('${stk}')">＋</button>
-          <button class="icon-btn" title="Xóa toàn bộ khoản vay của KH này" onclick="deleteAllLoansForCustomer('${stk}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+          <button class="icon-btn" title="Thêm khoản vay cho KH này" onclick="openLoanModal('${escJs(stk)}')">＋</button>
+          <button class="icon-btn" title="Xóa toàn bộ khoản vay của KH này" onclick="deleteAllLoansForCustomer('${escJs(stk)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
         </div>`}
       </td>
     </tr>`;
@@ -5427,25 +5427,25 @@ function renderLoans(){
           rowsHtml += `<tr data-lid="${l.id}">
             ${bulkSelectMode ? `<td><input type="checkbox" class="bulk-checkbox" ${bulkSelectedLoanIds.has(l.id)?'checked':''} onchange="toggleBulkSelectLoan(${l.id})"></td>` : ''}
             <td>${stt}</td>
-            <td><span style="cursor:pointer;" title="Bấm để copy số tài khoản" onclick="copyToClipboard('${account}', this)">${account} <span style="opacity:.45;">📋</span></span></td>
+            <td><span style="cursor:pointer;" title="Bấm để copy số tài khoản" onclick="copyToClipboard('${escJs(account)}', this)">${esc(account)} <span style="opacity:.45;">📋</span></span></td>
             <td>
-              <input type="text" class="loan-note-input" style="width:104px;font-weight:700;color:${dueColor};" value="${dueIcon}${l.dueDate}"
-                onfocus="this.value='${l.dueDate}'" onchange="updateLoanDueDate(${l.id}, this.value, '${account.slice(0,6)}')">
+              <input type="text" class="loan-note-input" style="width:104px;font-weight:700;color:${dueColor};" value="${dueIcon}${esc(l.dueDate)}"
+                onfocus="this.value='${escJs(l.dueDate)}'" onchange="updateLoanDueDate(${l.id}, this.value, '${escJs(account.slice(0,6))}')">
             </td>
             <td>
               <input type="text" class="loan-note-input num" style="width:110px;text-align:right;" value="${l.amount ? fmt(l.amount) : ''}" placeholder="—"
                 onchange="updateLoanAmount(${l.id}, this.value)">
             </td>
             <td>
-              <select class="status-select" data-status="${l.status}" onchange="this.dataset.status=this.value;updateLoanStatus(${l.id}, this.value)">
-                ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${s===l.status?'selected':''}>${s}</option>`).join('')}
+              <select class="status-select" data-status="${esc(l.status)}" onchange="this.dataset.status=this.value;updateLoanStatus(${l.id}, this.value)">
+                ${STATUS_OPTIONS.map(s=>`<option value="${esc(s)}" ${s===l.status?'selected':''}>${esc(s)}</option>`).join('')}
               </select>
             </td>
-            <td><input type="text" class="loan-note-input" value="${(l.note||'').replace(/"/g,'&quot;')}" placeholder="Thêm ghi chú…" onchange="updateLoanNote(${l.id}, this.value)"></td>
+            <td><input type="text" class="loan-note-input" value="${esc(l.note||'')}" placeholder="Thêm ghi chú…" onchange="updateLoanNote(${l.id}, this.value)"></td>
             <td>
               <div class="row-actions" style="opacity:1;">
-                <button class="icon-btn" title="Xem lịch sử sửa đổi" onclick="openLoanHistoryModal(${l.id}, '${account}')">🕒</button>
-                <button class="icon-btn" title="Soạn tin nhắn — chọn xưng hô" onclick="openLoanPronounMenu(event, '${account.slice(0,6)}')">⋮</button>
+                <button class="icon-btn" title="Xem lịch sử sửa đổi" onclick="openLoanHistoryModal(${l.id}, '${escJs(account)}')">🕒</button>
+                <button class="icon-btn" title="Soạn tin nhắn — chọn xưng hô" onclick="openLoanPronounMenu(event, '${escJs(account.slice(0,6))}')">⋮</button>
                 <button class="icon-btn" title="Xóa khoản vay" onclick="deleteLoanEntry(${l.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
               </div>
             </td>
@@ -5479,7 +5479,7 @@ function marginCallStatusBadge(s){
     "Chưa xử lý":"badge-red", "Đã check":"badge-blue", "Đã liên hệ":"badge-amber",
     "KH xử lý xong":"badge-green", "Công ty đã xử lý":"badge-gray"
   };
-  return `<span class="badge ${map[s]||'badge-gray'}">${s}</span>`;
+  return `<span class="badge ${map[s]||'badge-gray'}">${esc(s)}</span>`;
 }
 function openMarginCallModal(preselectStk){
   document.getElementById('mc_stk').innerHTML = customerOptionsHtml();
@@ -5665,10 +5665,10 @@ async function openMarginCallHistoryModal(marginCallId, account){
     document.getElementById('marginCallHistoryList').innerHTML = data.map(h=>{
       const t = new Date(h.created_at);
       const timeStr = `${String(t.getDate()).padStart(2,'0')}/${String(t.getMonth()+1).padStart(2,'0')}/${t.getFullYear()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
-      return `<div class="tl-item"><div class="tl-date">${timeStr}</div><div class="tl-text"><b>${MARGINCALL_HISTORY_ACTION_LABELS[h.action]||h.action}</b>${h.note?': '+h.note:''}<br><span style="color:var(--text-muted);font-size:11.5px;">bởi ${h.changed_by||'—'}</span></div></div>`;
+      return `<div class="tl-item"><div class="tl-date">${timeStr}</div><div class="tl-text"><b>${esc(MARGINCALL_HISTORY_ACTION_LABELS[h.action]||h.action)}</b>${esc(h.note?': '+h.note:'')}<br><span style="color:var(--text-muted);font-size:11.5px;">bởi ${esc(h.changed_by||'—')}</span></div></div>`;
     }).join('');
   } catch(err){
-    document.getElementById('marginCallHistoryList').innerHTML = `<div style="color:var(--red);font-size:12.5px;">Lỗi khi tải lịch sử: ${err.message}</div>`;
+    document.getElementById('marginCallHistoryList').innerHTML = `<div style="color:var(--red);font-size:12.5px;">Lỗi khi tải lịch sử: ${esc(err.message)}</div>`;
   }
 }
 function closeMarginCallHistoryModal(){ document.getElementById('marginCallHistoryOverlay').classList.remove('active'); }
@@ -5780,7 +5780,7 @@ function openMarginCallPronounMenu(evt, stk){
   const btn = evt.currentTarget;
   const rect = btn.getBoundingClientRect();
   document.getElementById('marginCallPronounMenuList').innerHTML = LOAN_PRONOUN_PAIRS.map(p=>`
-    <div class="loan-pronoun-row" style="padding:9px 14px;font-size:13px;cursor:pointer;" onmouseover="this.style.background='#F5F7FA'" onmouseout="this.style.background=''" onclick="quickComposeMarginCallMessage('${stk}','${p.goi}|${p.tu}',this); setTimeout(closeMarginCallPronounMenu, 500);">
+    <div class="loan-pronoun-row" style="padding:9px 14px;font-size:13px;cursor:pointer;" onmouseover="this.style.background='#F5F7FA'" onmouseout="this.style.background=''" onclick="quickComposeMarginCallMessage('${escJs(stk)}','${p.goi}|${p.tu}',this); setTimeout(closeMarginCallPronounMenu, 500);">
       ${p.goi} <span style="color:var(--text-muted);">(xưng: ${p.tu})</span>
     </div>`).join('');
   placeFloatingMenu(menu, rect);
@@ -5890,7 +5890,7 @@ function describeCurrentMarginCallFilters(){
   const q = (document.getElementById('mcSearchInput').value||'').trim();
   const showAll = document.getElementById('mcShowAll').checked;
   const parts = [];
-  if(q) parts.push(`Tìm kiếm: "<b>${q}</b>"`);
+  if(q) parts.push(`Tìm kiếm: "<b>${esc(q)}</b>"`);
   if(!showAll) parts.push(`Đang <b>ẩn</b> các khoản đã xử lý (KH xử lý xong / Công ty đã xử lý)`);
   if(mcStatusPillFilter) parts.push(`Trạng thái: <b>${mcStatusPillFilter}</b>`);
   if(mcDatePillFilter){
@@ -5913,7 +5913,7 @@ function renderMarginCalls(){
   const soonCount = marginCalls.filter(m=>{const d=daysUntil(m.dueDate);return d>0 && d<=7;}).length;
 
   document.getElementById('mcStatusPills').innerHTML = ['Chưa xử lý','Đã check','Đã liên hệ'].map(s=>`
-    <div class="loan-pill ${statusPillClass(s)} ${mcStatusPillFilter===s?'active':''}" onclick="setMarginCallStatusPill('${s}')">${s} <span class="cnt">${statusCounts[s]}</span></div>
+    <div class="loan-pill ${statusPillClass(s)} ${mcStatusPillFilter===s?'active':''}" onclick="setMarginCallStatusPill('${escJs(s)}')">${esc(s)} <span class="cnt">${statusCounts[s]}</span></div>
   `).join('');
   document.getElementById('mcDatePills').innerHTML = `
     <div class="loan-pill lp-today ${mcDatePillFilter==='today'?'active':''}" onclick="setMarginCallDatePill('today')">Đến hạn hôm nay <span class="cnt">${todayCount}</span></div>
@@ -5966,25 +5966,25 @@ function renderMarginCalls(){
     const managerIdForGroup = custCalls.find(m=>m.managerId)?.managerId || '—';
     const colspan = mcBulkSelectMode ? 8 : 7;
 
-    html += `<tr class="loan-summary-row row-${overall.cls}" onclick="toggleMarginCallGroup('${stk}')" style="cursor:pointer;">
-      ${mcBulkSelectMode ? `<td onclick="event.stopPropagation();"><input type="checkbox" class="bulk-checkbox" ${allSelected?'checked':''} ${!allSelected&&someSelected?'data-indeterminate="1"':''} title="Chọn tất cả khoản của KH này" onclick="toggleBulkSelectMarginCallGroup('${stk}', this.checked)"></td>` : ''}
+    html += `<tr class="loan-summary-row row-${overall.cls}" onclick="toggleMarginCallGroup('${escJs(stk)}')" style="cursor:pointer;">
+      ${mcBulkSelectMode ? `<td onclick="event.stopPropagation();"><input type="checkbox" class="bulk-checkbox" ${allSelected?'checked':''} ${!allSelected&&someSelected?'data-indeterminate="1"':''} title="Chọn tất cả khoản của KH này" onclick="toggleBulkSelectMarginCallGroup('${escJs(stk)}', this.checked)"></td>` : ''}
       <td>
         <div style="display:flex;align-items:center;gap:5px;">
           <span class="chevron ${isOpen?'open':''}">▸</span>
-          ${mcBulkSelectMode ? '' : `<button class="icon-btn" title="Soạn tin nhắn — chọn xưng hô" onclick="openMarginCallPronounMenu(event, '${stk}')">⋮</button>`}
-          <span class="loan-stk-pill" style="cursor:pointer;white-space:nowrap;" title="Bấm để copy STK" onclick="event.stopPropagation();copyToClipboard('${stk}', this)">${stk}</span>
+          ${mcBulkSelectMode ? '' : `<button class="icon-btn" title="Soạn tin nhắn — chọn xưng hô" onclick="openMarginCallPronounMenu(event, '${escJs(stk)}')">⋮</button>`}
+          <span class="loan-stk-pill" style="cursor:pointer;white-space:nowrap;" title="Bấm để copy STK" onclick="event.stopPropagation();copyToClipboard('${escJs(stk)}', this)">${esc(stk)}</span>
         </div>
       </td>
-      <td class="td-mgr">${managerIdForGroup}</td>
+      <td class="td-mgr">${esc(managerIdForGroup)}</td>
       <td>${custCalls.length}</td>
-      <td style="color:${nearest<0?'var(--red)':nearest<=3?'var(--amber)':'var(--text)'};">${nearest<0?'⚠️ ':nearest<=3?'⚠️ ':''}${nearestCall.dueDate}</td>
+      <td style="color:${nearest<0?'var(--red)':nearest<=3?'var(--amber)':'var(--text)'};">${nearest<0?'⚠️ ':nearest<=3?'⚠️ ':''}${esc(nearestCall.dueDate)}</td>
       <td class="num-col num">${fmt(totalAmount)}</td>
       <td><span class="badge ${overall.cls}">${overall.label}</span></td>
       <td onclick="event.stopPropagation();" style="white-space:nowrap;">
         ${mcBulkSelectMode ? '' : `
         <div style="display:flex;gap:6px;">
-          <button class="icon-btn" title="Thêm khoản RRUB/Call Margin cho KH này" onclick="openMarginCallModal('${stk}')">＋</button>
-          <button class="icon-btn" title="Xóa toàn bộ khoản của KH này" onclick="deleteAllMarginCallsForCustomer('${stk}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+          <button class="icon-btn" title="Thêm khoản RRUB/Call Margin cho KH này" onclick="openMarginCallModal('${escJs(stk)}')">＋</button>
+          <button class="icon-btn" title="Xóa toàn bộ khoản của KH này" onclick="deleteAllMarginCallsForCustomer('${escJs(stk)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
         </div>`}
       </td>
     </tr>`;
@@ -6003,25 +6003,25 @@ function renderMarginCalls(){
           rowsHtml += `<tr data-mid="${m.id}">
             ${mcBulkSelectMode ? `<td><input type="checkbox" class="bulk-checkbox" ${bulkSelectedMarginCallIds.has(m.id)?'checked':''} onchange="toggleBulkSelectMarginCall(${m.id})"></td>` : ''}
             <td>${stt}</td>
-            <td><span style="cursor:pointer;" title="Bấm để copy số tài khoản" onclick="copyToClipboard('${account}', this)">${account} <span style="opacity:.45;">📋</span></span></td>
+            <td><span style="cursor:pointer;" title="Bấm để copy số tài khoản" onclick="copyToClipboard('${escJs(account)}', this)">${esc(account)} <span style="opacity:.45;">📋</span></span></td>
             <td>
-              <input type="text" class="loan-note-input" style="width:104px;font-weight:700;color:${dueColor};" value="${dueIcon}${m.dueDate}"
-                onfocus="this.value='${m.dueDate}'" onchange="updateMarginCallDueDate(${m.id}, this.value, '${account.slice(0,6)}')">
+              <input type="text" class="loan-note-input" style="width:104px;font-weight:700;color:${dueColor};" value="${dueIcon}${esc(m.dueDate)}"
+                onfocus="this.value='${escJs(m.dueDate)}'" onchange="updateMarginCallDueDate(${m.id}, this.value, '${escJs(account.slice(0,6))}')">
             </td>
             <td>
               <input type="text" class="loan-note-input num" style="width:110px;text-align:right;" value="${m.amount ? fmt(m.amount) : ''}" placeholder="—"
                 onchange="updateMarginCallAmount(${m.id}, this.value)">
             </td>
             <td>
-              <select class="status-select" data-status="${m.status}" onchange="this.dataset.status=this.value;updateMarginCallStatus(${m.id}, this.value)">
-                ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${s===m.status?'selected':''}>${s}</option>`).join('')}
+              <select class="status-select" data-status="${esc(m.status)}" onchange="this.dataset.status=this.value;updateMarginCallStatus(${m.id}, this.value)">
+                ${STATUS_OPTIONS.map(s=>`<option value="${esc(s)}" ${s===m.status?'selected':''}>${esc(s)}</option>`).join('')}
               </select>
             </td>
-            <td><input type="text" class="loan-note-input" value="${(m.note||'').replace(/"/g,'&quot;')}" placeholder="Thêm ghi chú…" onchange="updateMarginCallNote(${m.id}, this.value)"></td>
+            <td><input type="text" class="loan-note-input" value="${esc(m.note||'')}" placeholder="Thêm ghi chú…" onchange="updateMarginCallNote(${m.id}, this.value)"></td>
             <td>
               <div class="row-actions" style="opacity:1;">
-                <button class="icon-btn" title="Xem lịch sử sửa đổi" onclick="openMarginCallHistoryModal(${m.id}, '${account}')">🕒</button>
-                <button class="icon-btn" title="Soạn tin nhắn — chọn xưng hô" onclick="openMarginCallPronounMenu(event, '${account.slice(0,6)}')">⋮</button>
+                <button class="icon-btn" title="Xem lịch sử sửa đổi" onclick="openMarginCallHistoryModal(${m.id}, '${escJs(account)}')">🕒</button>
+                <button class="icon-btn" title="Soạn tin nhắn — chọn xưng hô" onclick="openMarginCallPronounMenu(event, '${escJs(account.slice(0,6))}')">⋮</button>
                 <button class="icon-btn" title="Xóa khoản" onclick="deleteMarginCallEntry(${m.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
               </div>
             </td>
@@ -6056,7 +6056,7 @@ function rightStatusBadge(s){
     "Chưa đăng ký":"badge-amber", "Đã đăng ký":"badge-blue", "Đã nộp tiền":"badge-green",
     "Hết hạn":"badge-gray", "Đã hủy":"badge-red"
   };
-  return `<span class="badge ${map[s]||'badge-gray'}">${s}</span>`;
+  return `<span class="badge ${map[s]||'badge-gray'}">${esc(s)}</span>`;
 }
 function openRightModal(){
   document.getElementById('right_stk').innerHTML = customerOptionsHtml();
@@ -6131,20 +6131,20 @@ function renderRights(){
   document.getElementById('rightsBody').innerHTML = list.map((r,idx)=>`
     <tr>
       <td>${idx+1}</td>
-      <td class="cust-name">${r.name}</td>
-      <td>${r.stk}</td>
-      <td><b>${r.symbol}</b></td>
-      <td>${r.ratio}</td>
+      <td class="cust-name">${esc(r.name)}</td>
+      <td>${esc(r.stk)}</td>
+      <td><b>${esc(r.symbol)}</b></td>
+      <td>${esc(r.ratio)}</td>
       <td class="num-col num">${fmt(r.price)}</td>
       <td class="num-col num">${fmt(r.qty)}</td>
-      <td>${r.recordDate}</td>
-      <td>${r.deadline}</td>
+      <td>${esc(r.recordDate)}</td>
+      <td>${esc(r.deadline)}</td>
       <td>
         <select class="status-select" onchange="updateRightStatus(${r.id}, this.value)">
-          ${RIGHT_STATUS_OPTIONS.map(s=>`<option value="${s}" ${s===r.status?'selected':''}>${s}</option>`).join('')}
+          ${RIGHT_STATUS_OPTIONS.map(s=>`<option value="${esc(s)}" ${s===r.status?'selected':''}>${esc(s)}</option>`).join('')}
         </select>
       </td>
-      <td><button class="icon-btn" title="Soạn tin nhắn" onclick="openMessageModal('right', '${r.stk}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button></td>
+      <td><button class="icon-btn" title="Soạn tin nhắn" onclick="openMessageModal('right', '${escJs(r.stk)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button></td>
     </tr>`).join('');
 }
 
@@ -6446,9 +6446,9 @@ async function loadImportHistory(){
       const timeStr = `${String(time.getDate()).padStart(2,'0')}/${String(time.getMonth()+1).padStart(2,'0')}/${time.getFullYear()} ${String(time.getHours()).padStart(2,'0')}:${String(time.getMinutes()).padStart(2,'0')}`;
       return `<tr>
         <td>${timeStr}</td>
-        <td>${IMPORT_TYPE_LABELS[b.import_type]||b.import_type}</td>
-        <td>${b.file_name||'—'}</td>
-        <td>${b.imported_by||'—'}</td>
+        <td>${esc(IMPORT_TYPE_LABELS[b.import_type]||b.import_type)}</td>
+        <td>${esc(b.file_name||'—')}</td>
+        <td>${esc(b.imported_by||'—')}</td>
         <td class="num-col num">${b.total_rows??'—'}</td>
         <td class="num-col num" style="color:var(--accent);">${b.new_customers??0}</td>
         <td class="num-col num" style="color:var(--green);">${b.updated_rows??0}</td>
@@ -6456,7 +6456,7 @@ async function loadImportHistory(){
       </tr>`;
     }).join('');
   } catch(err){
-    body.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--red);padding:14px;">Lỗi khi tải lịch sử: ${err.message}</td></tr>`;
+    body.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--red);padding:14px;">Lỗi khi tải lịch sử: ${esc(err.message)}</td></tr>`;
   }
 }
 
@@ -6604,7 +6604,7 @@ function rebuildHeaderMapping(){
     w.style.display = names.length ? 'block' : 'none';
     w.textContent = names.length ? '⚠️ Có nhiều cột cùng chọn ghi vào: ' + names.join(', ') + ' — hệ thống chỉ lấy cột chọn sau cùng.' : ''; }
   const sm = document.getElementById('mapSummary');
-  if(sm){ const parts = specs.filter(sp=>sp.key!=='stk' && m[sp.key]).map(sp=>`<b>${sp.label}</b> ← cột "${m[sp.key]}"`);
+  if(sm){ const parts = specs.filter(sp=>sp.key!=='stk' && m[sp.key]).map(sp=>`<b>${sp.label}</b> ← cột "${esc(m[sp.key])}"`);
     sm.innerHTML = parts.length ? 'Sẽ ghi đè: ' + parts.join(' · ') : 'Chưa chọn trường nào để ghi đè.'; }
 }
 function setHeaderTarget(h, t){ currentHeaderTarget[h]=t; rebuildHeaderMapping(); }
@@ -6644,7 +6644,7 @@ function renderColumnMappingStep(){
   const cardHtml = (spec, guessed)=>{
     currentOverwrite[spec.key] = true;
     const options = ['<option value="">— Không có —</option>']
-      .concat(pendingImportHeaders.map(h=>`<option value="${h}" ${h===guessed?'selected':''}>${h}</option>`)).join('');
+      .concat(pendingImportHeaders.map(h=>`<option value="${esc(h)}" ${h===guessed?'selected':''}>${esc(h)}</option>`)).join('');
     const owBox = (!canOw || spec.key==='stk') ? (spec.key==='stk' && canOw ? '<div class="field-hint" style="margin-top:4px;">Dùng để khớp KH trong hệ thống</div>' : '')
       : `<label id="owbox_${spec.key}" style="display:${guessed?'flex':'none'};align-items:center;gap:6px;margin-top:6px;font-size:12.5px;font-weight:600;cursor:pointer;"><input type="checkbox" checked onchange="currentOverwrite['${spec.key}']=this.checked"> Ghi đè ${spec.label} trên hệ thống theo file</label>`;
     return `<div class="form-field">
@@ -6662,7 +6662,7 @@ function renderColumnMappingStep(){
   grid.innerHTML = `<div style="grid-column:1/-1;font-weight:700;font-size:13px;">✅ Các trường đọc được từ file${canOw?' — tick trường nào muốn ghi đè lên dữ liệu trên hệ thống':''}</div>`
     + found.join('')
     + (missing.length ? `<details style="grid-column:1/-1;margin-top:6px;"><summary style="cursor:pointer;font-size:12.5px;color:var(--text-muted);">Trường không thấy trong file (${missing.length}) — bỏ qua, không ghi gì. Bấm để chọn cột thủ công nếu có.</summary><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:10px;">${missing.join('')}</div></details>` : '');
-  document.getElementById('mappingFileInfo').innerHTML = `File có <b>${pendingImportHeaders.length} cột</b>: ${pendingImportHeaders.join(', ')} — tổng <b>${pendingImportRows.length} dòng</b> dữ liệu.`;
+  document.getElementById('mappingFileInfo').innerHTML = `File có <b>${pendingImportHeaders.length} cột</b>: ${esc(pendingImportHeaders.join(', '))} — tổng <b>${pendingImportRows.length} dòng</b> dữ liệu.`;
   document.getElementById('syncRoomOption').style.display = (currentImportType==='customerlist') ? 'block' : 'none';
 }
 
@@ -6998,7 +6998,7 @@ function renderImportStep3Summary(plan){
   const _sk = plan.skippedSpecial || [];
   if(plan.errors.length){
     errPanel.style.display = 'block';
-    document.getElementById('importErrorBody').innerHTML = plan.errors.slice(0,200).map(e=>`<tr><td>${e.line}</td><td>${e.content}</td><td><span class="badge badge-red">${e.error}</span></td></tr>`).join('');
+    document.getElementById('importErrorBody').innerHTML = plan.errors.slice(0,200).map(e=>`<tr><td>${e.line}</td><td>${esc(e.content)}</td><td><span class="badge badge-red">${esc(e.error)}</span></td></tr>`).join('');
   } else { errPanel.style.display = 'none'; }
   if(_sk.length) showToast(`Có ${_sk.length} STK bị loại vì không thuộc ID đặc biệt — xem danh sách bên dưới.`,'error');
   else if((plan.type==='loan'||plan.type==='margincall') && specialIds.length && !currentColumnMapping.managerId) showToast('Chưa map cột ID quản lý nên không lọc được theo ID đặc biệt.','error');
@@ -7009,7 +7009,7 @@ function renderImportStep3Summary(plan){
     const _c2 = plan.type==='update' && plan.mode==='create';
     document.getElementById('unmatchedTitle').textContent = _c2 ? '⚠️ STK trong file ĐÃ CÓ trong hệ thống — không thêm mới' : '⚠️ STK trong file không tìm thấy trong hệ thống';
     document.getElementById('unmatchedHint').textContent = _c2 ? 'Các STK này đã tồn tại trong danh sách khách hàng nên không được thêm và không bị sửa gì. Muốn cập nhật dữ liệu của họ thì dùng chế độ "Cập nhật KH đã có".' : 'Các STK này có trong file nhưng chưa tồn tại trong danh sách khách hàng — không cập nhật được. Xuất danh sách ra Excel, rồi dùng chế độ "Thêm KH mới" nếu cần tạo.';
-    document.getElementById('unmatchedBody').innerHTML = plan.unmatched.slice(0,500).map(u=>`<tr><td>${u.line}</td><td>${u.stk}</td><td>${u.name}</td><td>${u.managerId||'—'}</td></tr>`).join('') + (plan.unmatched.length>500 ? `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:14px;">… và ${plan.unmatched.length-500} dòng khác</td></tr>` : '');
+    document.getElementById('unmatchedBody').innerHTML = plan.unmatched.slice(0,500).map(u=>`<tr><td>${u.line}</td><td>${esc(u.stk)}</td><td>${esc(u.name)}</td><td>${esc(u.managerId||'—')}</td></tr>`).join('') + (plan.unmatched.length>500 ? `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:14px;">… và ${plan.unmatched.length-500} dòng khác</td></tr>` : '');
   } else { unmatchedPanel.style.display = 'none'; }
 
   renderSkippedSpecialPanel(plan);
@@ -7064,16 +7064,16 @@ function goToImportStep4(){
     body.innerHTML = plan.valid.slice(0,300).map(it=>{
       if(it.isPriorityFallback){
         return `<tr style="background:#FEF3E2;">
-          <td><span style="color:var(--amber);" title="STK gốc trong file: ${it.rawStk}">⚠️ (chưa có TK)</span></td>
-          <td>${it.name}</td>
-          <td colspan="4" style="color:var(--text-muted);">Thiếu STK hợp lệ trong file (giá trị gốc: "${it.rawStk}")</td>
+          <td><span style="color:var(--amber);" title="STK gốc trong file: ${esc(it.rawStk)}">⚠️ (chưa có TK)</span></td>
+          <td>${esc(it.name)}</td>
+          <td colspan="4" style="color:var(--text-muted);">Thiếu STK hợp lệ trong file (giá trị gốc: "${esc(it.rawStk)}")</td>
           <td class="num-col num">${fmt(it.nav||0)}</td>
           <td><span class="badge badge-amber">KH ưu tiên — cần rà soát</span></td>
         </tr>`;
       }
       if(it.isDupInFile){
         return `<tr style="background:#FDE8E8;">
-          <td>${it.stk}</td><td>${it.name}</td>
+          <td>${esc(it.stk)}</td><td>${esc(it.name)}</td>
           <td colspan="4" style="color:var(--text-muted);">Trùng STK với 1 dòng khác trong cùng file này</td>
           <td class="num-col num">${fmt(it.nav||0)}</td>
           <td><span class="badge badge-red">🔴 Trùng trong file — bị bỏ qua</span></td>
@@ -7081,16 +7081,16 @@ function goToImportStep4(){
       }
       if(it.isSkippedHasStk){
         return `<tr style="background:#F3F4F6;">
-          <td>${it.stk}</td><td>${it.name}</td>
-          <td colspan="4" style="color:var(--text-muted);">Khớp Tên Telegram với <b>${it.existing.name}</b> (STK ${it.existing.stk}) — KH này đã có STK thật rồi</td>
+          <td>${esc(it.stk)}</td><td>${esc(it.name)}</td>
+          <td colspan="4" style="color:var(--text-muted);">Khớp Tên Telegram với <b>${esc(it.existing.name)}</b> (STK ${esc(it.existing.stk)}) — KH này đã có STK thật rồi</td>
           <td class="num-col num">—</td>
           <td><span class="badge badge-gray">Đã có STK — bỏ qua</span></td>
         </tr>`;
       }
       if(it.isAssignStk){
         return `<tr style="background:#E7F6EC;">
-          <td><span style="color:var(--text-muted);text-decoration:line-through;">${it.existing.stk}</span> → <b style="color:var(--green);">${it.stk}</b></td>
-          <td>${it.name}</td>
+          <td><span style="color:var(--text-muted);text-decoration:line-through;">${esc(it.existing.stk)}</span> → <b style="color:var(--green);">${esc(it.stk)}</b></td>
+          <td>${esc(it.name)}</td>
           <td colspan="4" style="color:var(--text-muted);">Khớp theo Tên Telegram — gán STK thật, chuyển khỏi "KH ưu tiên"</td>
           <td class="num-col num">${fmt(it.nav||0)}</td>
           <td><span class="badge badge-green">Gán STK mới</span></td>
@@ -7103,22 +7103,22 @@ function goToImportStep4(){
       const tag = it.isNew ? '<span class="badge badge-blue">Mới</span>' : ((it.navChanged||it.feeChanged||it.roomChanged) ? '<span class="badge badge-green">Thay đổi</span>' : '<span class="badge badge-gray">Không đổi</span>');
       let roomCell;
       if(it.existing && it.roomChanged){
-        roomCell = `<span style="color:var(--text-muted);text-decoration:line-through;">${roomLabel(it.existing.room)}</span> → <b style="color:var(--green);">${roomLabel(it.targetRoomKey)}</b>`;
+        roomCell = `<span style="color:var(--text-muted);text-decoration:line-through;">${esc(roomLabel(it.existing.room))}</span> → <b style="color:var(--green);">${esc(roomLabel(it.targetRoomKey))}</b>`;
       } else if(!it.roomRaw){
-        roomCell = it.existing ? roomLabel(it.existing.room) : `<span style="color:var(--text-muted);">— (chưa có Room)</span>`;
+        roomCell = it.existing ? esc(roomLabel(it.existing.room)) : `<span style="color:var(--text-muted);">— (chưa có Room)</span>`;
       } else if(SPECIAL_ROOMS.includes(it.roomRaw)){
-        roomCell = it.roomRaw;
+        roomCell = esc(it.roomRaw);
       } else {
         const matched = resolveRoomByName(it.roomRaw);
-        roomCell = matched ? roomLabel(matched) : `<span style="color:var(--amber);" title="Không khớp tên Room nào đang có — để trống Room">⚠️ ${it.roomRaw}</span>`;
+        roomCell = matched ? esc(roomLabel(matched)) : `<span style="color:var(--amber);" title="Không khớp tên Room nào đang có — để trống Room">⚠️ ${esc(it.roomRaw)}</span>`;
       }
-      return `<tr><td>${it.stk}</td><td>${it.name}</td><td>${roomCell}</td><td class="num-col ${it.navChanged?'diff-old':''} num">${navOld}</td><td class="num-col ${it.navChanged?'diff-new':''} num">${navNew}</td><td class="num-col ${it.feeChanged?'diff-old':''} num">${feeOld}</td><td class="num-col ${it.feeChanged?'diff-new':''} num">${feeNew}</td><td>${tag}</td></tr>`;
+      return `<tr><td>${esc(it.stk)}</td><td>${esc(it.name)}</td><td>${roomCell}</td><td class="num-col ${it.navChanged?'diff-old':''} num">${navOld}</td><td class="num-col ${it.navChanged?'diff-new':''} num">${navNew}</td><td class="num-col ${it.feeChanged?'diff-old':''} num">${feeOld}</td><td class="num-col ${it.feeChanged?'diff-new':''} num">${feeNew}</td><td>${tag}</td></tr>`;
     }).join('') + (plan.valid.length>300 ? `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:14px;">… và ${plan.valid.length-300} dòng khác</td></tr>` : '');
   } else if(plan.type==='update'){
     const rows = plan.valid.filter(it=>it.changes && it.changes.length);
     document.getElementById('previewTitle').textContent = `Xem trước ${rows.length} KH sẽ được cập nhật (${plan.valid.length-rows.length} KH không đổi)`;
     head.innerHTML = `<tr><th>STK</th><th>Tên KH</th><th>Thay đổi (cũ → mới)</th></tr>`;
-    body.innerHTML = rows.slice(0,300).map(it=>`<tr><td>${it.stk}</td><td>${escHtml(it.existing.name||'')}</td><td>${it.changes.map(c=>`<div><b>${c.label}:</b> <span style="color:var(--text-muted);text-decoration:line-through;">${escHtml(String(c.old==null||c.old===''?'—':c.old))}</span> → <b style="color:var(--green);">${escHtml(String(c.nw))}</b></div>`).join('')}</td></tr>`).join('') + (rows.length>300 ? `<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:14px;">… và ${rows.length-300} KH khác</td></tr>` : '');
+    body.innerHTML = rows.slice(0,300).map(it=>`<tr><td>${esc(it.stk)}</td><td>${escHtml(it.existing.name||'')}</td><td>${it.changes.map(c=>`<div><b>${c.label}:</b> <span style="color:var(--text-muted);text-decoration:line-through;">${escHtml(String(c.old==null||c.old===''?'—':c.old))}</span> → <b style="color:var(--green);">${escHtml(String(c.nw))}</b></div>`).join('')}</td></tr>`).join('') + (rows.length>300 ? `<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:14px;">… và ${rows.length-300} KH khác</td></tr>` : '');
   } else if(plan.type==='nav' || plan.type==='bc12'){
     head.innerHTML = `<tr><th>STK</th><th>Tên KH</th><th class="num-col">NAV cũ</th><th class="num-col">NAV mới</th><th class="num-col">Phí cũ</th><th class="num-col">Phí mới</th><th>Trạng thái</th></tr>`;
     body.innerHTML = plan.valid.slice(0,300).map(it=>{
@@ -7127,7 +7127,7 @@ function goToImportStep4(){
       const feeOld = it.existing ? fmt(it.existing.fee) : '—';
       const feeNew = it.fee!==undefined ? fmt(it.fee) : '—';
       const tag = it.isNew ? '<span class="badge badge-blue">Mới</span>' : ((it.navChanged||it.feeChanged) ? '<span class="badge badge-green">Thay đổi</span>' : '<span class="badge badge-gray">Không đổi</span>');
-      return `<tr><td>${it.stk}</td><td>${it.name}</td><td class="num-col ${it.navChanged?'diff-old':''} num">${navOld}</td><td class="num-col ${it.navChanged?'diff-new':''} num">${navNew}</td><td class="num-col ${it.feeChanged?'diff-old':''} num">${feeOld}</td><td class="num-col ${it.feeChanged?'diff-new':''} num">${feeNew}</td><td>${tag}</td></tr>`;
+      return `<tr><td>${esc(it.stk)}</td><td>${esc(it.name)}</td><td class="num-col ${it.navChanged?'diff-old':''} num">${navOld}</td><td class="num-col ${it.navChanged?'diff-new':''} num">${navNew}</td><td class="num-col ${it.feeChanged?'diff-old':''} num">${feeOld}</td><td class="num-col ${it.feeChanged?'diff-new':''} num">${feeNew}</td><td>${tag}</td></tr>`;
     }).join('') + (plan.valid.length>300 ? `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:14px;">… và ${plan.valid.length-300} dòng khác</td></tr>` : '');
   } else if(plan.type==='loan'){
     head.innerHTML = `<tr><th>Số tài khoản</th><th>Ngày đến hạn</th><th>ID QL</th><th>Trạng thái</th></tr>`;
@@ -7136,7 +7136,7 @@ function goToImportStep4(){
       const tag = it.isDupInFile ? '<span class="badge badge-red">🔴 Trùng trong file — bị bỏ qua</span>'
         : it.isDup ? '<span class="badge badge-gray">Đã tồn tại, bỏ qua</span>'
         : '<span class="badge badge-blue">Mới</span>';
-      return `<tr${rowStyle}><td>${it.account}</td><td>${it.dueDate}</td><td>${it.managerId||'—'}</td><td>${tag}</td></tr>`;
+      return `<tr${rowStyle}><td>${esc(it.account)}</td><td>${esc(it.dueDate)}</td><td>${esc(it.managerId||'—')}</td><td>${tag}</td></tr>`;
     }).join('');
   } else if(plan.type==='margincall'){
     head.innerHTML = `<tr><th>Số tài khoản</th><th>Hạn xử lý</th><th class="num-col">Số tiền</th><th>ID QL</th><th>Trạng thái</th></tr>`;
@@ -7145,7 +7145,7 @@ function goToImportStep4(){
       const tag = it.isDupInFile ? '<span class="badge badge-red">🔴 Trùng trong file — bị bỏ qua</span>'
         : it.isDup ? '<span class="badge badge-gray">Đã tồn tại, bỏ qua</span>'
         : '<span class="badge badge-blue">Mới</span>';
-      return `<tr${rowStyle}><td>${it.account}</td><td>${it.dueDate}</td><td class="num-col num">${it.amount?fmt(it.amount):'—'}</td><td>${it.managerId||'—'}</td><td>${tag}</td></tr>`;
+      return `<tr${rowStyle}><td>${esc(it.account)}</td><td>${esc(it.dueDate)}</td><td class="num-col num">${it.amount?fmt(it.amount):'—'}</td><td>${esc(it.managerId||'—')}</td><td>${tag}</td></tr>`;
     }).join('');
   } else if(plan.type==='specialid'){
     head.innerHTML = `<tr><th>ID</th><th>Tên</th><th>Phòng</th><th>Trưởng phòng</th><th>Ghi chú</th><th>Trạng thái</th></tr>`;
@@ -7162,7 +7162,7 @@ function goToImportStep4(){
       const tag = it.isDupInFile ? '<span class="badge badge-red">🔴 Trùng trong file — bị bỏ qua</span>'
         : it.isDup ? '<span class="badge badge-gray">Đã tồn tại, bỏ qua</span>'
         : '<span class="badge badge-blue">Mới</span>';
-      return `<tr${rowStyle}><td>${it.stk}</td><td>${it.symbol}</td><td>${it.ratioNum}:${it.ratioDenom}</td><td class="num-col num">${fmt(it.price)}</td><td class="num-col num">${fmt(it.qty)}</td><td>${it.recordDate}</td><td>${it.deadline}</td><td>${tag}</td></tr>`;
+      return `<tr${rowStyle}><td>${esc(it.stk)}</td><td>${esc(it.symbol)}</td><td>${esc(it.ratioNum)}:${esc(it.ratioDenom)}</td><td class="num-col num">${fmt(it.price)}</td><td class="num-col num">${fmt(it.qty)}</td><td>${esc(it.recordDate)}</td><td>${esc(it.deadline)}</td><td>${tag}</td></tr>`;
     }).join('');
   }
   goImportStep(4);
@@ -7570,6 +7570,8 @@ let specialIds = []; // nạp từ bảng special_ids
 let editingSpecialId = null;
 function normId(v){ return String(v||'').trim().toUpperCase(); }
 function findSpecialId(id){ const k = normId(id); return k ? specialIds.find(x=>normId(x.id)===k) : null; }
+function esc(v){ return escHtml(v); }
+function escJs(v){ return escHtml(String(v==null?'':v).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' ')); }
 function escHtml(v){ return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function renderSpecialIds(){
   const body = document.getElementById('specialIdsBody');
@@ -7596,8 +7598,8 @@ function renderSpecialIds(){
     <td>${i+1}</td>
     <td><b>${escHtml(x.id)}</b></td><td>${escHtml(x.name)}</td><td>${escHtml(x.room)}</td><td>${escHtml(x.head)}</td><td>${escHtml(x.note)}</td>
     <td><div class="row-actions" style="opacity:1;">
-      <button class="icon-btn" title="Sửa" onclick="openSpecialIdModal(decodeURIComponent('${encodeURIComponent(x.id)}'))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>
-      <button class="icon-btn sp-del" title="Xóa ID đặc biệt" onclick="deleteSpecialId(decodeURIComponent('${encodeURIComponent(x.id)}'))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+      <button class="icon-btn" title="Sửa" onclick="openSpecialIdModal(decodeURIComponent('${escJs(encodeURIComponent(x.id))}'))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>
+      <button class="icon-btn sp-del" title="Xóa ID đặc biệt" onclick="deleteSpecialId(decodeURIComponent('${escJs(encodeURIComponent(x.id))}'))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
     </div></td></tr>`).join('');
 }
 function openSpecialIdModal(id){
@@ -7737,15 +7739,15 @@ function renderAccounts(){
     const ownerCount = accounts.filter(x=>x.role==='owner').length;
     const isLastOwner = a.role==='owner' && ownerCount<=1;
     return `<tr>
-      <td>${a.email}</td>
-      <td class="cust-name">${a.name}</td>
+      <td>${esc(a.email)}</td>
+      <td class="cust-name">${esc(a.name)}</td>
       <td><span class="badge ${a.role==='owner'?'badge-blue':'badge-gray'}">${a.role==='owner'?'Owner':'Editor'}</span></td>
       <td>${accessLastCell(a.email)}</td>
-      <td>${a.createdAt}</td>
+      <td>${esc(a.createdAt)}</td>
       <td>
         <div class="row-actions" style="opacity:1;">
-          <button class="icon-btn" title="Sửa" onclick="openAccountModal('${a.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>
-          <button class="icon-btn" title="${isLastOwner?'Không thể xóa Owner duy nhất':'Xóa'}" ${isLastOwner?'disabled style="opacity:.4;"':''} onclick="deleteAccount('${a.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+          <button class="icon-btn" title="Sửa" onclick="openAccountModal('${escJs(a.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>
+          <button class="icon-btn" title="${isLastOwner?'Không thể xóa Owner duy nhất':'Xóa'}" ${isLastOwner?'disabled style="opacity:.4;"':''} onclick="deleteAccount('${escJs(a.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
         </div>
       </td>
     </tr>`;
@@ -7896,12 +7898,12 @@ function describeCurrentCustomerFilters(){
   const roomF = document.getElementById('filterRoom').value;
   const statusF = document.getElementById('filterStatus').value;
   const parts = [];
-  if(q) parts.push(`Tìm kiếm: "<b>${q}</b>"`);
+  if(q) parts.push(`Tìm kiếm: "<b>${esc(q)}</b>"`);
   if(roomF){
     const r = rooms.find(r=>String(r.id)===roomF);
-    parts.push(`Room: <b>${r ? r.name : roomF}</b>`);
+    parts.push(`Room: <b>${esc(r ? r.name : roomF)}</b>`);
   }
-  if(statusF) parts.push(`Trạng thái: <b>${statusF}</b>`);
+  if(statusF) parts.push(`Trạng thái: <b>${esc(statusF)}</b>`);
   if(advancedFilters.length) parts.push(`Bộ lọc nâng cao: <b>${advancedFilters.length} điều kiện</b>`);
   if(!parts.length) parts.push('<i>Không có bộ lọc nào đang áp dụng — sẽ khớp TOÀN BỘ khách hàng trong hệ thống.</i>');
   return parts.join('<br>');
