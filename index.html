@@ -881,6 +881,7 @@ body{-webkit-text-size-adjust:100%;}
         </div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;">
+        <button id="encLockBtn" onclick="openEncUnlock()">🔒 Đang khoá</button>
         <div style="position:relative;">
           <button class="icon-btn" id="notifBellBtn" title="Cảnh báo cần xử lý" onclick="toggleNotifPanel()" style="width:34px;height:34px;">
             🔔<span class="notif-badge" id="notifBadge" style="display:none;"></span>
@@ -1514,6 +1515,65 @@ body{-webkit-text-size-adjust:100%;}
         </div>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- ===== MÃ HOÁ DỮ LIỆU: MỞ KHOÁ ===== -->
+<div class="overlay" id="encUnlockOverlay">
+  <div class="modal" style="width:440px;">
+    <div class="modal-header">
+      <div class="modal-title">🔓 Mở khoá dữ liệu</div>
+      <button class="close-x" onclick="closeEncUnlock()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13.5px;color:var(--text-muted);margin:0 0 12px;">Nhập mật khẩu mã hoá riêng của bạn để xem tên khách hàng và số tài khoản. Đây không phải mật khẩu đăng nhập.</p>
+      <input type="password" id="encPwInput" placeholder="Mật khẩu mã hoá" autocomplete="off"
+             style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:7px;font-size:14px;"
+             onkeydown="if(event.key==='Enter')doEncUnlock()">
+      <div id="encUnlockMsg" style="font-size:13px;margin-top:10px;min-height:18px;"></div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+        <button class="btn btn-secondary btn-sm" onclick="openEncSetup()">Chưa có mật khẩu, hoặc quên mật khẩu</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeEncUnlock()">Đóng</button>
+      <button class="btn btn-primary" id="encUnlockBtn" onclick="doEncUnlock()">Mở khoá</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MÃ HOÁ DỮ LIỆU: THIẾT LẬP / KHÔI PHỤC ===== -->
+<div class="overlay" id="encSetupOverlay">
+  <div class="modal" style="width:520px;">
+    <div class="modal-header">
+      <div class="modal-title" id="encSetupTitle">🔑 Thiết lập mật khẩu mã hoá</div>
+      <button class="close-x" onclick="closeEncSetup()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="encSetupFirst" style="display:none;">
+        <p style="font-size:13.5px;">Hệ thống chưa có chìa khoá dữ liệu. Bạn sắp tạo chìa khoá đầu tiên cho toàn bộ hệ thống.</p>
+        <p style="font-size:13.5px;color:var(--red);"><b>Chỉ làm việc này một lần.</b> Sau khi tạo, bạn sẽ nhận một mã khôi phục — phải ghi lại và cất giữ, mất mã này và quên mật khẩu là mất dữ liệu vĩnh viễn.</p>
+      </div>
+      <div id="encSetupRecovery" style="display:none;">
+        <p style="font-size:13.5px;">Dán <b>mã khôi phục</b> mà người quản trị đã đưa cho bạn, rồi đặt mật khẩu riêng của mình.</p>
+        <input type="text" id="encRecInput" placeholder="Mã khôi phục" autocomplete="off"
+               style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:7px;font-size:13px;font-family:monospace;margin-bottom:10px;">
+      </div>
+      <input type="password" id="encNewPw1" placeholder="Mật khẩu mã hoá mới (tối thiểu 10 ký tự)" autocomplete="off"
+             style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:7px;font-size:14px;margin-bottom:8px;">
+      <input type="password" id="encNewPw2" placeholder="Nhập lại mật khẩu" autocomplete="off"
+             style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:7px;font-size:14px;">
+      <div id="encSetupMsg" style="font-size:13px;margin-top:10px;min-height:18px;"></div>
+      <div id="encRecoveryBox" style="display:none;margin-top:14px;padding:12px;border:2px solid var(--red);border-radius:8px;background:#FFF7F7;">
+        <div style="font-size:13px;font-weight:600;color:var(--red);margin-bottom:6px;">⚠️ MÃ KHÔI PHỤC — ghi lại ngay, chỉ hiện một lần</div>
+        <div id="encRecoveryCode" style="font-family:monospace;font-size:13px;word-break:break-all;background:#fff;padding:10px;border-radius:6px;border:1px solid var(--border);"></div>
+        <button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="copyToClipboard(document.getElementById('encRecoveryCode').textContent, this)">Sao chép</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeEncSetup()">Đóng</button>
+      <button class="btn btn-primary" id="encSetupBtn" onclick="doEncSetup()">Thiết lập</button>
     </div>
   </div>
 </div>
@@ -2252,6 +2312,295 @@ const SUPABASE_URL = 'https://fkgkmobwoiptfrbiverh.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZrZ2ttb2J3b2lwdGZyYml2ZXJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxMDkzODYsImV4cCI6MjEwMzY4NTM4Nn0.hw12yAhkP9PCm0v8TV1kUi6rMtdfFau4OLNr72fReEg';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+/* ================= LỚP MÃ HOÁ DỮ LIỆU (enc v1) =================
+   - Tên/ghi chú: mã hoá ngẫu nhiên (e1:)  -> cùng giá trị ra chuỗi khác nhau
+   - Số tài khoản: mã hoá tất định (d1:)   -> cùng STK ra cùng chuỗi, vẫn khớp được
+   - Chìa khoá dữ liệu (DEK) sinh ngẫu nhiên, được bọc bằng mật khẩu riêng của từng người
+   - Mật khẩu KHÔNG lưu ở đâu cả; đóng tab hoặc 15 phút không dùng là khoá lại
+================================================================= */
+const ENC_R = 'e1:', ENC_D = 'd1:';
+const ENC_IDLE_MS = 15 * 60 * 1000;
+const ENC_PBKDF2_ITER = 310000;
+
+// bảng -> cột nào mã hoá kiểu nào
+const ENC_FIELDS = {
+  customers:           { det:['account_number'], rnd:['customer_name','telegram_name','note','gender'] },
+  loans:               { det:['account_number'], rnd:['note'] },
+  margin_calls:        { det:['account_number'], rnd:['note'] },
+  rights_offerings:    { det:['account_number'], rnd:[] },
+  transfer_in_list:    { det:['account_number'], rnd:['customer_name','note'] },
+  transfer_out_list:   { det:['account_number'], rnd:['customer_name','note'] },
+  zalo_leads:          { det:['account_number'], rnd:['lead_name','contact_person','note'] },
+  contact_leads:       { det:['account_number'], rnd:['lead_name','phone','note'] },
+  loan_history:        { det:[], rnd:['note'] },
+  margin_call_history: { det:[], rnd:['note'] },
+  change_log:          { det:[], rnd:['old_value','new_value'] }
+};
+
+let _dek = null, _dekRaw = null, _detKey = null, encUnlocked = false, _encIdleTimer = null;
+const _te = new TextEncoder(), _td = new TextDecoder();
+
+function _b64(buf){ const b = new Uint8Array(buf); let s = ''; for(let i=0;i<b.length;i++) s += String.fromCharCode(b[i]); return btoa(s); }
+function _ub64(s){ return Uint8Array.from(atob(s), c=>c.charCodeAt(0)); }
+
+async function _setDek(raw){
+  _dekRaw = new Uint8Array(raw);
+  _dek = await crypto.subtle.importKey('raw', raw, {name:'AES-GCM'}, false, ['encrypt','decrypt']);
+  const mix = new Uint8Array(raw.length + 6);
+  mix.set(raw, 0); mix.set(_te.encode('det-iv'), raw.length);
+  const h = await crypto.subtle.digest('SHA-256', mix);
+  _detKey = await crypto.subtle.importKey('raw', h, {name:'HMAC', hash:'SHA-256'}, false, ['sign']);
+  encUnlocked = true;
+  encTouch();
+}
+function encLock(){
+  _dek = null; _dekRaw = null; _detKey = null; encUnlocked = false;
+  if(_encIdleTimer){ clearTimeout(_encIdleTimer); _encIdleTimer = null; }
+  renderEncBar();
+  if(typeof loadAllData === 'function') loadAllData().then(()=>renderCurrentView()).catch(e=>console.error(e));
+}
+function encTouch(){
+  if(!encUnlocked) return;
+  if(_encIdleTimer) clearTimeout(_encIdleTimer);
+  _encIdleTimer = setTimeout(()=>{ encLock(); showToast('Đã tự khoá dữ liệu sau 15 phút không dùng'); }, ENC_IDLE_MS);
+}
+
+async function _deriveKek(password, salt){
+  const base = await crypto.subtle.importKey('raw', _te.encode(password), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    {name:'PBKDF2', salt, iterations:ENC_PBKDF2_ITER, hash:'SHA-256'},
+    base, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+}
+
+/* ---------- mã hoá / giải mã một giá trị ---------- */
+async function encVal(v, det){
+  if(v === null || v === undefined || v === '') return v;
+  if(!_dek) throw new Error('Chưa mở khoá dữ liệu');
+  const s = String(v);
+  if(s.startsWith(ENC_R) || s.startsWith(ENC_D)) return s;   // đã mã hoá rồi
+  const pt = _te.encode(s);
+  let iv;
+  if(det){ const mac = await crypto.subtle.sign('HMAC', _detKey, pt); iv = new Uint8Array(mac).slice(0,12); }
+  else   { iv = crypto.getRandomValues(new Uint8Array(12)); }
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, _dek, pt);
+  return (det ? ENC_D : ENC_R) + _b64(iv) + '.' + _b64(ct);
+}
+function isEnc(v){ return typeof v === 'string' && (v.startsWith(ENC_R) || v.startsWith(ENC_D)); }
+
+async function decVal(v){
+  if(!isEnc(v)) return v;                 // dữ liệu cũ chưa mã hoá -> trả nguyên
+  if(!_dek) return null;                  // đang khoá
+  try{
+    const p = v.slice(3).split('.');
+    const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:_ub64(p[0])}, _dek, _ub64(p[1]));
+    return _td.decode(pt);
+  }catch(e){ return null; }
+}
+
+/* ---------- mã hoá / giải mã cả dòng ---------- */
+async function encRow(table, row){
+  const f = ENC_FIELDS[table];
+  if(!f || !row) return row;
+  const out = Object.assign({}, row);
+  for(const k of f.det) if(k in out) out[k] = await encVal(out[k], true);
+  for(const k of f.rnd) if(k in out) out[k] = await encVal(out[k], false);
+  return out;
+}
+async function encRows(table, rows){
+  if(!Array.isArray(rows)) return encRow(table, rows);
+  const out = []; for(const r of rows) out.push(await encRow(table, r)); return out;
+}
+const ENC_NAME_COLS = new Set(['account_number','customer_name','lead_name']);
+async function decRows(table, rows){
+  const f = ENC_FIELDS[table];
+  if(!f || !Array.isArray(rows) || !rows.length) return rows;
+  const cols = f.det.concat(f.rnd).filter(c => c in rows[0]);
+  if(!cols.length) return rows;
+  for(const r of rows){
+    const m = encUnlocked ? null : maskRow(r);
+    for(const c of cols){
+      if(!isEnc(r[c])) continue;
+      r[c] = encUnlocked ? await decVal(r[c]) : (ENC_NAME_COLS.has(c) ? m : '•••');
+    }
+  }
+  return rows;
+}
+// mã hoá một giá trị để lọc (vd .eq('account_number', await encFilter(stk)))
+async function encFilter(v){ return encUnlocked ? await encVal(v, true) : v; }
+
+/* ---------- mã hiển thị khi đang khoá ---------- */
+function maskRow(r){
+  const src = r.account_number || r.customer_id || r.id || r.loan_id || r.lead_id || '';
+  const s = String(src).replace(/[^A-Za-z0-9]/g,'');
+  return s ? ('KH-' + s.slice(-6).toUpperCase()) : '•••';
+}
+
+/* ---------- hộp khoá của từng người (lưu trong app_settings) ---------- */
+function _boxKey(email){ return 'enc_box_' + String(email||'').toLowerCase(); }
+
+async function encLoadBox(email){
+  const { data } = await sb.from('app_settings').select('value').eq('key', _boxKey(email)).maybeSingle();
+  if(!data || !data.value) return null;
+  try{ return JSON.parse(data.value); }catch(e){ return null; }
+}
+async function encSaveBox(email, box){
+  const { error } = await sb.from('app_settings').upsert({ key:_boxKey(email), value: JSON.stringify(box), updated_at: new Date().toISOString() }, { onConflict:'key' });
+  if(error) throw error;
+}
+async function encSystemReady(){
+  const { data } = await sb.from('app_settings').select('value').eq('key','enc_check').maybeSingle();
+  return !!(data && data.value);
+}
+
+// tạo chìa khoá dữ liệu lần đầu (chỉ Owner, chỉ một lần cho cả hệ thống)
+async function encInitSystem(password){
+  if(await encSystemReady()) throw new Error('Hệ thống đã có chìa khoá dữ liệu rồi');
+  const raw = crypto.getRandomValues(new Uint8Array(32));
+  await _setDek(raw);
+  await encSaveBox(currentUserEmail, await _wrapDek(raw, password));
+  const { error } = await sb.from('app_settings').upsert({ key:'enc_check', value: await encVal('ok', false), updated_at:new Date().toISOString() }, { onConflict:'key' });
+  if(error) throw error;
+  return _b64(raw);              // mã khôi phục, hiện cho người dùng ghi lại
+}
+async function _wrapDek(raw, password){
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv   = crypto.getRandomValues(new Uint8Array(12));
+  const kek  = await _deriveKek(password, salt);
+  const wrapped = await crypto.subtle.encrypt({name:'AES-GCM', iv}, kek, raw);
+  return { v:1, salt:_b64(salt), iv:_b64(iv), wrapped:_b64(wrapped) };
+}
+
+// mở khoá bằng mật khẩu riêng
+async function encUnlock(password){
+  const box = await encLoadBox(currentUserEmail);
+  if(!box) throw new Error('Tài khoản này chưa đặt mật khẩu mã hoá. Hãy dùng mã khôi phục để thiết lập.');
+  const kek = await _deriveKek(password, _ub64(box.salt));
+  let raw;
+  try{ raw = await crypto.subtle.decrypt({name:'AES-GCM', iv:_ub64(box.iv)}, kek, _ub64(box.wrapped)); }
+  catch(e){ throw new Error('Mật khẩu không đúng'); }
+  await _setDek(new Uint8Array(raw));
+  await _verifyKey();
+}
+// thiết lập mật khẩu riêng bằng mã khôi phục (người thứ 2, thứ 3, hoặc khi quên mật khẩu)
+async function encSetupFromRecovery(recoveryCode, newPassword){
+  let raw;
+  try{ raw = _ub64(recoveryCode.trim()); }catch(e){ throw new Error('Mã khôi phục không hợp lệ'); }
+  if(raw.length !== 32) throw new Error('Mã khôi phục không hợp lệ');
+  await _setDek(raw);
+  await _verifyKey();
+  await encSaveBox(currentUserEmail, await _wrapDek(raw, newPassword));
+}
+async function _verifyKey(){
+  const { data } = await sb.from('app_settings').select('value').eq('key','enc_check').maybeSingle();
+  if(!data || !data.value) return;
+  if(await decVal(data.value) !== 'ok'){ encLock(); throw new Error('Chìa khoá không khớp với dữ liệu trên hệ thống'); }
+}
+// đổi mật khẩu của chính mình (phải đang mở khoá)
+async function encChangePassword(newPassword){
+  if(!encUnlocked) throw new Error('Phải mở khoá trước');
+  await encSaveBox(currentUserEmail, await _wrapDek(_dekRaw, newPassword));
+}
+
+// hiện lại mã khôi phục khi đang mở khoá (Owner cất giữ)
+function encGetRecovery(){ if(!encUnlocked) return null; return _b64(_dekRaw); }
+
+/* ============ GIAO DIỆN MỞ KHOÁ / KHOÁ DỮ LIỆU ============ */
+function renderEncBar(){
+  const b = document.getElementById('encLockBtn');
+  if(!b) return;
+  if(encUnlocked){
+    b.innerHTML = '🔓 Đã mở khoá';
+    b.title = 'Dữ liệu đang hiện tên thật. Bấm để khoá lại.';
+    b.style.cssText = 'padding:6px 12px;border-radius:7px;font-size:12.5px;font-weight:600;border:1px solid #BBE5C8;background:#EAF7EE;color:#1E7F43;cursor:pointer;';
+    b.onclick = ()=>{ encLock(); showToast('Đã khoá dữ liệu'); };
+  } else {
+    b.innerHTML = '🔒 Đang khoá';
+    b.title = 'Đang ẩn tên khách hàng và số tài khoản. Bấm để mở khoá.';
+    b.style.cssText = 'padding:6px 12px;border-radius:7px;font-size:12.5px;font-weight:600;border:1px solid #F3C6C6;background:#FDF0F0;color:#B3261E;cursor:pointer;';
+    b.onclick = openEncUnlock;
+  }
+}
+
+function openEncUnlock(){
+  document.getElementById('encPwInput').value = '';
+  document.getElementById('encUnlockMsg').textContent = '';
+  document.getElementById('encUnlockOverlay').classList.add('active');
+  setTimeout(()=>document.getElementById('encPwInput').focus(), 50);
+}
+function closeEncUnlock(){ document.getElementById('encUnlockOverlay').classList.remove('active'); }
+
+async function doEncUnlock(){
+  const pw = document.getElementById('encPwInput').value;
+  const msg = document.getElementById('encUnlockMsg');
+  const btn = document.getElementById('encUnlockBtn');
+  if(!pw){ msg.innerHTML = '<span style="color:var(--red);">Hãy nhập mật khẩu.</span>'; return; }
+  btn.disabled = true; msg.innerHTML = '<span style="color:var(--text-muted);">Đang mở khoá…</span>';
+  try{
+    await encUnlock(pw);
+    closeEncUnlock();
+    renderEncBar();
+    showToast('Đã mở khoá, đang tải lại dữ liệu…');
+    await loadAllData();
+    renderCurrentView();
+    showToast('Đã hiện dữ liệu đầy đủ');
+  }catch(e){
+    msg.innerHTML = '<span style="color:var(--red);">' + escHtml(e.message || 'Không mở khoá được') + '</span>';
+  }finally{ btn.disabled = false; }
+}
+
+async function openEncSetup(){
+  closeEncUnlock();
+  const ready = await encSystemReady();
+  document.getElementById('encSetupFirst').style.display    = ready ? 'none' : 'block';
+  document.getElementById('encSetupRecovery').style.display = ready ? 'block' : 'none';
+  document.getElementById('encSetupTitle').textContent = ready ? '🔑 Đặt mật khẩu bằng mã khôi phục' : '🔑 Tạo chìa khoá dữ liệu lần đầu';
+  document.getElementById('encNewPw1').value = '';
+  document.getElementById('encNewPw2').value = '';
+  document.getElementById('encRecInput').value = '';
+  document.getElementById('encSetupMsg').textContent = '';
+  document.getElementById('encRecoveryBox').style.display = 'none';
+  document.getElementById('encSetupBtn').disabled = false;
+  document.getElementById('encSetupOverlay').classList.add('active');
+}
+function closeEncSetup(){ document.getElementById('encSetupOverlay').classList.remove('active'); }
+
+async function doEncSetup(){
+  const msg = document.getElementById('encSetupMsg');
+  const btn = document.getElementById('encSetupBtn');
+  const pw1 = document.getElementById('encNewPw1').value;
+  const pw2 = document.getElementById('encNewPw2').value;
+  const rec = document.getElementById('encRecInput').value;
+  const isFirst = document.getElementById('encSetupFirst').style.display !== 'none';
+  if(pw1.length < 10){ msg.innerHTML = '<span style="color:var(--red);">Mật khẩu phải từ 10 ký tự trở lên.</span>'; return; }
+  if(pw1 !== pw2){ msg.innerHTML = '<span style="color:var(--red);">Hai ô mật khẩu không giống nhau.</span>'; return; }
+  if(!isFirst && !rec.trim()){ msg.innerHTML = '<span style="color:var(--red);">Hãy dán mã khôi phục.</span>'; return; }
+  btn.disabled = true; msg.innerHTML = '<span style="color:var(--text-muted);">Đang xử lý…</span>';
+  try{
+    if(isFirst){
+      if(currentRole !== 'owner') throw new Error('Chỉ Owner mới tạo được chìa khoá lần đầu.');
+      const code = await encInitSystem(pw1);
+      document.getElementById('encRecoveryCode').textContent = code;
+      document.getElementById('encRecoveryBox').style.display = 'block';
+      msg.innerHTML = '<span style="color:var(--green);">Đã tạo chìa khoá. Hãy ghi lại mã khôi phục bên dưới trước khi đóng.</span>';
+    } else {
+      await encSetupFromRecovery(rec, pw1);
+      msg.innerHTML = '<span style="color:var(--green);">Đã đặt mật khẩu. Từ nay bạn mở khoá bằng mật khẩu này.</span>';
+      setTimeout(closeEncSetup, 1500);
+    }
+    renderEncBar();
+    await loadAllData();
+    renderCurrentView();
+  }catch(e){
+    msg.innerHTML = '<span style="color:var(--red);">' + escHtml(e.message || 'Không thực hiện được') + '</span>';
+    btn.disabled = false;
+  }
+}
+
+// gia hạn phiên mở khoá khi người dùng còn thao tác
+['click','keydown'].forEach(ev => document.addEventListener(ev, ()=>{ if(encUnlocked) encTouch(); }, {passive:true}));
+
+
+
 let currentUserEmail = null;
 let currentRole = 'editor'; // cập nhật thật sau khi đăng nhập, tra bảng user_roles
 
@@ -2332,6 +2681,8 @@ async function checkAuthAndInit(){
   document.getElementById('currentUserAvatar').textContent = (roleRow.display_name||currentUserEmail)[0].toUpperCase();
   document.querySelector('.uname').textContent = roleRow.display_name || currentUserEmail;
   applyRoleVisibility();
+  renderEncBar();
+  encSystemReady().then(ready=>{ if(ready && !encUnlocked) setTimeout(openEncUnlock, 600); }).catch(e=>console.error(e));
 
   renderDashboard();
   markViewsDirty('dashboard');   // các màn khác chỉ vẽ khi mở lần đầu → vào app nhanh hơn
@@ -2408,6 +2759,10 @@ function applyRoleVisibility(){
 let roomHistoryRows = [];
 let zaloLeads = [], transferIns = [], transferOuts = [];
 async function fetchAllRows(table, cols, order){
+  const _rows = await _fetchAllRowsRaw(table, cols, order);
+  return await decRows(table, _rows);
+}
+async function _fetchAllRowsRaw(table, cols, order){
   const PS = 1000;
   const page = async (i)=>{
     for(let t=0;t<2;t++){
@@ -3255,7 +3610,7 @@ function renderMoves(){
 
 // ---------------- 3 DANH SÁCH: KH ZALO / CHUYỂN VỀ / CHUYỂN ĐI ----------------
 async function loadMoveLists(){
-  const ld = async (table, order)=>{ try{ const { data, error } = await sb.from(table).select('*').order(order); if(error) throw error; return data||[]; }catch(e){ console.error('load '+table, e); return []; } };
+  const ld = async (table, order)=>{ try{ const { data, error } = await sb.from(table).select('*').order(order); if(error) throw error; return await decRows(table, data||[]); }catch(e){ console.error('load '+table, e); return []; } };
   const [_zl,_ti,_to] = await Promise.all([ld('zalo_leads','lead_id'), ld('transfer_in_list','id'), ld('transfer_out_list','id')]);
   zaloLeads = _zl.map(r=>({ id:r.lead_id, date:fromDbDate(r.received_date), name:r.lead_name||'', person:r.contact_person||'', contact:r.contact_status, outcome:r.outcome, stk:r.account_number||'', note:r.note||'' }));
   transferIns = _ti.map(r=>({ id:r.id, date:fromDbDate(r.transfer_date), stk:r.account_number||'', newId:r.new_id||'', name:r.customer_name||'', leadId:r.lead_id, note:r.note||'' }));
@@ -3377,7 +3732,7 @@ async function updateLead(id, field, value){
   const col = {name:'lead_name', person:'contact_person', contact:'contact_status', outcome:'outcome', stk:'account_number', note:'note'}[field];
   l[field] = v;
   try {
-    const { error } = await sb.from('zalo_leads').update({ [col]: (field==='stk' && !v) ? null : v, updated_at:new Date().toISOString() }).eq('lead_id', id);
+    const { error } = await sb.from('zalo_leads').update(await encRow('zalo_leads', { [col]: (field==='stk' && !v) ? null : v, updated_at:new Date().toISOString() })).eq('lead_id', id);
     if(error) throw error;
     const tr = document.querySelector(`#leadBody tr[data-lid="${id}"]`);
     if(tr){
@@ -3404,7 +3759,7 @@ async function saveLead(){
   const stk = norm6(document.getElementById('ld_stk').value);
   if(!name && !stk){ alert('Vui lòng nhập Tên KH hoặc STK.'); return; }
   try {
-    const { error } = await sb.from('zalo_leads').insert({ received_date: toDbDate(dateStr), lead_name:name, contact_person:document.getElementById('ld_person').value.trim(), contact_status:document.getElementById('ld_contact').value, outcome:document.getElementById('ld_outcome').value, account_number: stk||null, note:document.getElementById('ld_note').value.trim(), created_by: currentUserEmail });
+    const { error } = await sb.from('zalo_leads').insert(await encRows('zalo_leads', { received_date: toDbDate(dateStr), lead_name:name, contact_person:document.getElementById('ld_person').value.trim(), contact_status:document.getElementById('ld_contact').value, outcome:document.getElementById('ld_outcome').value, account_number: stk||null, note:document.getElementById('ld_note').value.trim(), created_by: currentUserEmail }));
     if(error) throw error;
     await loadMoveLists(); closeLeadModal(); renderMoveLists();
     showToast('Đã thêm KH thành công.');
@@ -3426,7 +3781,7 @@ async function saveLeadBulk(){
   });
   if(!add.length && !dups.length){ alert('Không có dòng hợp lệ để thêm.'); return; }
   try {
-    if(add.length){ const { error } = await sb.from('zalo_leads').insert(add); if(error) throw error; }
+    if(add.length){ const { error } = await sb.from('zalo_leads').insert(await encRows('zalo_leads', add)); if(error) throw error; }
     await loadMoveLists(); closeLeadBulk(); renderMoveLists();
     showToast(`Đã thêm ${add.length} KH.`);
     if(dups.length) alert(`Đã thêm ${add.length} KH.\n\nBỏ qua ${dups.length} tên đã có trong danh sách (để tránh trùng):\n${dups.join('\n')}\n\nNếu là người khác trùng tên, hãy thêm riêng bằng nút "+ Thêm KH".`);
@@ -3516,8 +3871,8 @@ async function saveTin(){
   const row = { transfer_date: toDbDate(dateStr), account_number: stk, new_id: document.getElementById('tin_newid').value.trim().toUpperCase(), customer_name: document.getElementById('tin_name').value.trim(), lead_id: leadId, note: document.getElementById('tin_note').value.trim(), updated_at: new Date().toISOString() };
   try {
     let error;
-    if(editingTinId) ({ error } = await sb.from('transfer_in_list').update(row).eq('id', editingTinId));
-    else ({ error } = await sb.from('transfer_in_list').insert({ ...row, created_by: currentUserEmail }));
+    if(editingTinId) ({ error } = await sb.from('transfer_in_list').update(await encRow('transfer_in_list', row)).eq('id', editingTinId));
+    else ({ error } = await sb.from('transfer_in_list').insert(await encRows('transfer_in_list', { ...row, created_by: currentUserEmail })));
     if(error) throw error;
     const wasEdit = !!editingTinId;
     await loadMoveLists(); closeTinModal(); renderMoveLists();
@@ -3573,8 +3928,8 @@ async function saveTout(){
   const row = { transfer_date: toDbDate(dateStr), account_number: stk, customer_name: document.getElementById('tout_name').value.trim(), new_id: document.getElementById('tout_newid').value.trim().toUpperCase(), note: document.getElementById('tout_note').value.trim(), updated_at: new Date().toISOString() };
   try {
     let error;
-    if(editingToutId) ({ error } = await sb.from('transfer_out_list').update(row).eq('id', editingToutId));
-    else ({ error } = await sb.from('transfer_out_list').insert({ ...row, created_by: currentUserEmail }));
+    if(editingToutId) ({ error } = await sb.from('transfer_out_list').update(await encRow('transfer_out_list', row)).eq('id', editingToutId));
+    else ({ error } = await sb.from('transfer_out_list').insert(await encRows('transfer_out_list', { ...row, created_by: currentUserEmail })));
     if(error) throw error;
     const wasEdit = !!editingToutId;
     await loadMoveLists(); closeToutModal(); renderMoveLists();
@@ -4149,7 +4504,7 @@ async function saveLinkAsSecondary(){
   const c = customers.find(x=>x.stk===currentDetailStk);
   const primary = customers.find(x=>x.stk===primaryStk);
   try {
-    const { error } = await sb.from('customers').update({ linked_to_customer_id: primary.id }).eq('customer_id', c.id);
+    const { error } = await sb.from('customers').update(await encRow('customers', { linked_to_customer_id: primary.id })).eq('customer_id', c.id);
     if(error) throw error;
     await loadAllData();
     openDetail(c.code);
@@ -4162,7 +4517,7 @@ async function unlinkSelf(){
   const c = customers.find(x=>x.stk===currentDetailStk);
   if(!confirm(`Bỏ liên kết? "${c.name}" sẽ trở thành tài khoản Chính độc lập.`)) return;
   try {
-    const { error } = await sb.from('customers').update({ linked_to_customer_id: null }).eq('customer_id', c.id);
+    const { error } = await sb.from('customers').update(await encRow('customers', { linked_to_customer_id: null })).eq('customer_id', c.id);
     if(error) throw error;
     await loadAllData();
     openDetail(c.code);
@@ -4177,7 +4532,7 @@ async function addSecondaryToThis(){
   const primary = customers.find(x=>x.stk===currentDetailStk);
   const secondary = customers.find(x=>x.stk===secStk);
   try {
-    const { error } = await sb.from('customers').update({ linked_to_customer_id: primary.id }).eq('customer_id', secondary.id);
+    const { error } = await sb.from('customers').update(await encRow('customers', { linked_to_customer_id: primary.id })).eq('customer_id', secondary.id);
     if(error) throw error;
     await loadAllData();
     openDetail(primary.code);
@@ -4190,7 +4545,7 @@ async function removeSecondary(secStk){
   const secondary = customers.find(x=>x.stk===secStk);
   if(!confirm(`Bỏ liên kết "${secondary.name}" khỏi tài khoản Chính này?`)) return;
   try {
-    const { error } = await sb.from('customers').update({ linked_to_customer_id: null }).eq('customer_id', secondary.id);
+    const { error } = await sb.from('customers').update(await encRow('customers', { linked_to_customer_id: null })).eq('customer_id', secondary.id);
     if(error) throw error;
     await loadAllData();
     openDetail(currentDetailStk);
@@ -4332,19 +4687,19 @@ async function saveCustomer(){
       if(isReturning){
         dbPayload.removed_at = null; // KH quay lại — xoá mốc remove cũ
       }
-      const { error } = await sb.from('customers').update(dbPayload).eq('customer_id', c.id);
+      const { error } = await sb.from('customers').update(await encRow('customers', dbPayload)).eq('customer_id', c.id);
       if(error) throw error;
       if(stkChanged){
         const oldStk = editingCustomerStk;
         for(const l of loans.filter(x=>x.account.slice(0,6)===oldStk)){
-          const { error: e1 } = await sb.from('loans').update({ account_number: stk + l.account.slice(6) }).eq('loan_id', l.id);
+          const { error: e1 } = await sb.from('loans').update(await encRow('loans', { account_number: stk + l.account.slice(6) })).eq('loan_id', l.id);
           if(e1) throw new Error('Đã đổi STK khách hàng nhưng lỗi khi cập nhật khoản vay: ' + e1.message);
         }
         for(const m of marginCalls.filter(x=>x.account.slice(0,6)===oldStk)){
-          const { error: e2 } = await sb.from('margin_calls').update({ account_number: stk + m.account.slice(6) }).eq('margin_call_id', m.id);
+          const { error: e2 } = await sb.from('margin_calls').update(await encRow('margin_calls', { account_number: stk + m.account.slice(6) })).eq('margin_call_id', m.id);
           if(e2) throw new Error('Đã đổi STK khách hàng nhưng lỗi khi cập nhật RRUB/Call Margin: ' + e2.message);
         }
-        const { error: e3 } = await sb.from('rights_offerings').update({ account_number: stk }).eq('account_number', oldStk);
+        const { error: e3 } = await sb.from('rights_offerings').update(await encRow('rights_offerings',{ account_number: stk })).eq('account_number', await encFilter(oldStk));
         if(e3) throw new Error('Đã đổi STK khách hàng nhưng lỗi khi cập nhật quyền mua: ' + e3.message);
       }
 
@@ -4376,7 +4731,7 @@ async function saveCustomer(){
         return;
       }
       dbPayload.created_at = new Date().toISOString();
-      const { data: inserted, error } = await sb.from('customers').insert(dbPayload).select().single();
+      const { data: inserted, error } = await sb.from('customers').insert(await encRows('customers', dbPayload)).select().single();
       if(error) throw error;
       await sb.from('nav_history').insert({ customer_id: inserted.customer_id, update_date: toDbDate(today), nav, source: 'manual' });
       await sb.from('fee_history').insert({ customer_id: inserted.customer_id, update_date: toDbDate(today), fee, source: 'manual' });
@@ -4826,12 +5181,12 @@ async function saveLoan(){
   const dupLoan = loans.find(l=>l.account===account && toDbDate(l.dueDate)===toDbDate(due));
   if(dupLoan){ alert(`Tài khoản ${account} đã có khoản vay đến hạn ngày ${dupLoan.dueDate} (trạng thái: ${dupLoan.status}).\n\nKhông thể thêm trùng. Nếu cần, hãy sửa khoản đã có (số tiền, trạng thái, ghi chú) thay vì tạo mới.`); return; }
   try {
-    const { data: ins, error } = await sb.from('loans').insert({
+    const { data: ins, error } = await sb.from('loans').insert(await encRows('loans', {
       account_number: account, amount, due_date: toDbDate(due),
       status: document.getElementById('loan_status').value,
       note: document.getElementById('loan_note').value.trim(),
       manager_id: document.getElementById('loan_manager_id').value.trim() || null,
-    }).select().single();
+    })).select().single();
     if(error) throw error;
     logLoanHistory(ins.loan_id, 'tao_moi', `Thêm tay — ${fmt(amount)}, đến hạn ${due}`);
     await loadAllData();
@@ -4870,14 +5225,14 @@ function overallLoanStatus(custLoans){
 
 // Ghi lịch sử sửa đổi khoản vay (âm thầm — lỗi ghi log không chặn thao tác chính)
 function logLoanHistory(loanId, action, note){
-  sb.from('loan_history').insert({ loan_id: loanId, changed_by: currentUserEmail, action, note }).then(()=>{});
+  encRows('loan_history', { loan_id: loanId, changed_by: currentUserEmail, action, note }).then(r=>sb.from('loan_history').insert(r)).catch(e=>console.error(e));
 }
 
 async function updateLoanNote(id, newNote){
   const l = loans.find(x=>x.id===id);
   const oldNote = l ? (l.note||'') : '';
   if(l) l.note = newNote;
-  const { error } = await sb.from('loans').update({ note: newNote, updated_at: new Date().toISOString() }).eq('loan_id', id);
+  const { error } = await sb.from('loans').update(await encRow('loans', { note: newNote, updated_at: new Date().toISOString() })).eq('loan_id', id);
   if(error){ alert('Lỗi khi lưu ghi chú: ' + error.message); if(l) l.note = oldNote; }
   else { showToast('Đã lưu ghi chú thành công.'); if(oldNote !== newNote) logLoanHistory(id, 'sua_ghi_chu', `"${oldNote||'(trống)'}" → "${newNote||'(trống)'}"`); }
 }
@@ -4904,7 +5259,7 @@ async function updateLoanAmount(id, newValue){
   keepRender(()=>renderLoans(), 'tr[data-lid="'+id+'"]');
   renderDashboard();
   try {
-    const { error } = await sb.from('loans').update({ amount: num, updated_at: new Date().toISOString() }).eq('loan_id', id);
+    const { error } = await sb.from('loans').update(await encRow('loans', { amount: num, updated_at: new Date().toISOString() })).eq('loan_id', id);
     if(error) throw error;
     showToast('Đã cập nhật số tiền thành công.');
     if(oldAmount !== num) logLoanHistory(id, 'sua_so_tien', `${fmt(oldAmount||0)} → ${fmt(num)}`);
@@ -4935,7 +5290,7 @@ async function updateLoanDueDate(id, newValue, stk){
   keepRender(()=>renderLoans(), 'tr[data-lid="'+id+'"]');
   renderDashboard();
   try {
-    const { error } = await sb.from('loans').update({ due_date: toDbDate(newDate), updated_at: new Date().toISOString() }).eq('loan_id', id);
+    const { error } = await sb.from('loans').update(await encRow('loans', { due_date: toDbDate(newDate), updated_at: new Date().toISOString() })).eq('loan_id', id);
     if(error) throw error;
     showToast('Đã cập nhật ngày đến hạn thành công.');
     if(oldDate !== newDate) logLoanHistory(id, 'sua_ngay_den_han', `${oldDate} → ${newDate}`);
@@ -4962,7 +5317,7 @@ async function updateLoanStatus(id, newStatus){
   // Không renderLoans(): giữ nguyên màn hình, chỉ ô trạng thái đổi (đã đổi tại chỗ qua onchange)
   refreshLoanPillCounts();
   renderDashboard();
-  const { error } = await sb.from('loans').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('loan_id', id);
+  const { error } = await sb.from('loans').update(await encRow('loans', { status: newStatus, updated_at: new Date().toISOString() })).eq('loan_id', id);
   if(error){
     if(l) l.status = oldStatus;
     document.querySelectorAll('.loan-detail-table select.status-select').forEach(sel=>{
@@ -5017,7 +5372,8 @@ async function openLoanHistoryModal(loanId, account){
   document.getElementById('loanHistoryList').innerHTML = 'Đang tải…';
   document.getElementById('loanHistoryOverlay').classList.add('active');
   try {
-    const { data, error } = await sb.from('loan_history').select('*').eq('loan_id', loanId).order('created_at', {ascending:false});
+    let { data, error } = await sb.from('loan_history').select('*').eq('loan_id', loanId).order('created_at', {ascending:false});
+    data = await decRows('loan_history', data||[]);
     if(error) throw error;
     if(!data || !data.length){
       document.getElementById('loanHistoryList').innerHTML = '<div style="color:var(--text-muted);font-size:12.5px;padding:10px 0;">Chưa có lịch sử sửa đổi nào cho khoản vay này.</div>';
@@ -5503,12 +5859,12 @@ async function saveMarginCall(){
   const dupMc = marginCalls.find(m=>m.account===account && toDbDate(m.dueDate)===toDbDate(due));
   if(dupMc){ alert(`Tài khoản ${account} đã có khoản RRUB/Call Margin hạn xử lý ngày ${dupMc.dueDate} (trạng thái: ${dupMc.status}).\n\nKhông thể thêm trùng. Nếu cần, hãy sửa khoản đã có thay vì tạo mới.`); return; }
   try {
-    const { data: ins, error } = await sb.from('margin_calls').insert({
+    const { data: ins, error } = await sb.from('margin_calls').insert(await encRows('margin_calls', {
       account_number: account, amount, due_date: toDbDate(due),
       status: document.getElementById('mc_status').value,
       note: document.getElementById('mc_note').value.trim(),
       manager_id: document.getElementById('mc_manager_id').value.trim() || null,
-    }).select().single();
+    })).select().single();
     if(error) throw error;
     logMarginCallHistory(ins.margin_call_id, 'tao_moi', `Thêm tay — ${fmt(amount)}, hạn xử lý ${due}`);
     await loadAllData();
@@ -5543,14 +5899,14 @@ function overallMarginCallStatus(custCalls){
 
 // Ghi lịch sử sửa đổi khoản RRUB/Call Margin (âm thầm — lỗi ghi log không chặn thao tác chính)
 function logMarginCallHistory(marginCallId, action, note){
-  sb.from('margin_call_history').insert({ margin_call_id: marginCallId, changed_by: currentUserEmail, action, note }).then(()=>{});
+  encRows('margin_call_history', { margin_call_id: marginCallId, changed_by: currentUserEmail, action, note }).then(r=>sb.from('margin_call_history').insert(r)).catch(e=>console.error(e));
 }
 
 async function updateMarginCallNote(id, newNote){
   const m = marginCalls.find(x=>x.id===id);
   const oldNote = m ? (m.note||'') : '';
   if(m) m.note = newNote;
-  const { error } = await sb.from('margin_calls').update({ note: newNote, updated_at: new Date().toISOString() }).eq('margin_call_id', id);
+  const { error } = await sb.from('margin_calls').update(await encRow('margin_calls', { note: newNote, updated_at: new Date().toISOString() })).eq('margin_call_id', id);
   if(error){ alert('Lỗi khi lưu ghi chú: ' + error.message); if(m) m.note = oldNote; }
   else { showToast('Đã lưu ghi chú thành công.'); if(oldNote !== newNote) logMarginCallHistory(id, 'sua_ghi_chu', `"${oldNote||'(trống)'}" → "${newNote||'(trống)'}"`); }
 }
@@ -5562,7 +5918,7 @@ async function updateMarginCallAmount(id, newValue){
   keepRender(()=>renderMarginCalls(), 'tr[data-mid="'+id+'"]');
   renderDashboard();
   try {
-    const { error } = await sb.from('margin_calls').update({ amount: num, updated_at: new Date().toISOString() }).eq('margin_call_id', id);
+    const { error } = await sb.from('margin_calls').update(await encRow('margin_calls', { amount: num, updated_at: new Date().toISOString() })).eq('margin_call_id', id);
     if(error) throw error;
     showToast('Đã cập nhật số tiền thành công.');
     if(oldAmount !== num) logMarginCallHistory(id, 'sua_so_tien', `${fmt(oldAmount||0)} → ${fmt(num)}`);
@@ -5592,7 +5948,7 @@ async function updateMarginCallDueDate(id, newValue, stk){
   keepRender(()=>renderMarginCalls(), 'tr[data-mid="'+id+'"]');
   renderDashboard();
   try {
-    const { error } = await sb.from('margin_calls').update({ due_date: toDbDate(newDate), updated_at: new Date().toISOString() }).eq('margin_call_id', id);
+    const { error } = await sb.from('margin_calls').update(await encRow('margin_calls', { due_date: toDbDate(newDate), updated_at: new Date().toISOString() })).eq('margin_call_id', id);
     if(error) throw error;
     showToast('Đã cập nhật hạn xử lý thành công.');
     if(oldDate !== newDate) logMarginCallHistory(id, 'sua_han_xu_ly', `${oldDate} → ${newDate}`);
@@ -5609,7 +5965,7 @@ async function updateMarginCallStatus(id, newStatus){
   if(m) m.status = newStatus;
   keepRender(()=>renderMarginCalls(), 'tr[data-mid="'+id+'"]');
   renderDashboard();
-  const { error } = await sb.from('margin_calls').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('margin_call_id', id);
+  const { error } = await sb.from('margin_calls').update(await encRow('margin_calls', { status: newStatus, updated_at: new Date().toISOString() })).eq('margin_call_id', id);
   if(error){ alert('Lỗi khi cập nhật trạng thái: ' + error.message); await loadAllData(); keepRender(()=>renderMarginCalls(), 'tr[data-mid="'+id+'"]'); renderDashboard(); }
   else { showToast('Đã cập nhật trạng thái: ' + newStatus); if(oldStatus !== newStatus) logMarginCallHistory(id, 'doi_trang_thai', `${oldStatus} → ${newStatus}`); }
 }
@@ -5656,7 +6012,8 @@ async function openMarginCallHistoryModal(marginCallId, account){
   document.getElementById('marginCallHistoryList').innerHTML = 'Đang tải…';
   document.getElementById('marginCallHistoryOverlay').classList.add('active');
   try {
-    const { data, error } = await sb.from('margin_call_history').select('*').eq('margin_call_id', marginCallId).order('created_at', {ascending:false});
+    let { data, error } = await sb.from('margin_call_history').select('*').eq('margin_call_id', marginCallId).order('created_at', {ascending:false});
+    data = await decRows('margin_call_history', data||[]);
     if(error) throw error;
     if(!data || !data.length){
       document.getElementById('marginCallHistoryList').innerHTML = '<div style="color:var(--text-muted);font-size:12.5px;padding:10px 0;">Chưa có lịch sử sửa đổi nào cho khoản này.</div>';
@@ -6089,7 +6446,7 @@ async function saveRight(){
   const recordDate = document.getElementById('right_record_date').value.trim();
   if(!deadline || !recordDate){ alert('Vui lòng nhập đầy đủ Ngày chốt quyền và Hạn đăng ký (dd/mm/yyyy).'); return; }
   try {
-    const { error } = await sb.from('rights_offerings').insert({
+    const { error } = await sb.from('rights_offerings').insert(await encRows('rights_offerings', {
       account_number: stk,
       symbol: document.getElementById('right_symbol').value.trim().toUpperCase(),
       ratio_num: num, ratio_denom: denom,
@@ -6097,7 +6454,7 @@ async function saveRight(){
       holdings, qty,
       record_date: toDbDate(recordDate), deadline: toDbDate(deadline),
       status: document.getElementById('right_status').value
-    });
+    }));
     if(error) throw error;
     await loadAllData();
     closeRightModal();
@@ -6112,7 +6469,7 @@ async function updateRightStatus(id, newStatus){
   if(r) r.status = newStatus;
   renderRights();
   renderDashboard();
-  const { error } = await sb.from('rights_offerings').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('right_id', id);
+  const { error } = await sb.from('rights_offerings').update(await encRow('rights_offerings', { status: newStatus, updated_at: new Date().toISOString() })).eq('right_id', id);
   if(error){ alert('Lỗi khi cập nhật trạng thái: ' + error.message); await loadAllData(); renderRights(); renderDashboard(); }
   else showToast('Đã cập nhật trạng thái quyền mua: ' + newStatus);
 }
@@ -7197,7 +7554,7 @@ async function confirmImportToDatabase(){
             if(it.existing.status === 'KH ưu tiên') payload.status = it.status || 'Đang quản lý';
             if(it.navChanged){ payload.current_nav = it.nav; payload.nav_updated_at = toDbDate(it.dataDate||today); }
             if(it.feeChanged){ payload.current_fee = it.fee; payload.fee_updated_at = toDbDate(it.dataDate||today); }
-            const { error } = await sb.from('customers').update(payload).eq('customer_id', it.existing.id);
+            const { error } = await sb.from('customers').update(await encRow('customers', payload)).eq('customer_id', it.existing.id);
             if(error) throw error;
             if(it.navChanged) await sb.from('nav_history').insert({customer_id:it.existing.id, update_date:toDbDate(it.dataDate||today), nav:it.nav, source:'import_customerlist'});
             if(it.feeChanged) await sb.from('fee_history').insert({customer_id:it.existing.id, update_date:toDbDate(it.dataDate||today), fee:it.fee, source:'import_customerlist'});
@@ -7214,7 +7571,7 @@ async function confirmImportToDatabase(){
             } else {
               roomId = null;
             }
-            const { data: ins, error } = await sb.from('customers').insert({
+            const { data: ins, error } = await sb.from('customers').insert(await encRows('customers', {
               account_number: it.isPriorityFallback ? generateTempStk() : it.stk, customer_name: it.name || '',
               gender: it.gender||null, birth_year: it.birthYear||null, birth_date: it.birthYear ? `${it.birthYear}-01-01` : null,
               manager_id: it.managerId||null,
@@ -7226,7 +7583,7 @@ async function confirmImportToDatabase(){
               note: it.note||null,
               management_start_date: toDbDate(it.mgmtStart||today),
               customer_type: it.ctype || 'Tài khoản mới',
-            }).select().single();
+            })).select().single();
             if(error) throw error;
             if(it.nav) await sb.from('nav_history').insert({customer_id:ins.customer_id, update_date:toDbDate(it.dataDate||today), nav:it.nav, source: plan.type==='bc12'?'import_bc12':'import_nav'});
             if(it.fee){ if(plan.type==='update') await upsertMonthlyFee(ins.customer_id, it.feeMonth, it.fee, 'import_nav'); else await sb.from('fee_history').insert({customer_id:ins.customer_id, update_date:toDbDate(it.dataDate||today), fee:it.fee, source: plan.type==='bc12'?'import_bc12':'import_nav'}); }
@@ -7255,7 +7612,7 @@ async function confirmImportToDatabase(){
               else { payload.current_room_id = it.targetRoomKey; payload.special_room = null; }
               didSyncRoom = true;
             }
-            const { error } = await sb.from('customers').update(payload).eq('customer_id', it.existing.id);
+            const { error } = await sb.from('customers').update(await encRow('customers', payload)).eq('customer_id', it.existing.id);
             if(error) throw error;
             if(it.navChanged){
               const _nd = toDbDate(it.dataDate||today); let _done = false;
@@ -7287,13 +7644,13 @@ async function confirmImportToDatabase(){
     }
     else if(plan.type==='loan'){
       const toInsert = plan.valid.filter(it=>it.isNew).map(it=>({ account_number: it.account, due_date: toDbDate(it.dueDate), status:'Chưa xử lý', manager_id: it.managerId||null }));
-      if(toInsert.length){ const { error } = await sb.from('loans').insert(toInsert); if(error) throw error; }
+      if(toInsert.length){ const { error } = await sb.from('loans').insert(await encRows('loans', toInsert)); if(error) throw error; }
       // Vá ID quản lý cho khoản vay ĐÃ CÓ SẴN nếu file lần này có ID mà bản ghi cũ đang thiếu/khác
       const toBackfill = plan.valid.filter(it=>it.existingLoan && it.managerId && it.managerId !== (it.existingLoan.managerId||''));
       let managerIdBackfilledCount = 0;
       for(const it of toBackfill){
         try {
-          const { error } = await sb.from('loans').update({ manager_id: it.managerId, updated_at: new Date().toISOString() }).eq('loan_id', it.existingLoan.id);
+          const { error } = await sb.from('loans').update(await encRow('loans', { manager_id: it.managerId, updated_at: new Date().toISOString() })).eq('loan_id', it.existingLoan.id);
           if(!error) managerIdBackfilledCount++;
         } catch(e){ /* bỏ qua từng lỗi nhỏ, không chặn cả batch */ }
       }
@@ -7303,13 +7660,13 @@ async function confirmImportToDatabase(){
     }
     else if(plan.type==='margincall'){
       const toInsert = plan.valid.filter(it=>it.isNew).map(it=>({ account_number: it.account, due_date: toDbDate(it.dueDate), amount: it.amount||0, status:'Chưa xử lý', manager_id: it.managerId||null }));
-      if(toInsert.length){ const { error } = await sb.from('margin_calls').insert(toInsert); if(error) throw error; }
+      if(toInsert.length){ const { error } = await sb.from('margin_calls').insert(await encRows('margin_calls', toInsert)); if(error) throw error; }
       // Vá ID quản lý cho khoản ĐÃ CÓ SẴN nếu file lần này có ID mà bản ghi cũ đang thiếu/khác
       const toBackfill = plan.valid.filter(it=>it.existingMarginCall && it.managerId && it.managerId !== (it.existingMarginCall.managerId||''));
       let managerIdBackfilledCount = 0;
       for(const it of toBackfill){
         try {
-          const { error } = await sb.from('margin_calls').update({ manager_id: it.managerId, updated_at: new Date().toISOString() }).eq('margin_call_id', it.existingMarginCall.id);
+          const { error } = await sb.from('margin_calls').update(await encRow('margin_calls', { manager_id: it.managerId, updated_at: new Date().toISOString() })).eq('margin_call_id', it.existingMarginCall.id);
           if(!error) managerIdBackfilledCount++;
         } catch(e){ /* bỏ qua từng lỗi nhỏ, không chặn cả batch */ }
       }
@@ -7340,7 +7697,7 @@ async function confirmImportToDatabase(){
     }
     else if(plan.type==='right'){
       const toInsert = plan.valid.filter(it=>it.isNew).map(it=>({ account_number: it.stk, symbol: it.symbol, ratio_num: it.ratioNum, ratio_denom: it.ratioDenom, price: it.price, holdings: it.holdings, qty: it.qty, record_date: toDbDate(it.recordDate), deadline: toDbDate(it.deadline), status:'Chưa đăng ký' }));
-      if(toInsert.length){ const { error } = await sb.from('rights_offerings').insert(toInsert); if(error) throw error; }
+      if(toInsert.length){ const { error } = await sb.from('rights_offerings').insert(await encRows('rights_offerings', toInsert)); if(error) throw error; }
       await sb.from('import_batches').insert({ import_type: 'right', file_name: document.getElementById('fileInput').files[0]?.name, imported_by: currentUserEmail, total_rows: plan.valid.length+plan.errors.length, new_customers: toInsert.length, updated_rows: 0, error_rows: plan.errors.length });
       document.getElementById('importResultTitle').textContent = `Đã import ${toInsert.length} quyền mua mới`; showToast(`Đã import ${toInsert.length} quyền mua mới`);
       document.getElementById('importResultSub').textContent = `${plan.valid.length-toInsert.length} dòng trùng với dữ liệu đã có, đã bỏ qua.`;
