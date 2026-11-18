@@ -1511,6 +1511,21 @@ body{-webkit-text-size-adjust:100%;}
               </div>
               <button class="btn btn-secondary btn-sm" style="color:var(--red);border-color:#F3C6C6;" onclick="openWipeConfirm()">🗑 Xóa toàn bộ dữ liệu</button>
             </div>
+            <div style="border-top:1px solid var(--border);"></div>
+            <div>
+              <div class="loan-col-value">🔐 Mã hoá dữ liệu khách hàng</div>
+              <div class="field-hint" style="margin-bottom:10px;">Mã hoá tên khách hàng, số tài khoản và ghi chú đang lưu trên hệ thống. Phải mở khoá dữ liệu trước. Chạy lúc không có ai dùng app. Không hoàn tác được — đã có bản sao lưu ngày 18/11 trong database.</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                <button class="btn btn-secondary btn-sm" onclick="migCheck()">Kiểm tra</button>
+                <button class="btn btn-secondary btn-sm" id="migRunBtn" style="display:none;color:var(--red);border-color:#F3C6C6;" onclick="migRun()">Bắt đầu mã hoá</button>
+                <button class="btn btn-secondary btn-sm" id="migStopBtn" style="display:none;" onclick="migStop()">Dừng</button>
+              </div>
+              <div style="margin-top:10px;height:8px;background:#EEF1F5;border-radius:5px;overflow:hidden;">
+                <div id="migBarFill" style="height:100%;width:0;background:#1E7F43;transition:width .2s;"></div>
+              </div>
+              <div id="migBarText" style="font-size:12px;color:var(--text-muted);margin-top:4px;"></div>
+              <div id="migLog" style="margin-top:8px;max-height:220px;overflow:auto;font-size:12.5px;font-family:ui-monospace,monospace;background:#FAFBFC;border:1px solid var(--border);border-radius:7px;padding:8px;"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -2503,6 +2518,114 @@ async function encChangePassword(newPassword){
 
 // hiện lại mã khôi phục khi đang mở khoá (Owner cất giữ)
 function encGetRecovery(){ if(!encUnlocked) return null; return _b64(_dekRaw); }
+
+/* ========== CHUYỂN ĐỔI DỮ LIỆU CŨ SANG DẠNG MÃ HOÁ (chỉ Owner) ========== */
+const ENC_PK = {
+  customers:'customer_id', loans:'loan_id', margin_calls:'margin_call_id', rights_offerings:'right_id',
+  transfer_in_list:'id', transfer_out_list:'id', zalo_leads:'lead_id', contact_leads:'lead_id',
+  loan_history:'id', margin_call_history:'id', change_log:'log_id'
+};
+const ENC_MIG_BATCH = 200;
+let _migRunning = false, _migStop = false;
+
+function encNeeds(table, row){
+  const f = ENC_FIELDS[table]; if(!f) return false;
+  for(const c of f.det.concat(f.rnd)){
+    const v = row[c];
+    if(v !== null && v !== undefined && v !== '' && !isEnc(v)) return true;
+  }
+  return false;
+}
+function migLog(html, color){
+  const el = document.getElementById('migLog');
+  if(!el) return;
+  const d = document.createElement('div');
+  d.style.cssText = 'padding:2px 0;' + (color ? 'color:' + color + ';' : '');
+  d.innerHTML = html;
+  el.appendChild(d); el.scrollTop = el.scrollHeight;
+}
+function migSetBar(pct, text){
+  const b = document.getElementById('migBarFill'), t = document.getElementById('migBarText');
+  if(b) b.style.width = Math.max(0, Math.min(100, pct)) + '%';
+  if(t) t.textContent = text || '';
+}
+
+// Đếm xem còn bao nhiêu dòng chưa mã hoá
+async function migCheck(){
+  if(currentRole !== 'owner'){ alert('Chỉ Owner mới dùng được công cụ này.'); return; }
+  document.getElementById('migLog').innerHTML = '';
+  migLog('<b>Đang kiểm tra…</b>');
+  let tong = 0;
+  for(const table of Object.keys(ENC_PK)){
+    try{
+      const rows = await _fetchAllRowsRaw(table, '*', ENC_PK[table]);
+      const n = rows.filter(r => encNeeds(table, r)).length;
+      tong += n;
+      migLog(table + ': <b>' + n + '</b> / ' + rows.length + ' dòng chưa mã hoá', n ? '#B3261E' : '#1E7F43');
+    }catch(e){ migLog(table + ': lỗi đọc — ' + escHtml(e.message), '#B3261E'); }
+  }
+  migLog('<b>Tổng cộng ' + tong + ' dòng cần chuyển đổi.</b>');
+  document.getElementById('migRunBtn').style.display = tong ? 'inline-block' : 'none';
+  migSetBar(tong ? 0 : 100, tong ? '' : 'Đã mã hoá xong toàn bộ');
+}
+
+async function migRun(){
+  if(currentRole !== 'owner'){ alert('Chỉ Owner mới dùng được công cụ này.'); return; }
+  if(!encUnlocked){ alert('Phải mở khoá dữ liệu trước khi chuyển đổi.'); return; }
+  if(_migRunning) return;
+  if(!confirm('Bắt đầu mã hoá toàn bộ dữ liệu cũ?\n\nHãy chắc chắn không có ai đang dùng app. Quá trình này không thể hoàn tác (đã có bản sao lưu).')) return;
+  const typed = prompt('Gõ MA HOA để xác nhận:');
+  if(typed === null || typed.trim().toUpperCase() !== 'MA HOA'){ alert('Đã huỷ.'); return; }
+
+  _migRunning = true; _migStop = false;
+  document.getElementById('migRunBtn').disabled = true;
+  document.getElementById('migStopBtn').style.display = 'inline-block';
+  document.getElementById('migLog').innerHTML = '';
+
+  // gom việc trước để biết tổng tiến độ
+  const jobs = [];
+  for(const table of Object.keys(ENC_PK)){
+    try{
+      const rows = await _fetchAllRowsRaw(table, '*', ENC_PK[table]);
+      const todo = rows.filter(r => encNeeds(table, r));
+      if(todo.length) jobs.push({ table, rows: todo });
+    }catch(e){ migLog('Không đọc được ' + table + ': ' + escHtml(e.message), '#B3261E'); }
+  }
+  const tong = jobs.reduce((s,j)=>s+j.rows.length, 0);
+  if(!tong){ migLog('Không có gì để chuyển đổi.', '#1E7F43'); _migRunning = false; document.getElementById('migRunBtn').disabled = false; document.getElementById('migStopBtn').style.display='none'; return; }
+  migLog('Bắt đầu mã hoá <b>' + tong + '</b> dòng…');
+
+  let xong = 0, loi = 0;
+  for(const job of jobs){
+    if(_migStop) break;
+    const pk = ENC_PK[job.table];
+    migLog('— ' + job.table + ' (' + job.rows.length + ' dòng)');
+    for(let i = 0; i < job.rows.length; i += ENC_MIG_BATCH){
+      if(_migStop) break;
+      const lo = job.rows.slice(i, i + ENC_MIG_BATCH);
+      try{
+        const enc = [];
+        for(const r of lo) enc.push(await encRow(job.table, r));
+        const { error } = await sb.from(job.table).upsert(enc, { onConflict: pk });
+        if(error) throw error;
+        xong += lo.length;
+      }catch(e){
+        loi += lo.length;
+        migLog('  lỗi lô ' + (i/ENC_MIG_BATCH + 1) + ': ' + escHtml(e.message || ''), '#B3261E');
+      }
+      migSetBar((xong + loi) / tong * 100, (xong + loi) + ' / ' + tong + ' dòng');
+      await new Promise(r => setTimeout(r, 30));   // nhường hơi cho trình duyệt
+    }
+  }
+  _migRunning = false;
+  document.getElementById('migRunBtn').disabled = false;
+  document.getElementById('migStopBtn').style.display = 'none';
+  if(_migStop) migLog('<b>Đã dừng.</b> Đã mã hoá ' + xong + ' dòng. Bấm "Bắt đầu" lần nữa để chạy tiếp phần còn lại.', '#B3261E');
+  else if(loi) migLog('<b>Xong nhưng có lỗi.</b> Thành công ' + xong + ', lỗi ' + loi + ' dòng. Bấm "Kiểm tra" rồi chạy lại.', '#B3261E');
+  else migLog('<b>✓ Hoàn tất. Đã mã hoá ' + xong + ' dòng.</b> Bấm "Kiểm tra" để xác nhận còn 0 dòng.', '#1E7F43');
+  await loadAllData(); renderCurrentView();
+}
+function migStop(){ _migStop = true; migLog('Đang dừng sau lô hiện tại…'); }
 
 /* ============ GIAO DIỆN MỞ KHOÁ / KHOÁ DỮ LIỆU ============ */
 function renderEncBar(){
