@@ -2339,7 +2339,7 @@ const ENC_PBKDF2_ITER = 310000;
 
 // bảng -> cột nào mã hoá kiểu nào
 const ENC_FIELDS = {
-  customers:           { det:['account_number'], rnd:['customer_name','telegram_name','note','gender'] },
+  customers:           { det:['account_number'], rnd:['customer_name','telegram_name','note'] },
   loans:               { det:['account_number'], rnd:['note'] },
   margin_calls:        { det:['account_number'], rnd:['note'] },
   rights_offerings:    { det:['account_number'], rnd:[] },
@@ -2526,6 +2526,9 @@ const ENC_PK = {
   loan_history:'id', margin_call_history:'id', change_log:'log_id'
 };
 const ENC_MIG_BATCH = 200;
+// các bảng ràng buộc "người ghi phải là người đang đăng nhập" -> không upsert hàng loạt được
+const ENC_ROW_UPDATE = new Set(['loan_history','margin_call_history','change_log','zalo_leads','transfer_in_list','transfer_out_list','contact_leads']);
+const ENC_PAR = 12;   // số dòng sửa song song
 let _migRunning = false, _migStop = false;
 
 function encNeeds(table, row){
@@ -2606,9 +2609,24 @@ async function migRun(){
       try{
         const enc = [];
         for(const r of lo) enc.push(await encRow(job.table, r));
-        const { error } = await sb.from(job.table).upsert(enc, { onConflict: pk });
-        if(error) throw error;
-        xong += lo.length;
+        if(ENC_ROW_UPDATE.has(job.table)){
+          // sửa từng dòng, chạy song song theo nhóm nhỏ
+          let ok = 0, that = 0, loiDau = '';
+          for(let k = 0; k < enc.length; k += ENC_PAR){
+            const nhom = enc.slice(k, k + ENC_PAR).map(async row=>{
+              const body = Object.assign({}, row); delete body[pk];
+              const { error } = await sb.from(job.table).update(body).eq(pk, row[pk]);
+              if(error){ that++; if(!loiDau) loiDau = error.message; } else ok++;
+            });
+            await Promise.all(nhom);
+          }
+          xong += ok; loi += that;
+          if(that) migLog('  ' + that + ' dòng lỗi: ' + escHtml(loiDau), '#B3261E');
+        } else {
+          const { error } = await sb.from(job.table).upsert(enc, { onConflict: pk });
+          if(error) throw error;
+          xong += lo.length;
+        }
       }catch(e){
         loi += lo.length;
         migLog('  lỗi lô ' + (i/ENC_MIG_BATCH + 1) + ': ' + escHtml(e.message || ''), '#B3261E');
