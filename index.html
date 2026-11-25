@@ -137,6 +137,7 @@ tbody tr{cursor:pointer;}
 .badge-amber{background:var(--amber-soft);color:var(--amber);}
 .badge-gray{background:#F0F2F5;color:var(--text-muted);}
 .badge-red{background:var(--red-soft);color:var(--red);}
+.badge-purple{background:#EFEBFF;color:#5B3FD1;}
 
 .row-actions{display:flex;gap:4px;opacity:0;transition:opacity .1s;}
 tbody tr:hover .row-actions{opacity:1;}
@@ -1118,6 +1119,7 @@ body{-webkit-text-size-adjust:100%;}
                 <option value="Chưa xử lý">Chưa xử lý</option>
                 <option value="Đã check">Đã check</option>
                 <option value="Đã liên hệ">Đã liên hệ</option>
+                <option value="Nhắn zalo">Nhắn zalo</option>
                 <option value="KH xử lý xong">KH xử lý xong</option>
                 <option value="Công ty đã xử lý">Công ty đã xử lý</option>
               </select>
@@ -1164,6 +1166,7 @@ body{-webkit-text-size-adjust:100%;}
                 <option value="Chưa xử lý">Chưa xử lý</option>
                 <option value="Đã check">Đã check</option>
                 <option value="Đã liên hệ">Đã liên hệ</option>
+                <option value="Nhắn zalo">Nhắn zalo</option>
                 <option value="KH xử lý xong">KH xử lý xong</option>
                 <option value="Công ty đã xử lý">Công ty đã xử lý</option>
               </select>
@@ -2005,7 +2008,7 @@ body{-webkit-text-size-adjust:100%;}
         <div class="form-field">
           <label>Trạng thái *</label>
           <select id="loan_status">
-            <option>Chưa xử lý</option><option>Đã check</option><option>Đã liên hệ</option>
+            <option>Chưa xử lý</option><option>Đã check</option><option>Đã liên hệ</option><option>Nhắn zalo</option>
             <option>KH xử lý xong</option><option>Công ty đã xử lý</option>
           </select>
         </div>
@@ -2050,7 +2053,7 @@ body{-webkit-text-size-adjust:100%;}
         <div class="form-field">
           <label>Trạng thái *</label>
           <select id="mc_status">
-            <option>Chưa xử lý</option><option>Đã check</option><option>Đã liên hệ</option>
+            <option>Chưa xử lý</option><option>Đã check</option><option>Đã liên hệ</option><option>Nhắn zalo</option>
             <option>KH xử lý xong</option><option>Công ty đã xử lý</option>
           </select>
         </div>
@@ -5258,7 +5261,7 @@ function findCustomerByAccountNumber(accNum){
 let loans = []; // nạp từ Supabase lúc khởi động
 function loanStatusBadge(s){
   const map = {
-    "Chưa xử lý":"badge-red", "Đã check":"badge-blue", "Đã liên hệ":"badge-amber",
+    "Chưa xử lý":"badge-red", "Đã check":"badge-blue", "Đã liên hệ":"badge-amber", "Nhắn zalo":"badge-purple",
     "KH xử lý xong":"badge-green", "Công ty đã xử lý":"badge-gray"
   };
   return `<span class="badge ${map[s]||'badge-gray'}">${esc(s)}</span>`;
@@ -5355,7 +5358,7 @@ function toggleLoanGroup(stk){
 }
 
 function statusPillClass(s){
-  return ({'Chưa xử lý':'lp-chua','Đã check':'lp-check','Đã liên hệ':'lp-lienhe','KH xử lý xong':'lp-xong','Công ty đã xử lý':'lp-cty'})[s] || '';
+  return ({'Chưa xử lý':'lp-chua','Đã check':'lp-check','Đã liên hệ':'lp-lienhe','Nhắn zalo':'lp-zalo','KH xử lý xong':'lp-xong','Công ty đã xử lý':'lp-cty'})[s] || '';
 }
 function overallLoanStatus(custLoans){
   const nearest = Math.min(...custLoans.map(l=>daysUntil(l.dueDate)));
@@ -5820,14 +5823,14 @@ function freezeLoanOrder(){
 function renderLoans(){
   // Đếm số liệu cho các pill (tính trên toàn bộ loans, không phụ thuộc bộ lọc khác — giống hệ thống cũ)
   const statusCounts = {};
-  ['Chưa xử lý','Đã check','Đã liên hệ','KH xử lý xong','Công ty đã xử lý'].forEach(s=>{
+  ['Chưa xử lý','Đã check','Đã liên hệ','Nhắn zalo','KH xử lý xong','Công ty đã xử lý'].forEach(s=>{
     statusCounts[s] = loans.filter(l=>l.status===s).length;
   });
   const todayCount = loans.filter(l=>daysUntil(l.dueDate)===0).length;
   const overdueCount = loans.filter(l=>daysUntil(l.dueDate)<0).length;
   const soonCount = loans.filter(l=>{const d=daysUntil(l.dueDate);return d>0 && d<=7;}).length;
 
-  document.getElementById('loanStatusPills').innerHTML = ['Chưa xử lý','Đã check','Đã liên hệ'].map(s=>`
+  document.getElementById('loanStatusPills').innerHTML = ['Chưa xử lý','Đã check','Đã liên hệ','Nhắn zalo'].map(s=>`
     <div class="loan-pill ${statusPillClass(s)} ${loanStatusPillFilter===s?'active':''}" onclick="setLoanStatusPill('${escJs(s)}')">${esc(s)} <span class="cnt">${statusCounts[s]}</span></div>
   `).join('');
   document.getElementById('loanDatePills').innerHTML = `
@@ -5851,7 +5854,7 @@ function renderLoans(){
 
   loansGroupsInitialized = true; // mặc định thu gọn tất cả — không tự mở rộng khi tải trang
 
-  const STATUS_OPTIONS = ["Chưa xử lý","Đã check","Đã liên hệ","KH xử lý xong","Công ty đã xử lý"];
+  const STATUS_OPTIONS = ["Chưa xử lý","Đã check","Đã liên hệ","Nhắn zalo","KH xử lý xong","Công ty đã xử lý"];
 
   let bulkBar = '';
   if(bulkSelectMode){
@@ -5973,7 +5976,7 @@ function renderLoans(){
 let marginCalls = []; // nạp từ Supabase lúc khởi động
 function marginCallStatusBadge(s){
   const map = {
-    "Chưa xử lý":"badge-red", "Đã check":"badge-blue", "Đã liên hệ":"badge-amber",
+    "Chưa xử lý":"badge-red", "Đã check":"badge-blue", "Đã liên hệ":"badge-amber", "Nhắn zalo":"badge-purple",
     "KH xử lý xong":"badge-green", "Công ty đã xử lý":"badge-gray"
   };
   return `<span class="badge ${map[s]||'badge-gray'}">${esc(s)}</span>`;
@@ -6403,14 +6406,14 @@ function renderMarginCalls(){
   const showAll = document.getElementById('mcShowAll').checked;
 
   const statusCounts = {};
-  ['Chưa xử lý','Đã check','Đã liên hệ','KH xử lý xong','Công ty đã xử lý'].forEach(s=>{
+  ['Chưa xử lý','Đã check','Đã liên hệ','Nhắn zalo','KH xử lý xong','Công ty đã xử lý'].forEach(s=>{
     statusCounts[s] = marginCalls.filter(m=>m.status===s).length;
   });
   const todayCount = marginCalls.filter(m=>daysUntil(m.dueDate)===0).length;
   const overdueCount = marginCalls.filter(m=>daysUntil(m.dueDate)<0).length;
   const soonCount = marginCalls.filter(m=>{const d=daysUntil(m.dueDate);return d>0 && d<=7;}).length;
 
-  document.getElementById('mcStatusPills').innerHTML = ['Chưa xử lý','Đã check','Đã liên hệ'].map(s=>`
+  document.getElementById('mcStatusPills').innerHTML = ['Chưa xử lý','Đã check','Đã liên hệ','Nhắn zalo'].map(s=>`
     <div class="loan-pill ${statusPillClass(s)} ${mcStatusPillFilter===s?'active':''}" onclick="setMarginCallStatusPill('${escJs(s)}')">${esc(s)} <span class="cnt">${statusCounts[s]}</span></div>
   `).join('');
   document.getElementById('mcDatePills').innerHTML = `
@@ -6432,7 +6435,7 @@ function renderMarginCalls(){
 
   marginCallsGroupsInitialized = true; // mặc định thu gọn tất cả — không tự mở rộng khi tải trang
 
-  const STATUS_OPTIONS = ["Chưa xử lý","Đã check","Đã liên hệ","KH xử lý xong","Công ty đã xử lý"];
+  const STATUS_OPTIONS = ["Chưa xử lý","Đã check","Đã liên hệ","Nhắn zalo","KH xử lý xong","Công ty đã xử lý"];
 
   let bulkBar = '';
   if(mcBulkSelectMode){
